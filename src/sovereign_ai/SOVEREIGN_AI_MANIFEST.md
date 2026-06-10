@@ -108,6 +108,32 @@ or the Directorate of Defense Trade Controls (DDTC).
 │       ├── CUI: Controlled Unclassified Information marking enforcement
 │       ├── FVR: Foreign visit request evaluation against export controls
 │       └── Licensing: DSP-5, TAA, MLA, License Exception support
+├── crypto/
+│   └── sovereign-phantom-qsha.mo    Phantom QSHA Commitment Engine (30+ capabilities)
+│       ├── SHA-256: Complete FIPS 180-4 implementation (sovereign, no imports)
+│       ├── SHA3-256: Full Keccak-f[1600] sponge construction (sovereign)
+│       ├── QSHA-256: 12-round alternating SHA-256 ⊕ SHA3-256 with XOR mixing
+│       ├── Canonical JSON: Deterministic serialization (sorted keys, no whitespace)
+│       ├── Commitments: Value commitment, verification, round enforcement
+│       ├── HMAC-QSHA: Keyed commitment for authenticated integrity
+│       ├── Chain: Tamper-evident linked commitment sequences (genesis + append)
+│       ├── Rotation: Bitwise left-rotate byte arrays for state mixing
+│       ├── Utilities: Hex encode/decode, constant-time comparison
+│       └── Domain: MEDINA.PHANTOM.QSHA.v1 separation
+├── edge/
+│   └── sovereign-edge-node.mo       Edge Node Bus Protocol Engine (35+ capabilities)
+│       ├── Wire format: 12-byte frame header + CRC-16/CCITT integrity
+│       ├── SPI: Full-duplex, Mode 0-3, chip-select, fragmentation
+│       ├── I2C: 7/10-bit addressing, NACK handling, bus scan, speed modes
+│       ├── UART: Configurable baud/parity/stop/flow, frame time estimation
+│       ├── Fleet: Node registry, status tracking, capability descriptors
+│       ├── Inference dispatch: NF4 payload serialization, batch distribution
+│       ├── Signal acquisition: ADC channel mask, sample rate, gain control
+│       ├── Heartbeat: Keep-alive with uptime, temp, RAM, battery telemetry
+│       ├── Attestation: QSHA firmware verification, tamper detection
+│       ├── Zeroize: DoD secure destruction command with confirmation pattern
+│       ├── Arbitration: Exponential backoff retry with jitter
+│       └── Throughput: Bus capacity estimation, latency prediction
 └── airgap/
     └── sovereign-airgap.mo           Air-gap verification (25+ capabilities)
         ├── Isolation: Network proof generation & verification
