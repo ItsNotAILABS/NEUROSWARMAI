@@ -65,6 +65,15 @@ export function createEngine(substrate = 'node', config = {}) {
   return new NovaEngine({ substrate, ...config });
 }
 
+// ─── Specialized Engine Exports ──────────────────────────────────────────────
+// OPSEC Engine — Operational Security Intelligence
+// Import: import { NovaOpsecEngine } from './nova-opsec-engine.js'
+// Substrate: node, edge, worker
+
+// NeuroSwarm Engine — Distributed Neural-Aware Intelligence (www.neuroawarmai.com)
+// Import: import { NovaNeuroSwarmEngine } from './nova-neuroswarm-engine.js'
+// Substrate: node, edge, worker, icp
+
 // ─── Default Export ──────────────────────────────────────────────────────────
 export default {
   NovaEngine,

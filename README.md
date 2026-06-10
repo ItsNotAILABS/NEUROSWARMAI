@@ -1,6 +1,6 @@
 # CHIMERIA DEFENSE
 
-### Sovereign Living-Organism Defense Intelligence
+### Sovereign Living-Organism Defense Intelligence | [www.neuroawarmai.com](https://www.neuroawarmai.com)
 
 > *"Systems are not machines. They are living organisms — with immune systems, neural networks, heartbeats, and purpose. Defense is not a wall. It is a body that heals itself."*
 >
@@ -309,6 +309,7 @@ All code, algorithms, architectural designs, cognitive frameworks, mathematical 
 **Alfredo Medina Hernandez**
 Dallas, Texas
 MedinaSITech@outlook.com
+**Web:** [www.neuroawarmai.com](https://www.neuroawarmai.com)
 
 ---
 

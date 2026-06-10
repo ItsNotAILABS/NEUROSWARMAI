@@ -6,11 +6,11 @@
 
 ## CLASSIFICATION: SOVEREIGN SWARM INTELLIGENCE INFRASTRUCTURE
 
-This sublibrary implements **24 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-254)
+This sublibrary implements **32 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-262)
 that govern the distributed intelligence, coordination, security, and execution of the
 entire CHIMERIA organism fleet.
 
-Each protocol is anchored to one or more of the 6 Sovereign AI modules:
+Each protocol is anchored to one or more of the 8 Sovereign AI modules:
 
 | Module | Protocols | Domain |
 |--------|-----------|--------|
@@ -20,6 +20,8 @@ Each protocol is anchored to one or more of the 6 Sovereign AI modules:
 | SovereignSIGINT | PROTO-243, 244, 245, 246 | Collective signal intelligence, EW coordination |
 | SovereignCompliance | PROTO-247, 248, 249, 250 | Fleet-wide ITAR/EAR, distributed audit |
 | SovereignAirGap | PROTO-251, 252, 253, 254 | Swarm isolation verification, key ceremony |
+| SovereignOPSEC | PROTO-255, 256, 257, 258 | Operational security, traffic resistance, camouflage |
+| SovereignCOUNTERINTEL | PROTO-259, 260, 261, 262 | Counter-intelligence, deception, threat hunting |
 
 ---
 
@@ -61,5 +63,7 @@ This software may be subject to:
 ├── swarm-sigint-protocols.js            (PROTO-243–246)
 ├── swarm-compliance-protocols.js        (PROTO-247–250)
 ├── swarm-airgap-protocols.js            (PROTO-251–254)
+├── swarm-opsec-protocols.js             (PROTO-255–258)
+├── swarm-counterintel-protocols.js      (PROTO-259–262)
 └── swarm-orchestrator.js                (Fleet orchestration engine)
 ```
