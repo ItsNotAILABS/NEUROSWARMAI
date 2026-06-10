@@ -556,7 +556,6 @@ export function GRPECommandCenter({ className }: GRPECommandCenterProps) {
   
   const kuramotoR = brain.coherence ?? 0;
   // OMNIS = R >= 0.95 AND resonance lock (high coherence state)
-  const omnis = kuramotoR >= 0.95 && ((brain.brainState?.macroSphereR ?? 0) >= 0.95);
   const omnis = kuramotoR >= 0.95 && (brain.brainState?.macroSphereR ?? 0) >= 0.95;
   const pentecostActive = heritage.heritage?.pentecostPrecursor ?? false;
   

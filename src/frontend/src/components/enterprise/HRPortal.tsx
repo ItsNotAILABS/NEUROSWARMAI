@@ -44,7 +44,6 @@ import {
   Target,
   Trophy,
   TrendingUp,
-  Trophy,
   User,
   UserCheck,
   UserPlus,
