@@ -75,6 +75,18 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(qsha_lib);
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Fibonacci Library — Spacing & Irrational Constants Engine
+    // ─────────────────────────────────────────────────────────────────────────
+    const fibonacci_lib = b.addStaticLibrary(.{
+        .name = "fibonacci",
+        .root_source_file = b.path("src/fibonacci.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(fibonacci_lib);
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Standalone Executable — Attestable swarm runtime binary
     // ─────────────────────────────────────────────────────────────────────────
     const exe = b.addExecutable(.{

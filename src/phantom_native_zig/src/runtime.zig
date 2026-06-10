@@ -11,6 +11,7 @@ const neurocore = @import("neurocore.zig");
 const helix = @import("helix.zig");
 const helios = @import("helios.zig");
 const qsha = @import("qsha_binding.zig");
+const fibonacci = @import("fibonacci.zig");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TAURUS Memory — Native working memory with resonance decay
@@ -183,6 +184,9 @@ pub fn main() !void {
     try stdout.print("Helix Encoding Engine Ready\n", .{});
     try stdout.print("QSHA Commitment Engine Ready (digest: {d}-bit)\n", .{qsha.QSHA_DIGEST_LEN * 8});
     try stdout.print("MESIE-SIMD Kernel Ready\n", .{});
+    try stdout.print("Fibonacci Spacing Engine Ready (φ = {d:.10})\n", .{@as(f32, @floatCast(fibonacci.PHI))});
+    try stdout.print("  Irrational Lattice: {d} bases\n", .{fibonacci.IRRATIONAL_BASES.len});
+    try stdout.print("  Fibonacci Table: {d} entries (max u64)\n", .{fibonacci.FIB_TABLE.len});
     try stdout.print("TAURUS Memory Engine Ready\n", .{});
     try stdout.print("Dry-compile attestation: PASS\n", .{});
 }
