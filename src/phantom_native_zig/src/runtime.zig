@@ -8,6 +8,9 @@
 
 const std = @import("std");
 const neurocore = @import("neurocore.zig");
+const helix = @import("helix.zig");
+const helios = @import("helios.zig");
+const qsha = @import("qsha_binding.zig");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TAURUS Memory — Native working memory with resonance decay
@@ -173,6 +176,12 @@ pub export fn sovereign_forward(
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
     try stdout.print("Phantom Native Sovereign Runtime v2.0.0\n", .{});
+    try stdout.print("HELIOS Compute Engine v{s} — Native CUDA Replacement\n", .{helios.HELIOS_VERSION});
+    try stdout.print("  Warp Size: {d} lanes (sovereign SIMD)\n", .{helios.HELIOS_WARP_SIZE});
+    try stdout.print("  Max Streams: {d}\n", .{helios.HELIOS_MAX_STREAMS});
+    try stdout.print("  Max Blocks: {d}\n", .{helios.HELIOS_MAX_BLOCKS});
+    try stdout.print("Helix Encoding Engine Ready\n", .{});
+    try stdout.print("QSHA Commitment Engine Ready (digest: {d}-bit)\n", .{qsha.QSHA_DIGEST_LEN * 8});
     try stdout.print("MESIE-SIMD Kernel Ready\n", .{});
     try stdout.print("TAURUS Memory Engine Ready\n", .{});
     try stdout.print("Dry-compile attestation: PASS\n", .{});

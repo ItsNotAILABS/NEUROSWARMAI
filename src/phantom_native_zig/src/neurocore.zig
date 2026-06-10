@@ -11,6 +11,10 @@
 // Produces deterministic binary for QSHA manifest signing.
 
 const std = @import("std");
+const helix = @import("helix.zig");
+
+// Re-export helix module for downstream consumers
+pub const Helix = helix;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SovereignTensor — Native SIMD tensor structure

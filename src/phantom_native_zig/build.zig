@@ -39,6 +39,42 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
 
     // ─────────────────────────────────────────────────────────────────────────
+    // HELIOS Library — Sovereign CUDA Replacement Engine
+    // ─────────────────────────────────────────────────────────────────────────
+    const helios_lib = b.addStaticLibrary(.{
+        .name = "helios",
+        .root_source_file = b.path("src/helios.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(helios_lib);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helix Library — Spectral Encoding Primitives
+    // ─────────────────────────────────────────────────────────────────────────
+    const helix_lib = b.addStaticLibrary(.{
+        .name = "helix",
+        .root_source_file = b.path("src/helix.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(helix_lib);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // QSHA Library — Sovereign Cryptographic Attestation
+    // ─────────────────────────────────────────────────────────────────────────
+    const qsha_lib = b.addStaticLibrary(.{
+        .name = "qsha",
+        .root_source_file = b.path("src/qsha_binding.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(qsha_lib);
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Standalone Executable — Attestable swarm runtime binary
     // ─────────────────────────────────────────────────────────────────────────
     const exe = b.addExecutable(.{
