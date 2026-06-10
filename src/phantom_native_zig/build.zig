@@ -87,6 +87,18 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(fibonacci_lib);
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Spatial Exclusion Library — Fibonacci Collision Boundary Matrix
+    // ─────────────────────────────────────────────────────────────────────────
+    const spatial_lib = b.addStaticLibrary(.{
+        .name = "spatial_exclusion",
+        .root_source_file = b.path("src/spatial_exclusion.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(spatial_lib);
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Standalone Executable — Attestable swarm runtime binary
     // ─────────────────────────────────────────────────────────────────────────
     const exe = b.addExecutable(.{
