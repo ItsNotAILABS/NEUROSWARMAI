@@ -34,6 +34,14 @@
  * PROTO-252: Network Isolation Proof       │ SovereignAirGap
  * PROTO-253: Secure Boot Chain Verify      │ SovereignAirGap
  * PROTO-254: Zeroization Coordination      │ SovereignAirGap
+ * PROTO-255: Drone Sensor Ingest           │ SovereignDroneEdge
+ * PROTO-256: Edge Navigation Solve         │ SovereignDroneEdge
+ * PROTO-257: Local Gossip Mesh Tick        │ SovereignDroneEdge
+ * PROTO-258: Spectral Threat Fast Path     │ SovereignDroneEdge
+ * PROTO-259: Formation Lattice Update      │ SovereignDroneEdge
+ * PROTO-260: Jam Failover Route            │ SovereignDroneEdge
+ * PROTO-261: Side Engine Attestation       │ SovereignDroneEdge
+ * PROTO-262: CPL-L Law Gate                │ SovereignDroneEdge
  * ─────────────────────────────────────────────────────────────────────────
  *
  * ZERO EXTERNAL DEPENDENCIES — Complete sovereign execution.
@@ -127,10 +135,24 @@ export {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export {
+  droneSensorIngest,
+  droneNavigationSolve,
+  droneMeshGossipTick,
+  droneSpectralThreat,
+  droneFormationLattice,
+  droneJamFailoverRoute,
+  droneSideEngineAttestation,
+  droneLawGate,
+  executeDroneSideTick,
+  DRONE_SIDE_ENGINES,
+} from './swarm-drone-side-protocols.js';
+
+export {
   createSwarmState,
   executePreFlight,
   executeCompute,
   executeDeploy,
+  executeDroneSide,
   executeSIGINT,
   executeEmergencyZeroize,
   executeSwarmMission,

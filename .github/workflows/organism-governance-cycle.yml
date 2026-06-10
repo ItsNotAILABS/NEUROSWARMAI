@@ -54,6 +54,11 @@ jobs:
             echo "⚠️ No governance events directory found" >> $GITHUB_STEP_SUMMARY
           fi
 
+      - name: 🛸 Emit Drone Swarm Governance Event
+        run: |
+          mkdir -p dist/governance/events
+          node scripts/emit_drone_swarm_governance_event.js
+
       - name: ⚖️ Run Governance Cycle
         id: cycle
         run: |

@@ -12,6 +12,9 @@ on:
       - 'pyproject.toml'
       - 'build_python.py'
       - 'requirements.txt'
+      - 'evidence/**'
+      - 'governance/**'
+      - 'laws/**'
   pull_request:
     paths:
       - 'pythonista/**'
@@ -60,6 +63,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pytest pytest-asyncio pytest-benchmark
+          pip install -r requirements.txt
       - name: Run unit tests
         run: |
           python -m pytest tests/python/ -v --tb=short --junitxml=test-results-${{ matrix.python-version }}.xml

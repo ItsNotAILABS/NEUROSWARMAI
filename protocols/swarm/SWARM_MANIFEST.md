@@ -6,7 +6,7 @@
 
 ## CLASSIFICATION: SOVEREIGN SWARM INTELLIGENCE INFRASTRUCTURE
 
-This sublibrary implements **24 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-254)
+This sublibrary implements **32 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-262)
 that govern the distributed intelligence, coordination, security, and execution of the
 entire CHIMERIA organism fleet.
 
@@ -20,6 +20,7 @@ Each protocol is anchored to one or more of the 6 Sovereign AI modules:
 | SovereignSIGINT | PROTO-243, 244, 245, 246 | Collective signal intelligence, EW coordination |
 | SovereignCompliance | PROTO-247, 248, 249, 250 | Fleet-wide ITAR/EAR, distributed audit |
 | SovereignAirGap | PROTO-251, 252, 253, 254 | Swarm isolation verification, key ceremony |
+| SovereignDroneEdge | PROTO-255, 256, 257, 258, 259, 260, 261, 262 | On-node side engines, attestation, CPL-L gate |
 
 ---
 
@@ -61,5 +62,11 @@ This software may be subject to:
 ├── swarm-sigint-protocols.js            (PROTO-243–246)
 ├── swarm-compliance-protocols.js        (PROTO-247–250)
 ├── swarm-airgap-protocols.js            (PROTO-251–254)
+├── swarm-drone-side-protocols.js        (PROTO-255–262)
+├── neuroswarm-drone-side.tpl.yaml       (TPL wire messages)
 └── swarm-orchestrator.js                (Fleet orchestration engine)
+
+/laws/neuroswarm-drone-side.cpl-l        (CPL-L constitutional gates)
+/governance/events/drone_swarm_state.spec.yaml
+/pythonista/neuroswarm/drone_side_engines.py
 ```

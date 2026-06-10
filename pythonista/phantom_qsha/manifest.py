@@ -48,7 +48,7 @@ def build_manifest(
 
     manifest = {
         "package": "phantom_qsha",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "domain": "MEDINA.PHANTOM.QSHA.v1",
         "files": files,
         "aggregate_commitment": aggregate_hash,

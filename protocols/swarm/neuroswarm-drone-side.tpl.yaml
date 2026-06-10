@@ -1,0 +1,73 @@
+# NeuroSwarm Drone Side — Terminal Protocol Language (TPL)
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+protocol_family: neuroswarm-drone-side
+version: "1.0.0"
+phi_beat_ms: 873
+constrained_by: [CPL-L:NEUROSWARM_DRONE_SIDE]
+
+channels:
+  DRONE_EDGE_MESH:
+    MODE: MULTICAST
+    PARTICIPANTS: [drone-*, swarm-orchestrator, chimera-alpha]
+    ENCRYPTION: PHANTOM_SHADOW_WIRE
+    HEARTBEAT: 873
+
+messages:
+  DRONE_TICK:
+    FROM: drone-{agent_id}
+    TO: swarm-orchestrator
+    PRIORITY: 8
+    TTL: 3
+    PAYLOAD:
+      agent_id: string
+      kuramoto_r: float
+      threat: bool
+      threat_score: float
+      access_mode: enum[ground_mesh, orbital_preferred, leo_relay, geo_backup]
+      engines_attested: array[string]
+      protocols: array[string]
+      law_violations: array[object]
+    SIGNATURE: qsha_commitment
+
+  DRONE_LAW_VIOLATION:
+    FROM: drone-{agent_id}
+    TO: ATLAS
+    PRIORITY: 13
+    TTL: 5
+    PAYLOAD:
+      law_id: string
+      severity: enum[CRITICAL, HIGH, MEDIUM]
+      action: string
+      agent_id: string
+      tick_timestamp: iso8601
+    SIGNATURE: qsha_commitment
+
+  SWARM_FORMATION_UPDATE:
+    FROM: swarm-orchestrator
+    TO: BROADCAST
+    PRIORITY: 5
+    TTL: 2
+    PAYLOAD:
+      lattice_seed: int
+      target_slots: array[vector3]
+      phi_tolerance: 0.618033988749895
+    SIGNATURE: fleet_compliance_attestation
+
+  JAM_FAILOVER_COMMAND:
+    FROM: swarm-orchestrator
+    TO: drone-*
+    PRIORITY: 13
+    TTL: 1
+    PAYLOAD:
+      ground_jammed: bool
+      required_access_mode: orbital_preferred
+      protocol: PROTO-260
+    SIGNATURE: distributed_audit_chain
+
+handshake:
+  INITIATOR: drone-{agent_id}
+  RESPONDER: swarm-orchestrator
+  PROTOCOL: [HELLO, ATTEST_ENGINES, VERIFY_LAWS, ESTABLISHED]
+  REQUIRED_ENGINES: [DSEN, DNAV, DMESH, DTHR, DFORM, DRT]
+  REQUIRED_PROTOCOLS: [PROTO-255, PROTO-256, PROTO-257, PROTO-258, PROTO-259, PROTO-260, PROTO-261, PROTO-262]

@@ -1,0 +1,81 @@
+name: NeuroSwarm Stack — Evidence, Swarm & Phantom
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pythonista/**'
+      - 'protocols/swarm/**'
+      - 'pythonista/neuroswarm/**'
+      - 'governance/**'
+      - 'laws/**'
+      - 'evidence/**'
+      - 'tests/**'
+      - 'scripts/emit_drone_swarm_governance_event.js'
+      - 'scripts/regenerate_phantom_manifest.py'
+  pull_request:
+    paths:
+      - 'pythonista/**'
+      - 'protocols/swarm/**'
+      - 'governance/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-stack:
+    name: Python — Sovereign + Drone + Phantom
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test deps
+        run: pip install pytest cryptography
+      - name: Sovereign + drone-side tests
+        run: python -m pytest tests/python/test_sovereign_native.py tests/python/test_drone_side_engines.py -v --tb=short
+      - name: Phantom QSHA tests
+        run: python -m pytest tests/python/test_phantom_qsha.py -v --tb=short
+
+  swarm-protocols:
+    name: Node — PROTO-255–262
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - name: Swarm drone-side vitest
+        run: pnpm exec vitest run tests/protocols/swarm-drone-side.test.js
+
+  evidence-smoke:
+    name: Evidence manifest smoke
+    runs-on: ubuntu-latest
+    needs: [python-stack, swarm-protocols]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify embedded evidence manifest
+        run: |
+          test -f evidence/mesie/evidence_manifest.json
+          python -c "import json; m=json.load(open('evidence/mesie/evidence_manifest.json')); assert m['verdict']; assert len(m['harness_results'])>=6"
+      - name: Regenerate phantom manifest
+        run: python scripts/regenerate_phantom_manifest.py
+      - name: Emit drone governance event
+        run: node scripts/emit_drone_swarm_governance_event.js
+      - name: Governance cycle (non-blocking smoke)
+        run: node governance/governance-cycle.js
+        continue-on-error: true
