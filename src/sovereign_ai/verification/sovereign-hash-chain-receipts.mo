@@ -331,7 +331,7 @@ module SovereignHashChainReceipts {
     ]
   };
 
-  func serializeState(h0:Nat32, h1:Nat32, h2:Nat32, h3:Nat32, h4:Nat32, h5:Nat32, h6:Nat32, h7:Nat32) : [Nat8] {
+  func serializeState(h0 : Nat32, h1 : Nat32, h2 : Nat32, h3 : Nat32, h4 : Nat32, h5 : Nat32, h6 : Nat32, h7 : Nat32) : [Nat8] {
     [
       Nat8.fromNat(Nat32.toNat((h0 >> 24) & 0xFF)), Nat8.fromNat(Nat32.toNat((h0 >> 16) & 0xFF)),
       Nat8.fromNat(Nat32.toNat((h0 >> 8) & 0xFF)),  Nat8.fromNat(Nat32.toNat(h0 & 0xFF)),

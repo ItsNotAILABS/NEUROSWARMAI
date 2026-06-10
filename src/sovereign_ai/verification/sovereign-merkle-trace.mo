@@ -345,7 +345,7 @@ module SovereignMerkleTrace {
         let proofValid = verifyProof(p);
         let fieldOk = step.fieldElement < GOLDILOCKS_MODULUS;
         {
-          valid = proofValid and arrayEqual(stepHash, hashLeaf(allStepHashes[stepIndex])) == false and fieldOk;
+          valid = proofValid and arrayEqual(stepHash, hashLeaf(allStepHashes[stepIndex])) and fieldOk;
           computedRoot = p.root;
           expectedRoot = trace.root;
           stepVerified = stepIndex;
