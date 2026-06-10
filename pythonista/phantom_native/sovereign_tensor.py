@@ -15,6 +15,7 @@ MESIE Integration:
 
 from __future__ import annotations
 
+import array
 import math
 import struct
 from typing import Any, Dict, List, Optional, Tuple
@@ -243,6 +244,158 @@ class SovereignTensor:
 
         payload = self.to_bytes() + str(self.spectral_meta).encode("utf-8")
         return qsha256_bytes(payload)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SIMD-style vectorized operations (manual unrolling for hot paths)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def to_simd_buffer(self) -> array.array:
+        """Convert to cache-friendly float32 buffer for SIMD-style processing."""
+        return array.array("f", self.data)
+
+    def vector_add(self, other: "SovereignTensor") -> "SovereignTensor":
+        """SIMD-style 8-wide unrolled element-wise addition."""
+        assert self.shape == other.shape, "Shape mismatch for vector_add"
+        n = len(self.data)
+        result = array.array("f", [0.0] * n)
+
+        # 8-wide unroll (maps to 256-bit SIMD registers)
+        i = 0
+        while i + 8 <= n:
+            result[i] = self.data[i] + other.data[i]
+            result[i + 1] = self.data[i + 1] + other.data[i + 1]
+            result[i + 2] = self.data[i + 2] + other.data[i + 2]
+            result[i + 3] = self.data[i + 3] + other.data[i + 3]
+            result[i + 4] = self.data[i + 4] + other.data[i + 4]
+            result[i + 5] = self.data[i + 5] + other.data[i + 5]
+            result[i + 6] = self.data[i + 6] + other.data[i + 6]
+            result[i + 7] = self.data[i + 7] + other.data[i + 7]
+            i += 8
+        # Scalar tail
+        while i < n:
+            result[i] = self.data[i] + other.data[i]
+            i += 1
+
+        return SovereignTensor(list(result), self.shape, self.spectral_meta)
+
+    def vector_mul(self, other: "SovereignTensor") -> "SovereignTensor":
+        """SIMD-style 8-wide unrolled element-wise multiplication."""
+        assert self.shape == other.shape, "Shape mismatch for vector_mul"
+        n = len(self.data)
+        result = array.array("f", [0.0] * n)
+
+        i = 0
+        while i + 8 <= n:
+            result[i] = self.data[i] * other.data[i]
+            result[i + 1] = self.data[i + 1] * other.data[i + 1]
+            result[i + 2] = self.data[i + 2] * other.data[i + 2]
+            result[i + 3] = self.data[i + 3] * other.data[i + 3]
+            result[i + 4] = self.data[i + 4] * other.data[i + 4]
+            result[i + 5] = self.data[i + 5] * other.data[i + 5]
+            result[i + 6] = self.data[i + 6] * other.data[i + 6]
+            result[i + 7] = self.data[i + 7] * other.data[i + 7]
+            i += 8
+        while i < n:
+            result[i] = self.data[i] * other.data[i]
+            i += 1
+
+        return SovereignTensor(list(result), self.shape, self.spectral_meta)
+
+    def vector_scale(self, scalar: float) -> "SovereignTensor":
+        """SIMD-style 8-wide unrolled scalar multiplication."""
+        n = len(self.data)
+        result = array.array("f", [0.0] * n)
+
+        i = 0
+        while i + 8 <= n:
+            result[i] = self.data[i] * scalar
+            result[i + 1] = self.data[i + 1] * scalar
+            result[i + 2] = self.data[i + 2] * scalar
+            result[i + 3] = self.data[i + 3] * scalar
+            result[i + 4] = self.data[i + 4] * scalar
+            result[i + 5] = self.data[i + 5] * scalar
+            result[i + 6] = self.data[i + 6] * scalar
+            result[i + 7] = self.data[i + 7] * scalar
+            i += 8
+        while i < n:
+            result[i] = self.data[i] * scalar
+            i += 1
+
+        return SovereignTensor(list(result), self.shape, self.spectral_meta)
+
+    def vector_fma(self, mul: "SovereignTensor", add: "SovereignTensor") -> "SovereignTensor":
+        """Fused multiply-add: self * mul + add (single pass, SIMD-friendly)."""
+        assert self.shape == mul.shape == add.shape, "Shape mismatch for vector_fma"
+        n = len(self.data)
+        result = array.array("f", [0.0] * n)
+
+        i = 0
+        while i + 4 <= n:
+            result[i] = self.data[i] * mul.data[i] + add.data[i]
+            result[i + 1] = self.data[i + 1] * mul.data[i + 1] + add.data[i + 1]
+            result[i + 2] = self.data[i + 2] * mul.data[i + 2] + add.data[i + 2]
+            result[i + 3] = self.data[i + 3] * mul.data[i + 3] + add.data[i + 3]
+            i += 4
+        while i < n:
+            result[i] = self.data[i] * mul.data[i] + add.data[i]
+            i += 1
+
+        return SovereignTensor(list(result), self.shape, self.spectral_meta)
+
+    def resonance_matmul(self, other: "SovereignTensor") -> "SovereignTensor":
+        """SIMD-optimized resonance-weighted matmul with 4-wide inner loop unrolling."""
+        assert self.ndim == 2 and other.ndim == 2, "resonance_matmul requires 2D tensors"
+        assert self.shape[1] == other.shape[0], "Inner dimensions must match"
+        m, k = self.shape
+        _, n = other.shape
+        result = array.array("f", [0.0] * (m * n))
+        resonance = self.resonance_score * other.resonance_score
+
+        for i in range(m):
+            for j in range(n):
+                acc = 0.0
+                p = 0
+                # 4-wide inner loop unroll
+                while p + 4 <= k:
+                    acc += (
+                        self.data[i * k + p] * other.data[p * n + j]
+                        + self.data[i * k + p + 1] * other.data[(p + 1) * n + j]
+                        + self.data[i * k + p + 2] * other.data[(p + 2) * n + j]
+                        + self.data[i * k + p + 3] * other.data[(p + 3) * n + j]
+                    )
+                    p += 4
+                # Scalar tail
+                while p < k:
+                    acc += self.data[i * k + p] * other.data[p * n + j]
+                    p += 1
+                result[i * n + j] = acc * resonance
+
+        return SovereignTensor(list(result), (m, n), self.spectral_meta)
+
+    def vector_dot(self, other: "SovereignTensor") -> float:
+        """SIMD-style 8-wide unrolled dot product."""
+        assert self.shape == other.shape, "Shape mismatch for vector_dot"
+        n = len(self.data)
+        acc = 0.0
+
+        i = 0
+        while i + 8 <= n:
+            acc += (
+                self.data[i] * other.data[i]
+                + self.data[i + 1] * other.data[i + 1]
+                + self.data[i + 2] * other.data[i + 2]
+                + self.data[i + 3] * other.data[i + 3]
+                + self.data[i + 4] * other.data[i + 4]
+                + self.data[i + 5] * other.data[i + 5]
+                + self.data[i + 6] * other.data[i + 6]
+                + self.data[i + 7] * other.data[i + 7]
+            )
+            i += 8
+        while i < n:
+            acc += self.data[i] * other.data[i]
+            i += 1
+
+        return acc
 
     def __repr__(self) -> str:
         return f"SovereignTensor(shape={self.shape}, resonance={self.resonance_score})"

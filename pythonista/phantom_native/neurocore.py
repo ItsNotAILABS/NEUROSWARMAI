@@ -11,16 +11,18 @@ sovereign spectral-matched attention and helix-encoded weight initialization.
 Architecture:
     - Helix-encoded weight initialization (MESIE primitives)
     - Resonance-weighted attention (custom spectral matching kernel)
-    - TAURUS working memory integration (bounded temporal buffer)
+    - TAURUS working memory integration (bounded temporal buffer + context fusion)
+    - SIMD-style vectorized forward pass (manual unrolling)
     - Stateless forward pass (side-channel resistant by design)
 """
 
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pythonista.phantom_native.sovereign_tensor import SovereignTensor
+from pythonista.phantom_native.taurus import TaurusMemory
 
 
 class SovereignNeuroCore:
@@ -32,7 +34,12 @@ class SovereignNeuroCore:
         self.head_dim: int = self.d_model // self.n_heads
         self.spectral_config = config
         self.weights = self._init_helix_weights()
-        self.taurus_memory: List[SovereignTensor] = []  # working memory
+        self.taurus = TaurusMemory(
+            capacity=config.get("taurus_capacity", 32),
+            decay_rate=config.get("taurus_decay", 0.95),
+        )
+        # Legacy accessor for backward compatibility
+        self.taurus_memory: List[SovereignTensor] = self.taurus.working_memory
         self.taurus_capacity: int = config.get("taurus_capacity", 32)
 
     def _init_helix_weights(self) -> Dict[str, List[float]]:
@@ -95,13 +102,14 @@ class SovereignNeuroCore:
         return output
 
     def forward(self, tensor: SovereignTensor) -> SovereignTensor:
-        """Full forward pass with resonance, helix, and TAURUS integration.
+        """Full forward pass with resonance, helix, TAURUS, and SIMD integration.
 
         Execution flow:
             1. Project input to Q, K, V via helix weights
             2. Compute resonance-weighted attention
-            3. Produce output tensor
-            4. Update TAURUS working memory
+            3. Fuse TAURUS context (top-k memory augmentation)
+            4. Produce output tensor
+            5. Update TAURUS working memory
         """
         data = tensor.data
         d = self.d_model
@@ -122,7 +130,6 @@ class SovereignNeuroCore:
 
         # Match output shape to input shape
         if len(output_data) != len(data):
-            # Truncate or pad to match input dimensions
             if len(output_data) > len(data):
                 output_data = output_data[: len(data)]
             else:
@@ -130,24 +137,72 @@ class SovereignNeuroCore:
 
         out_tensor = SovereignTensor(output_data, tensor.shape, tensor.spectral_meta)
 
-        # TAURUS working memory update (bounded)
-        self.taurus_memory.append(out_tensor)
-        if len(self.taurus_memory) > self.taurus_capacity:
-            self.taurus_memory.pop(0)
+        # TAURUS context fusion (augment with recalled memory)
+        context = self.taurus.recall_top_k(4)
+        if context:
+            fused = self.taurus.fuse_context(context)
+            if fused is not None and len(fused.data) == len(out_tensor.data):
+                # SIMD-style vector add for context fusion
+                out_tensor = out_tensor.vector_add(fused)
+
+        # TAURUS working memory update
+        self.taurus.store(out_tensor)
+
+        return out_tensor
+
+    def forward_simd(self, tensor: SovereignTensor) -> SovereignTensor:
+        """SIMD-optimized forward pass using vectorized operations.
+
+        Uses vector_add and vector_mul from SovereignTensor for
+        cache-friendly, unrolled computation paths.
+        """
+        data = tensor.data
+        d = self.d_model
+
+        # Build weight tensors for SIMD projection
+        q_weights = [self.weights["query"][i % d] for i in range(len(data))]
+        k_weights = [self.weights["key"][i % d] for i in range(len(data))]
+        v_weights = [self.weights["value"][i % d] for i in range(len(data))]
+
+        q_tensor = SovereignTensor(q_weights, tensor.shape, tensor.spectral_meta)
+        k_tensor = SovereignTensor(k_weights, tensor.shape, tensor.spectral_meta)
+        v_tensor = SovereignTensor(v_weights, tensor.shape, tensor.spectral_meta)
+
+        # SIMD vector multiply for projection
+        q_proj = tensor.vector_mul(q_tensor)
+        k_proj = tensor.vector_mul(k_tensor)
+        v_proj = tensor.vector_mul(v_tensor)
+
+        # Resonance attention on projected data
+        output_data = self._resonance_attention(q_proj.data, k_proj.data, v_proj.data)
+        out_tensor = SovereignTensor(output_data, tensor.shape, tensor.spectral_meta)
+
+        # TAURUS update
+        self.taurus.store(out_tensor)
 
         return out_tensor
 
     def get_taurus_context(self) -> List[SovereignTensor]:
         """Retrieve current TAURUS working memory for context fusion."""
-        return self.taurus_memory[:]
+        return self.taurus.working_memory[:]
 
     def clear_taurus(self) -> None:
         """Clear TAURUS working memory (context reset / zeroization)."""
-        self.taurus_memory.clear()
+        self.taurus.clear_working()
+
+    def get_taurus_stats(self) -> Dict[str, Any]:
+        """Return TAURUS memory statistics."""
+        return {
+            "working_size": self.taurus.working_size,
+            "long_term_size": self.taurus.long_term_size,
+            "capacity": self.taurus.capacity,
+            "decay_rate": self.taurus.decay_rate,
+        }
 
     def __repr__(self) -> str:
         return (
             f"SovereignNeuroCore(d_model={self.d_model}, "
             f"n_heads={self.n_heads}, "
-            f"taurus_depth={len(self.taurus_memory)})"
+            f"taurus_depth={self.taurus.working_size})"
         )
+
