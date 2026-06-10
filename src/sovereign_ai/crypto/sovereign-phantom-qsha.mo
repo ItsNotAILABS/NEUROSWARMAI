@@ -145,9 +145,9 @@ module SovereignPhantomQSHA {
     let msgLen = message.size();
     let bitLen : Nat64 = Nat64.fromNat(msgLen * 8);
 
-    // Message + 0x80 + zeros + 8 bytes length
-    let padLen = SHA256_BLOCK_SIZE - ((msgLen + 9) % SHA256_BLOCK_SIZE);
-    let totalLen = msgLen + 1 + (if (padLen == SHA256_BLOCK_SIZE) 0 else padLen) + 8;
+    // Total padded length must be multiple of 64 bytes (512 bits)
+    // Consists of: message + 1 byte (0x80) + zero padding + 8 bytes (length)
+    let totalLen = ((msgLen + 9 + SHA256_BLOCK_SIZE - 1) / SHA256_BLOCK_SIZE) * SHA256_BLOCK_SIZE;
 
     let padded = Array.init<Nat8>(totalLen, 0 : Nat8);
 
@@ -325,8 +325,8 @@ module SovereignPhantomQSHA {
     let msgLen = message.size();
     var offset = 0;
 
-    // Process full blocks
-    while (offset + rate <= msgLen) {
+    // Process full blocks (strict less-than: remaining bytes go to final padded block)
+    while (offset + rate < msgLen) {
       for (i in Iter.range(0, rate / 8 - 1)) {
         let base = offset + i * 8;
         var lane : Nat64 = 0;
@@ -460,10 +460,11 @@ module SovereignPhantomQSHA {
     result # "\""
   };
 
-  /// Float to text (basic conversion)
+  /// Float to text — integer micros representation for deterministic serialization
+  /// Limitation: loses sub-microsecond precision; NaN/Inf serialize as 0
   func floatToText(f : Float) : Text {
-    // Integer representation for determinism
-    Int.toText(Float.toInt(f * 1000000.0)) // 6 decimal places as integer
+    if (Float.isNaN(f) or not Float.isFinite(f)) return "0";
+    Int.toText(Float.toInt(f * 1000000.0))
   };
 
   /// Convert text to UTF-8 byte array

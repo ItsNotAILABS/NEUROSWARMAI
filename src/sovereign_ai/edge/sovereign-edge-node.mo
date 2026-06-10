@@ -476,7 +476,7 @@ module SovereignEdgeNode {
     };
     let stopBits : Nat32 = switch (config.stopBits) {
       case (#STOP_1) 1;
-      case (#STOP_1_5) 2; // Round up
+      case (#STOP_1_5) 2; // Rounded up for worst-case timing estimation
       case (#STOP_2) 2;
     };
 
@@ -746,12 +746,14 @@ module SovereignEdgeNode {
     buildFrame(#ATTESTATION, fleet.masterNodeId, destNode, seq, challenge)
   };
 
-  /// Build zeroize command (secure destruction)
+  /// Zeroize confirmation pattern — repeated 0xDEAD required to authorize destruction
+  let ZEROIZE_CONFIRMATION : [Nat8] = [0xDE, 0xAD, 0xDE, 0xAD, 0xDE, 0xAD, 0xDE, 0xAD];
+
+  /// Build zeroize command (secure destruction per DoD 5220.22-M)
+  /// Requires 4× 0xDEAD confirmation pattern to prevent accidental invocation
   public func buildZeroizeCommand(fleet : EdgeFleet, destNode : Nat16) : Frame {
     let seq = nextSequence(fleet);
-    // Zeroize requires confirmation pattern: 0xDEAD repeated
-    let payload : [Nat8] = [0xDE, 0xAD, 0xDE, 0xAD, 0xDE, 0xAD, 0xDE, 0xAD];
-    buildFrame(#ZEROIZE, fleet.masterNodeId, destNode, seq, payload)
+    buildFrame(#ZEROIZE, fleet.masterNodeId, destNode, seq, ZEROIZE_CONFIRMATION)
   };
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -776,11 +778,13 @@ module SovereignEdgeNode {
     }
   };
 
-  /// Compute retry delay for attempt N
+  /// Compute retry delay for attempt N (returns baseDelay for attempt 0)
   public func retryDelay(policy : RetryPolicy, attempt : Nat) : Nat32 {
     var delay = policy.baseDelayUs;
-    for (_ in Iter.range(0, attempt - 1)) {
-      delay *= Nat32.fromNat(policy.backoffMultiplier);
+    if (attempt > 0) {
+      for (_ in Iter.range(0, attempt - 1)) {
+        delay *= Nat32.fromNat(policy.backoffMultiplier);
+      };
     };
     delay
   };
