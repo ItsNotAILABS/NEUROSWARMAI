@@ -1,0 +1,108 @@
+# COMMAND PLATFORM Bridge Configuration
+# Connects MEDINA COMMAND PLATFORM to Sovereign Terminal
+
+bridge_id: "BRIDGE_COMMAND_PLATFORM"
+version: "1.0.0"
+status: "ACTIVE"
+
+source:
+  entity_id: "COMMAND_PLATFORM"
+  entity_type: "INFRASTRUCTURE_PLATFORM"
+  entity_path: "atlas/entities/command-platform.json"
+
+target:
+  terminal_id: "FREDDY_SOVEREIGN_TERMINAL"
+  terminal_type: "GOVERNANCE_ENGINE"
+
+connection:
+  protocol: "NATIVE"
+  synchronization: "PHI_BEAT"  # 873ms
+  bidirectional: true
+
+data_flow:
+  - direction: "COMMAND_PLATFORM → SOVEREIGN_TERMINAL"
+    data_types:
+      - "integration_status"
+      - "push_metrics"
+      - "platform_health"
+      - "error_rates"
+    frequency: "real_time"
+
+  - direction: "SOVEREIGN_TERMINAL → COMMAND_PLATFORM"
+    data_types:
+      - "integration_approvals"
+      - "rate_limits"
+      - "security_policies"
+      - "upgrade_schedules"
+    frequency: "on_demand"
+
+monitored_integrations:
+  - integration_id: "SLACK_PUSH_ORCHESTRATOR"
+    platform: "Slack"
+    metrics: ["push_success_rate", "latency", "error_rate"]
+
+  - integration_id: "DISCORD_PUSH_ORCHESTRATOR"
+    platform: "Discord"
+    metrics: ["push_success_rate", "latency", "error_rate"]
+
+  - integration_id: "TEAMS_PUSH_ORCHESTRATOR"
+    platform: "Microsoft Teams"
+    metrics: ["push_success_rate", "latency", "error_rate"]
+
+  - integration_id: "EMAIL_PUSH_ORCHESTRATOR"
+    platform: "Email"
+    metrics: ["delivery_rate", "latency", "bounce_rate"]
+
+  - integration_id: "VOICE_PUSH_ORCHESTRATOR"
+    platform: "Voice"
+    metrics: ["synthesis_quality", "latency", "error_rate"]
+
+  - integration_id: "WEB_PUSH_ORCHESTRATOR"
+    platform: "Web"
+    metrics: ["websocket_connections", "sse_subscribers", "push_success_rate"]
+
+governance_binding:
+  constitution: "sovereign-constitution.cpl"
+  contracts:
+    - "C-PLATFORM-001"
+
+  enforced_rules:
+    - "GP-004"  # Integration Boundaries
+    - "IR-005"  # Audit Trail
+
+security_policies:
+  allowed_protocols:
+    - "WEBHOOK"
+    - "SSE"
+    - "WEBSOCKET"
+    - "SMTP"
+    - "WEBRTC"
+
+  forbidden_protocols:
+    - "PULL"
+    - "POLLING"
+    - "SCRAPING"
+
+  rate_limits:
+    default: 1000  # requests per minute
+    burst: 100     # burst allowance
+
+  authentication:
+    required: true
+    methods: ["API_KEY", "OAUTH", "JWT"]
+
+alerts:
+  integration_failure:
+    threshold: 0.5  # 50% success rate
+    action: "ALERT_AND_INVESTIGATE"
+
+  high_latency:
+    threshold: 5000  # 5 seconds
+    action: "SCALE_RESOURCES"
+
+  security_breach:
+    severity: "CRITICAL"
+    action: "EMERGENCY_SHUTDOWN"
+
+created: "2026-05-02T00:00:00Z"
+last_updated: "2026-05-02T00:00:00Z"

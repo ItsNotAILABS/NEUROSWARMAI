@@ -1,0 +1,100 @@
+{
+  "scalability_results": [
+    {
+      "test": "kuramoto_50steps",
+      "n_nodes": 10,
+      "elapsed_ms": 0.776,
+      "metric": 0.349377
+    },
+    {
+      "test": "kuramoto_50steps",
+      "n_nodes": 50,
+      "elapsed_ms": 13.047,
+      "metric": 0.058056
+    },
+    {
+      "test": "kuramoto_50steps",
+      "n_nodes": 100,
+      "elapsed_ms": 52.093,
+      "metric": 0.107174
+    },
+    {
+      "test": "kuramoto_50steps",
+      "n_nodes": 200,
+      "elapsed_ms": 207.865,
+      "metric": 0.114197
+    },
+    {
+      "test": "kuramoto_50steps",
+      "n_nodes": 500,
+      "elapsed_ms": 1358.93,
+      "metric": 0.047258
+    },
+    {
+      "test": "hebbian_update",
+      "n_nodes": 10,
+      "elapsed_ms": 0.013,
+      "metric": 0.000333
+    },
+    {
+      "test": "hebbian_update",
+      "n_nodes": 50,
+      "elapsed_ms": 0.246,
+      "metric": 0.000374
+    },
+    {
+      "test": "hebbian_update",
+      "n_nodes": 100,
+      "elapsed_ms": 1.002,
+      "metric": 0.000398
+    },
+    {
+      "test": "hebbian_update",
+      "n_nodes": 200,
+      "elapsed_ms": 3.899,
+      "metric": 0.000402
+    },
+    {
+      "test": "hebbian_update",
+      "n_nodes": 500,
+      "elapsed_ms": 28.159,
+      "metric": 0.000416
+    },
+    {
+      "test": "network_creation",
+      "n_nodes": 20,
+      "elapsed_ms": 0.174,
+      "metric": 20.0
+    },
+    {
+      "test": "network_creation",
+      "n_nodes": 50,
+      "elapsed_ms": 0.629,
+      "metric": 50.0
+    },
+    {
+      "test": "network_creation",
+      "n_nodes": 100,
+      "elapsed_ms": 2.135,
+      "metric": 100.0
+    },
+    {
+      "test": "network_creation",
+      "n_nodes": 200,
+      "elapsed_ms": 7.231,
+      "metric": 200.0
+    },
+    {
+      "test": "network_creation",
+      "n_nodes": 500,
+      "elapsed_ms": 41.384,
+      "metric": 500.0
+    },
+    {
+      "test": "kuramoto_10k_projection",
+      "n_nodes": 10000,
+      "elapsed_ms": 202591.138,
+      "metric": 202.591138
+    }
+  ]
+}

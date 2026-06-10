@@ -1,0 +1,27 @@
+# EXL Specification v1.0.0
+# Experiment Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "EXL"
+title: "Experiment Language"
+description: "Running experiments and accepting risk: hypotheses, probes, kill-switches, learnings"
+
+core_concepts:
+  hypothesis: "Testable prediction"
+  probe: "Small-scale test"
+  kill_switch: "Safety abort mechanism"
+  learning: "Knowledge gained from experiment"
+
+experiment_phases:
+  - DESIGN
+  - SETUP
+  - EXECUTE
+  - OBSERVE
+  - ANALYZE
+  - CONCLUDE
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

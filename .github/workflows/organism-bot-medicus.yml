@@ -1,0 +1,206 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-003 · MEDICUS — Medicus et Reparator
+# Sovereign Organism Auto-Fix Bot
+#
+# Runs every 6 hours and on issues labeled 'bug'. Repairs lockfile drift,
+# fixes broken JSON configs, and applies any available lint/format fixes.
+# Opens a PR with all repairs via peter-evans/create-pull-request, never
+# pushing directly to main.
+#
+# Schedule: Every 6 hours at :21 past the hour  (Fibonacci-aligned)
+# Triggers: schedule · workflow_dispatch · issues (labeled bug) · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-003 · MEDICUS — Auto-Fixer"
+
+on:
+  schedule:
+    - cron: "21 */6 * * *"   # Every 6 hours at :21
+  workflow_dispatch:
+  issues:
+    types: [labeled]
+  workflow_call:
+    outputs:
+      status:
+        description: "Fix status: success | no-changes | failure"
+        value: ${{ jobs.fix.outputs.status }}
+      summary:
+        description: "Human-readable fix summary"
+        value: ${{ jobs.fix.outputs.summary }}
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  fix:
+    name: "MEDICUS — Organism Auto-Fix"
+    runs-on: ubuntu-latest
+    # On 'issues' event, only run if labeled 'bug'
+    if: |
+      github.event_name != 'issues' ||
+      github.event.label.name == 'bug'
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[MEDICUS] Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Node + pnpm ────────────────────────────────────────────────────────
+      - name: "[MEDICUS] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[MEDICUS] Setup pnpm 10"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # ── Fix 1: Lockfile drift ──────────────────────────────────────────────
+      - name: "[MEDICUS] Fix lockfile drift (pnpm install)"
+        id: lockfix
+        run: |
+          pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/lockfix.log
+          if git diff --quiet pnpm-lock.yaml 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No lockfile changes needed."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Lockfile drift fixed."
+          fi
+        continue-on-error: true
+
+      # ── Fix 2: Run pnpm fix (lint/format) ─────────────────────────────────
+      - name: "[MEDICUS] Run pnpm fix (lint + format)"
+        id: lintfix
+        run: |
+          pnpm run fix 2>&1 | tee /tmp/lintfix.log || true
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Fix 3: Validate + auto-fix JSON configs ────────────────────────────
+      - name: "[MEDICUS] Validate JSON configs"
+        id: jsonfix
+        run: |
+          FIXED=0
+          ERRORS=""
+          for f in $(find . -name "*.json" \
+                -not -path "*/node_modules/*" \
+                -not -path "*/.git/*" \
+                -not -path "*/dist/*" \
+                -not -path "*/.pnpm-store/*"); do
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/tmp/jerr || {
+              ERRORS="${ERRORS}\n  ✗ $f: $(cat /tmp/jerr)"
+            }
+          done
+          if [ -n "$ERRORS" ]; then
+            echo "json_errors<<EOF" >> $GITHUB_OUTPUT
+            printf "%b" "${ERRORS}" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "json_ok=false" >> $GITHUB_OUTPUT
+          else
+            echo "json_ok=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Fix 4: Remove trailing whitespace in worker files ──────────────────
+      - name: "[MEDICUS] Remove trailing whitespace (organism workers)"
+        id: whitespace
+        run: |
+          find organism/ -name "*.js" \
+            -not -path "*/node_modules/*" \
+            -exec sed -i 's/[[:space:]]*$//' {} +
+          if git diff --quiet organism/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Trailing whitespace removed."
+          fi
+        continue-on-error: true
+
+      # ── Gather all changes ─────────────────────────────────────────────────
+      - name: "[MEDICUS] Gather change summary"
+        id: changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only | head -50)
+          COUNT=$(git diff --name-only | wc -l | tr -d ' ')
+          if [ "$COUNT" = "0" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "count=${COUNT}" >> $GITHUB_OUTPUT
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "${CHANGED_FILES}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Open PR with fixes ─────────────────────────────────────────────────
+      - name: "[MEDICUS] Create auto-fix PR"
+        if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'workflow_call'
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[MEDICUS] Auto-fix: ${{ steps.changes.outputs.count }} file(s) repaired"
+          branch: organism-bot/medicus-autofix
+          delete-branch: true
+          title: "[MEDICUS] Auto-fix — ${{ steps.changes.outputs.count }} file(s) repaired"
+          body: |
+            ## 🩺 [MEDICUS] Organism Auto-Fix Report
+
+            **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            **Triggered by:** ${{ github.event_name }}
+
+            ### Repairs Applied
+
+            | Fix | Status |
+            |-----|--------|
+            | Lockfile drift | ${{ steps.lockfix.outputs.changed == 'true' && '✅ Fixed' || '➖ No change' }} |
+            | Lint / Format | ${{ steps.lintfix.outputs.changed == 'true' && '✅ Fixed' || '➖ No change' }} |
+            | JSON configs | ${{ steps.jsonfix.outputs.json_ok == 'true' && '✅ Valid' || '⚠️ Errors found (manual fix needed)' }} |
+            | Trailing whitespace | ${{ steps.whitespace.outputs.changed == 'true' && '✅ Fixed' || '➖ No change' }} |
+
+            ### Changed Files (${{ steps.changes.outputs.count }})
+            ```
+            ${{ steps.changes.outputs.files }}
+            ```
+
+            ### JSON Validation Errors (if any)
+            ```
+            ${{ steps.jsonfix.outputs.json_errors }}
+            ```
+
+            ---
+            *Auto-generated by BOT-003 · MEDICUS — Medicus et Reparator*
+          labels: |
+            organism-bot
+            auto-fix
+          draft: false
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[MEDICUS] Compute fix status"
+        id: set-output
+        run: |
+          if [ "${{ steps.changes.outputs.has_changes }}" = "true" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "summary=✅ MEDICUS repaired ${{ steps.changes.outputs.count }} file(s) — PR opened on organism-bot/medicus-autofix" >> $GITHUB_OUTPUT
+          else
+            echo "status=no-changes" >> $GITHUB_OUTPUT
+            echo "summary=➖ MEDICUS: organism is healthy, no repairs needed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[MEDICUS] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

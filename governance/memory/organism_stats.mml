@@ -1,0 +1,49 @@
+# ══════════════════════════════════════════════════════════════════
+#  GOVERNANCE MEMORY — Organism Health Statistics
+#  Format: MML (Metrics & Monitoring Language)
+#  Populated by OrganismRuntime.jl self-check loops.
+#  Tracks: drive levels, stress, PIL patterns, RIL repairs.
+# ══════════════════════════════════════════════════════════════════
+
+metrics:
+  - id: organism_health_score
+    description: "φ-weighted composite health score per organism"
+    unit: score
+  - id: organism_stress_level
+    description: "Current stress level per organism"
+    unit: ratio
+  - id: organism_drive_stability
+    description: "Stability drive level"
+    unit: ratio
+  - id: organism_drive_exploration
+    description: "Exploration drive level"
+    unit: ratio
+  - id: organism_drive_safety
+    description: "Safety drive level"
+    unit: ratio
+  - id: organism_pil_pattern_count
+    description: "Number of active PIL patterns detected"
+    unit: count
+  - id: organism_ril_pending_count
+    description: "Number of pending RIL repair actions"
+    unit: count
+
+alerts:
+  - id: organism_critical_stress
+    metric: organism_stress_level
+    condition: "> 0.8"
+  - id: organism_low_health
+    metric: organism_health_score
+    condition: "< 0.4"
+  - id: pil_pattern_accumulation
+    metric: organism_pil_pattern_count
+    condition: ">= 3"
+
+dashboards:
+  - id: organism_fleet_health
+    widgets:
+      - organism_health_heatmap
+      - organism_stress_trend
+      - organism_drive_radar
+      - pil_pattern_timeline
+      - ril_repair_queue

@@ -1,0 +1,70 @@
+// Candid interface for the Meridianus Security Adapter canister.
+// Any language supported by the ICP agent library can call this canister
+// using this interface: Motoko, Rust, JavaScript/TypeScript, Python, etc.
+//
+// Canister ID: set after first deploy with `dfx deploy security_adapter`
+//              then run `dfx canister id security_adapter`
+
+type SecurityVerdict = record {
+  allowed    : bool;
+  score      : float64;
+  reason     : text;
+  callerRate : nat;
+  layer      : text;
+};
+
+type SecurityStatus = record {
+  totalChecked  : nat64;
+  totalAllowed  : nat64;
+  totalRejected : nat64;
+  blacklistSize : nat;
+  activeCallers : nat;
+  coherence     : float64;
+  gateOpen      : bool;
+  phiInv        : float64;
+  doctrine      : text;
+};
+
+type Thresholds = record {
+  maxRate               : nat;
+  windowSeconds         : nat;
+  phiInv                : float64;
+  botFlagThreshold      : nat;
+  blacklistDurationMins : nat;
+  fibonacciSequence     : text;
+};
+
+service : {
+  // ── PRIMARY ──────────────────────────────────────────────────────────────
+  // Check if the calling principal passes the security gate.
+  // Call this at the top of any function you want to protect.
+  checkCaller : () -> (SecurityVerdict);
+
+  // Lightweight rate-only check (no phi-scoring overhead).
+  rateCheck : () -> (record { allowed : bool; count : nat; maxAllowed : nat });
+
+  // Report a suspicious principal discovered in your own system.
+  // 21 reports (from any source) triggers an automatic 10-min blacklist.
+  reportBot : (principal, text) -> (record { accepted : bool });
+
+  // ── QUERIES (free, no cycles) ─────────────────────────────────────────────
+  // Check if a specific principal is currently blacklisted.
+  isBlocked : (principal) -> (bool) query;
+
+  // Full system metrics for dashboards and monitoring.
+  getStatus : () -> (SecurityStatus) query;
+
+  // Returns the phi-security thresholds (for UI display / docs).
+  getThresholds : () -> (Thresholds) query;
+
+  // ── ADMIN ─────────────────────────────────────────────────────────────────
+  // Close the gate (all callers rejected, zero cycles consumed via inspect_message).
+  // Open it again with setGate(true).
+  setGate : (bool) -> ();
+
+  // Remove a principal from the blacklist.
+  unblock : (principal) -> (record { removed : bool });
+
+  // Clear a principal's rate + flag count.
+  resetCaller : (principal) -> (record { removed : bool });
+}

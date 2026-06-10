@@ -1,0 +1,26 @@
+# SIL Specification v1.0.0
+# Self-Identity Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "SIL"
+title: "Self-Identity Language"
+description: "'Who am I?' across roles and contexts - founder, architect, teacher, trickster, organism"
+
+core_concepts:
+  identity: "Sense of continuous self across contexts"
+  role: "Context-specific manifestation of self"
+  essence: "Core unchanging aspects"
+  facet: "Situational expressions"
+
+identity_dimensions:
+  - PROFESSIONAL
+  - PERSONAL
+  - CREATIVE
+  - SOCIAL
+  - SPIRITUAL
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

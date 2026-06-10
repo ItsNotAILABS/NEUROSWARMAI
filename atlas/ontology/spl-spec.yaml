@@ -1,0 +1,297 @@
+# SPL Specification v1.0.0
+# Study Pattern Language - Personal Learning Blueprints
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "SPL"
+title: "Study Pattern Language"
+description: "Personal learning blueprints defining how a specific student learns: modalities, pacing, repetition patterns, scaffolding preferences"
+
+core_concepts:
+  learning_profile: "Comprehensive model of individual learning characteristics"
+  modality_preference: "Preferred sensory channels for information intake"
+  pacing: "Optimal speed and rhythm of learning"
+  repetition_pattern: "How and when review reinforces learning"
+  scaffolding: "Support structures that facilitate understanding"
+
+profile_structure:
+  student_id: "unique identifier"
+  profile_version: "semantic version"
+  last_updated: "ISO 8601 timestamp"
+  learning_history: "summary of past performance and patterns"
+  current_level: "overall mastery across subjects"
+  growth_trajectory: "projected development path"
+
+modality_preferences:
+  VISUAL:
+    weight: 0.0-1.0
+    subtypes:
+      spatial: "diagrams, mind maps, spatial relationships"
+      linguistic: "written text, labels, captions"
+      pictorial: "images, illustrations, infographics"
+    optimal_media: ["diagrams", "flowcharts", "animations", "color-coding"]
+
+  AUDITORY:
+    weight: 0.0-1.0
+    subtypes:
+      linguistic: "lectures, discussions, explanations"
+      musical: "rhythm, melody, musical mnemonics"
+    optimal_media: ["podcasts", "discussions", "read-aloud", "audio summaries"]
+
+  KINESTHETIC:
+    weight: 0.0-1.0
+    subtypes:
+      tactile: "hands-on manipulation, physical models"
+      movement: "learning through motion, gestures"
+    optimal_media: ["simulations", "interactive exercises", "physical experiments"]
+
+  READING_WRITING:
+    weight: 0.0-1.0
+    subtypes:
+      note_taking: "written notes, summaries"
+      composition: "essays, reports, creative writing"
+    optimal_media: ["textbooks", "articles", "writing assignments"]
+
+pacing_profile:
+  base_pace:
+    tokens_per_minute: "information processing rate"
+    optimal_session_length: "minutes before effectiveness drops"
+    break_frequency: "minutes between breaks"
+    break_duration: "minutes per break"
+
+  adjustment_factors:
+    complexity_modifier:
+      SIMPLE: 1.0
+      MODERATE: 0.7
+      COMPLEX: 0.5
+      DEEP: 0.3
+
+    time_of_day:
+      morning: 1.0
+      midday: 0.8
+      afternoon: 0.9
+      evening: 0.7
+      night: 0.5
+
+    cognitive_load:
+      low: 1.0
+      medium: 0.8
+      high: 0.6
+      overwhelmed: 0.3
+
+  phi_synchronized_breaks:
+    enabled: true
+    break_after: "F11 beats (89 * 873ms = ~77.7s) of focused work"
+    break_duration: "F8 beats (21 * 873ms = ~18.3s)"
+
+repetition_patterns:
+  spaced_repetition:
+    algorithm: "Modified SM-2 with φ-intervals"
+    intervals:
+      first_review: "873ms (1 PHI_BEAT)"
+      second_review: "F8 beats (21 * 873ms = ~18.3s)"
+      third_review: "F11 beats (89 * 873ms = ~77.7s)"
+      fourth_review: "F13 beats (233 * 873ms = ~3.4min)"
+      fifth_review: "F17 beats (1597 * 873ms = ~23.2min)"
+      sixth_review: "F21 beats (10946 * 873ms = ~2.6hr)"
+
+    difficulty_adjustment:
+      too_easy: "multiply interval by PHI (1.618)"
+      just_right: "keep interval"
+      too_hard: "divide interval by PHI"
+
+  interleaving:
+    enabled: true
+    pattern: "ABACADAE... (mix topics)"
+    topic_switch_frequency: "every F8 items"
+
+  elaboration:
+    self_explanation: "prompt student to explain concepts"
+    analogy_generation: "connect to known concepts"
+    application_examples: "use in novel contexts"
+
+  retrieval_practice:
+    frequency: "F11 beats after initial learning"
+    format: "flashcards, quizzes, problems"
+    difficulty_progression: "easy → medium → hard"
+
+scaffolding_preferences:
+  worked_examples:
+    preference_strength: 0.0-1.0
+    fade_strategy: "Gradually remove steps as mastery increases"
+    optimal_ratio: "2:1 (examples:practice)"
+
+  hints_and_prompts:
+    preference_strength: 0.0-1.0
+    hint_levels:
+      conceptual: "big picture guidance"
+      strategic: "approach suggestions"
+      tactical: "specific step hints"
+    progressive_revelation: "start conceptual, get more specific"
+
+  peer_collaboration:
+    preference_strength: 0.0-1.0
+    optimal_group_size: 2-4
+    role_preferences: ["leader", "contributor", "observer", "alternating"]
+
+  instructor_guidance:
+    preference_strength: 0.0-1.0
+    interaction_style: ["Socratic", "direct_instruction", "coaching"]
+    feedback_timing: "immediate vs delayed"
+
+metacognitive_integration:
+  self_monitoring:
+    frequency: "every F11 beats"
+    prompts:
+      - "Do I understand this?"
+      - "What's still confusing?"
+      - "How does this connect to what I know?"
+
+  strategy_selection:
+    awareness: "Know multiple learning strategies"
+    selection: "Choose strategy based on task and context"
+    adjustment: "Switch strategies if current one isn't working"
+
+  self_evaluation:
+    frequency: "after each study session"
+    metrics: ["mastery gained", "effort expended", "enjoyment level"]
+    reflection: "What worked? What didn't? Why?"
+
+error_response_pattern:
+  initial_reaction:
+    GROWTH_MINDSET:
+      response: "Mistakes are learning opportunities"
+      persistence: HIGH
+
+    FIXED_MINDSET:
+      response: "Mistakes mean I'm not smart"
+      persistence: LOW
+
+    MIXED:
+      response: "Depends on subject and context"
+      persistence: VARIABLE
+
+  recovery_strategy:
+    immediate:
+      - "Review the error"
+      - "Identify misconception"
+      - "Seek clarification"
+
+    delayed:
+      - "Return after break"
+      - "Try different approach"
+      - "Seek help if still stuck"
+
+motivation_profile:
+  intrinsic_motivators:
+    - "Curiosity and interest in subject"
+    - "Desire to master skills"
+    - "Enjoyment of learning process"
+
+  extrinsic_motivators:
+    - "Grades and recognition"
+    - "Future career goals"
+    - "Parental/teacher approval"
+
+  optimal_motivation_mix:
+    intrinsic_weight: 0.0-1.0
+    extrinsic_weight: 0.0-1.0
+
+  engagement_triggers:
+    - "Real-world applications"
+    - "Gamification elements"
+    - "Progress visualization"
+    - "Choice and autonomy"
+
+attention_and_focus:
+  attention_span:
+    sustained_focus: "minutes without distraction"
+    recovery_time: "minutes to regain focus after interruption"
+
+  distraction_susceptibility:
+    internal: "mind wandering, daydreaming"
+    external: "noise, notifications, people"
+
+  focus_strategies:
+    - "Pomodoro technique (φ-beat variant)"
+    - "Environment modification"
+    - "Mindfulness practices"
+
+prior_knowledge_integration:
+  knowledge_activation:
+    strategy: "Begin with what student already knows"
+    connection_prompts: "How does this relate to X?"
+
+  misconception_handling:
+    detection: "Assess prior knowledge for errors"
+    correction: "Explicitly address misconceptions"
+    monitoring: "Check for resurgence of misconceptions"
+
+  schema_building:
+    organization: "Help student build mental models"
+    chunking: "Group related concepts"
+    hierarchies: "Understand relationships between concepts"
+
+adaptive_difficulty:
+  current_level: 0.0-1.0  # 0=novice, 1=expert
+  optimal_challenge: "slightly above current level (Vygotsky's ZPD)"
+
+  difficulty_bands:
+    too_easy: "success_rate > 0.95"
+    optimal: "success_rate 0.7-0.85"
+    too_hard: "success_rate < 0.5"
+
+  adjustment_mechanism:
+    increase_difficulty: "if too_easy for F8 consecutive items"
+    decrease_difficulty: "if too_hard for F5 consecutive items"
+
+integration_with_other_languages:
+  EDL: "Institutional requirements constrain learning paths"
+  PWL: "Learning patterns inform long-term pathways"
+  TSL: "Tools are customized to learning patterns"
+  RSL: "Learning realms implement these patterns"
+  CIL: "Student expresses learning experience internally"
+  CDL: "Pedagogical doctrine shapes approaches"
+
+example_student_profile:
+  student_id: "STU-12345"
+  name: "Alex Learner"
+  profile_version: "2.1.3"
+
+  modalities:
+    VISUAL: 0.8
+    AUDITORY: 0.5
+    KINESTHETIC: 0.7
+    READING_WRITING: 0.6
+
+  pacing:
+    tokens_per_minute: 120
+    optimal_session_length: 45
+    break_frequency: 20
+    break_duration: 5
+
+  repetition:
+    spaced_repetition: true
+    interleaving: true
+    retrieval_practice_frequency: "F11"
+
+  scaffolding:
+    worked_examples: 0.8
+    hints_and_prompts: 0.6
+    peer_collaboration: 0.7
+    instructor_guidance: 0.5
+
+  motivation:
+    intrinsic_weight: 0.7
+    extrinsic_weight: 0.3
+    primary_motivator: "Curiosity"
+
+  current_level: 0.65  # intermediate
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  research_basis: ["Cognitive science", "Educational psychology", "Learning sciences"]
+  phi_synchronized: true

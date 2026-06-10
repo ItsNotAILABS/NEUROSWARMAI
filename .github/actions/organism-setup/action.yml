@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# organism-setup — Reusable Composite Action
+# Standard environment setup for all Organism Bill Bots
+#
+# Provides: actions/checkout@v4 + actions/setup-node@v4 (Node 20) +
+#           pnpm/action-setup@v4 (pnpm 10, optional)
+#
+# Usage in any bot workflow:
+#   - uses: ./.github/actions/organism-setup
+#     with:
+#       fetch-depth: '0'          # default: '1'
+#       install-pnpm: 'true'      # default: 'false'
+#       install-deps: 'true'      # default: 'false' (requires install-pnpm: true)
+#
+# Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez
+# ═══════════════════════════════════════════════════════════════════════════
+name: 'Organism Setup'
+description: 'Standard checkout + Node 20 + optional pnpm 10 setup for all Organism Bill Bots'
+
+inputs:
+  fetch-depth:
+    description: 'Number of commits to fetch (0 = full history)'
+    required: false
+    default: '1'
+  install-pnpm:
+    description: 'Whether to install pnpm 10'
+    required: false
+    default: 'false'
+  install-deps:
+    description: 'Whether to run pnpm install (requires install-pnpm: true)'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: '[ORGANISM] Checkout repository'
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: '[ORGANISM] Setup Node 20'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: '[ORGANISM] Setup pnpm 10'
+      if: inputs.install-pnpm == 'true'
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: '[ORGANISM] Install dependencies'
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: pnpm install --no-frozen-lockfile

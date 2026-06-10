@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-06-10T07:41:50.651Z",
+  "metrics": {
+    "bot_fleet.health_ratio": 1,
+    "bot_fleet.total_count": 9,
+    "bot_fleet.policy_compliance": 1,
+    "bot_fleet.missing_count": 0,
+    "topology.orphans": 84,
+    "topology.dead_links": 0,
+    "topology.graph_centrality_max": 11,
+    "topology.graph_nodes": 185,
+    "topology.graph_edges": 312,
+    "topology.graph_density": 0.009165687426556992,
+    "topology.cycles_detected": 0,
+    "topology.max_depth": 5
+  }
+}

@@ -1,0 +1,50 @@
+# EDL Specification v1.0.0
+# Educational Doctrine Language - School Requirements
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "EDL"
+title: "Educational Doctrine Language"
+description: "School and subject doctrine language defining institutional requirements, standards, competencies, graduation paths, and constraints"
+
+core_concepts:
+  institution: "School, program, or educational organization"
+  standards: "Learning objectives and performance benchmarks"
+  competencies: "Skills and knowledge students must demonstrate"
+  requirements: "Mandatory coursework and assessments"
+  graduation_criteria: "Conditions for program completion"
+
+institution_profile:
+  institution_id: STRING
+  name: STRING
+  type: "K12 | HIGHER_ED | VOCATIONAL | ONLINE | CUSTOM"
+  accreditation: ARRAY[STRING]
+  philosophy: "Educational approach and values"
+
+standards_framework:
+  standard_id: STRING
+  domain: "MATH | SCIENCE | LANGUAGE | ARTS | SOCIAL | TECHNICAL"
+  grade_level: "K-12, UNDERGRAD, GRAD, or custom"
+  description: STRING
+  bloom_level: "REMEMBER | UNDERSTAND | APPLY | ANALYZE | EVALUATE | CREATE"
+  mastery_threshold: 0.0-1.0
+
+competency_definitions:
+  competency_id: STRING
+  name: STRING
+  related_standards: ARRAY[STRING]
+  assessment_methods: ARRAY[STRING]
+  proficiency_levels: ["NOVICE", "COMPETENT", "PROFICIENT", "EXPERT"]
+
+graduation_requirements:
+  credits_required: NUMBER
+  required_courses: ARRAY[COURSE_ID]
+  elective_options: ARRAY[COURSE_ID]
+  assessment_requirements: ARRAY[STRING]
+  time_constraints: "minimum/maximum duration"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

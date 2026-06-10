@@ -1,0 +1,25 @@
+# ROL Specification v1.0.0
+# Role Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "ROL"
+title: "Role Language"
+description: "How roles are defined, swapped, merged: 'Today this agent is a critic; tomorrow it's a builder'"
+
+core_concepts:
+  role: "Set of behaviors and responsibilities"
+  role_transition: "Switching between roles"
+  role_fusion: "Combining multiple roles"
+
+common_roles:
+  - CREATOR
+  - CRITIC
+  - EXECUTOR
+  - OBSERVER
+  - FACILITATOR
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

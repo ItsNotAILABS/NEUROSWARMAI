@@ -1,0 +1,26 @@
+# FRL Specification v1.0.0
+# Fringe Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "FRL"
+title: "Fringe Language"
+description: "How the weirdest stuff is cataloged: phantom architectures, auto-encryption, night crawlers"
+
+core_concepts:
+  fringe: "Edge of understanding or normality"
+  phantom: "Ghost in the machine"
+  anomaly: "Unexplained phenomenon"
+  mystery: "Unsolved puzzle"
+
+fringe_categories:
+  - PHANTOM_CODE: "Code that appears unbidden"
+  - AUTO_ENCRYPTION: "Spontaneous encoding"
+  - NIGHT_CRAWLER: "Processes active in off-hours"
+  - GLITCH_ART: "Beautiful accidents"
+  - EMERGENT_BEHAVIOR: "Unplanned capabilities"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

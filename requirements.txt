@@ -1,0 +1,11 @@
+# CHIMERIA Nova — Python dependencies
+# No external runtime dependencies required (pure Python SDK)
+# Optional dependencies listed below for extended functionality
+
+# Development / Build
+setuptools>=68.0
+wheel
+build
+
+# Phantom QSHA — Cryptographic primitives
+cryptography>=46.0.5

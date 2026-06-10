@@ -1,0 +1,88 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MERIDIANUS — Content Script Styles
+   Floating Action Button with orbital glow
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+#meridianus-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #111113 0%, #0a0a0b 100%);
+  border: 2px solid #22d3ee;
+  color: #22d3ee;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 2px 16px rgba(34, 211, 238, 0.2),
+    0 0 40px rgba(34, 211, 238, 0.05);
+  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  overflow: visible;
+}
+
+#meridianus-fab .fab-letter {
+  font-size: 20px;
+  font-weight: 800;
+  z-index: 2;
+  position: relative;
+  line-height: 1;
+}
+
+#meridianus-fab .fab-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(34, 211, 238, 0.3);
+  animation: fab-orbit 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes fab-orbit {
+  0% { transform: rotate(0deg); border-color: rgba(34, 211, 238, 0.4); }
+  25% { border-color: rgba(34, 211, 238, 0.15); }
+  50% { transform: rotate(180deg); border-color: rgba(34, 211, 238, 0.4); }
+  75% { border-color: rgba(34, 211, 238, 0.15); }
+  100% { transform: rotate(360deg); border-color: rgba(34, 211, 238, 0.4); }
+}
+
+#meridianus-fab:hover {
+  box-shadow:
+    0 0 24px rgba(34, 211, 238, 0.4),
+    0 0 60px rgba(34, 211, 238, 0.15);
+  transform: scale(1.1);
+  border-color: #67e8f9;
+}
+
+#meridianus-fab:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+}
+
+/* Pulse animation on first load */
+@keyframes meridianus-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5); }
+  70% { box-shadow: 0 0 0 16px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+
+#meridianus-fab.meridianus-pulse {
+  animation: meridianus-pulse 2s ease-out 3;
+}
+
+/* Legacy support — hide old FAB if present */
+#jarvis-fab {
+  display: none !important;
+}

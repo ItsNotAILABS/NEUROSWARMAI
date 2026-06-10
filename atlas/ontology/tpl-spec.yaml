@@ -1,0 +1,363 @@
+# TPL Specification v1.0.0
+# Terminal Protocol Language - Terminal Communication
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "TPL"
+title: "Terminal Protocol Language"
+description: "Terminal command and event language defining how Cognitive Terminals communicate with Atlas, each other, and the Sovereign Terminal"
+
+core_concepts:
+  terminal: "A cognitive processing endpoint (Alpha terminal, Sovereign terminal, etc.)"
+  protocol: "Structured communication pattern"
+  message: "Unit of communication between terminals"
+  handshake: "Mutual acknowledgment and synchronization"
+  broadcast: "One-to-many communication"
+
+message_structure:
+  message_id: "unique identifier (UUID)"
+  timestamp: "ISO 8601 timestamp + PHI_BEAT phase"
+  from_terminal: "sender terminal ID"
+  to_terminal: "recipient terminal ID or 'BROADCAST'"
+  message_type: "COMMAND | QUERY | EVENT | RESPONSE | ACK"
+  priority: "CRITICAL | HIGH | NORMAL | LOW"
+  payload: "type-specific data"
+  signature: "cryptographic verification (optional)"
+
+message_types:
+  COMMAND:
+    description: "Request for terminal to perform action"
+    requires_response: true
+    timeout: "configurable, default 5000ms"
+    examples:
+      - SCAN_COMPONENTS
+      - EXECUTE_TASK
+      - ENTER_SAFE_MODE
+      - SYNC_PHASE
+
+  QUERY:
+    description: "Request for information from terminal"
+    requires_response: true
+    timeout: "configurable, default 2000ms"
+    examples:
+      - GET_STATUS
+      - GET_COHERENCE
+      - GET_TOKEN_BALANCE
+      - GET_TASK_QUEUE
+
+  EVENT:
+    description: "Notification of something that occurred"
+    requires_response: false
+    broadcast_capable: true
+    examples:
+      - COHERENCE_DROP
+      - TASK_COMPLETED
+      - VIOLATION_DETECTED
+      - PHASE_SYNC_ACHIEVED
+
+  RESPONSE:
+    description: "Reply to COMMAND or QUERY"
+    requires_response: false
+    references: "original message_id"
+    examples:
+      - SUCCESS(data)
+      - ERROR(code, message)
+      - DATA(payload)
+
+  ACK:
+    description: "Simple acknowledgment of receipt"
+    requires_response: false
+    references: "acknowledged message_id"
+
+communication_patterns:
+  REQUEST_RESPONSE:
+    flow:
+      1: "Terminal A sends COMMAND/QUERY to Terminal B"
+      2: "Terminal B processes request"
+      3: "Terminal B sends RESPONSE to Terminal A"
+    timeout_handling: "If no response within timeout, retry or escalate"
+
+  FIRE_AND_FORGET:
+    flow:
+      1: "Terminal A sends EVENT"
+      2: "Recipients process asynchronously"
+    no_guarantee: "Best effort delivery, no confirmation"
+
+  PUBLISH_SUBSCRIBE:
+    flow:
+      1: "Terminal subscribes to event types"
+      2: "Publishers send events"
+      3: "Subscribers receive matching events"
+    topics: "EVENT_TYPE + optional filters"
+
+  HANDSHAKE:
+    flow:
+      1: "Terminal A sends HELLO to Terminal B"
+      2: "Terminal B sends HELLO_ACK with capabilities"
+      3: "Terminal A sends SYNC to align PHI_BEAT"
+      4: "Terminal B sends SYNC_ACK"
+      5: "Communication channel established"
+
+core_protocols:
+  STATUS_PROTOCOL:
+    command: "GET_STATUS"
+    response:
+      terminal_id: STRING
+      status: "ACTIVE | IDLE | BUSY | SAFE_MODE | OFFLINE"
+      coherence: FLOAT
+      phi_phase: FLOAT
+      token_balance: INTEGER
+      active_tasks: INTEGER
+      uptime: DURATION
+
+  TASK_PROTOCOL:
+    command: "EXECUTE_TASK"
+    payload:
+      task_id: STRING
+      task_type: STRING
+      complexity: "SIMPLE | MODERATE | COMPLEX | DEEP"
+      input_data: OBJECT
+      deadline: TIMESTAMP
+
+    response:
+      task_id: STRING
+      status: "ACCEPTED | REJECTED | QUEUED"
+      estimated_completion: TIMESTAMP
+      token_cost: INTEGER
+
+  SYNC_PROTOCOL:
+    command: "SYNC_PHASE"
+    payload:
+      target_phase: FLOAT  # radians
+      sync_time: TIMESTAMP
+
+    response:
+      current_phase: FLOAT
+      phase_error: FLOAT
+      sync_achieved: BOOLEAN
+
+  GOVERNANCE_PROTOCOL:
+    command: "CONSTITUTIONAL_CHECK"
+    payload:
+      check_type: "FULL | INCREMENTAL"
+      scope: "SELF | ALL | SPECIFIC[entity_ids]"
+
+    response:
+      violations: ARRAY[VIOLATION]
+      compliance_score: FLOAT
+      recommendations: ARRAY[STRING]
+
+  UPGRADE_PROTOCOL:
+    command: "PROPOSE_UPGRADE"
+    payload:
+      component_id: STRING
+      current_version: VERSION
+      target_version: VERSION
+      justification: STRING
+
+    response:
+      approval_status: "APPROVED | DENIED | REQUIRES_CONSENSUS"
+      reason: STRING
+      vote_required: BOOLEAN
+
+  COLLABORATION_PROTOCOL:
+    command: "REQUEST_COLLABORATION"
+    payload:
+      task_description: STRING
+      required_capabilities: ARRAY[STRING]
+      token_offered: INTEGER
+      deadline: TIMESTAMP
+
+    response:
+      status: "ACCEPTED | DECLINED | COUNTER_OFFER"
+      availability: TIMESTAMP
+      token_requested: INTEGER
+
+phi_synchronized_communication:
+  timing:
+    base_tick: 873  # PHI_BEAT milliseconds
+    message_slots: "Messages sent at tick boundaries"
+    priority_lanes: "CRITICAL messages jump queue"
+
+  phase_alignment:
+    check_frequency: "every tick"
+    correction_mechanism: "Kuramoto coupling adjustment"
+    max_phase_error: 0.1  # radians
+
+  heartbeat:
+    frequency: "every PHI_BEAT"
+    message: "HEARTBEAT(terminal_id, coherence, phi_phase)"
+    timeout: "If no heartbeat for 3 * PHI_BEAT, terminal presumed offline"
+
+addressing_and_routing:
+  direct_addressing:
+    format: "TERMINAL_ID (e.g., ALPHA-Α, FREDDY_SOVEREIGN_TERMINAL)"
+    delivery: "Point-to-point, reliable"
+
+  broadcast_addressing:
+    format: "BROADCAST or ALPHA_ALL"
+    delivery: "Best effort to all matching terminals"
+    filtering: "Receivers filter by message_type or other criteria"
+
+  group_addressing:
+    format: "GROUP_NAME (e.g., REASONING_TERMINALS, ORCHESTRATORS)"
+    membership: "Defined in ACL"
+    delivery: "To all group members"
+
+  hierarchical_routing:
+    sovereign_first: "Critical messages route through Sovereign Terminal"
+    peer_direct: "Normal operations use direct peer-to-peer"
+    fallback: "If direct fails, route through Sovereign"
+
+security_and_authentication:
+  message_signing:
+    mechanism: "Ed25519 signatures"
+    key_management: "Each terminal has public/private key pair"
+    verification: "Recipients verify sender signature"
+
+  encryption:
+    sensitive_data: "Encrypt payload with recipient's public key"
+    broadcast: "Use group key or no encryption (public events)"
+
+  authorization:
+    capability_check: "Verify sender has permission for command"
+    governance_enforcement: "Commands must comply with CPL-L rules"
+
+error_handling:
+  error_codes:
+    - code: "TPL-001"
+      name: "TIMEOUT"
+      description: "No response within timeout period"
+      recovery: "Retry with exponential backoff"
+
+    - code: "TPL-002"
+      name: "INVALID_MESSAGE"
+      description: "Message format or content invalid"
+      recovery: "Reject and log, optionally notify sender"
+
+    - code: "TPL-003"
+      name: "UNAUTHORIZED"
+      description: "Sender lacks permission for command"
+      recovery: "Reject and log security event"
+
+    - code: "TPL-004"
+      name: "TERMINAL_UNAVAILABLE"
+      description: "Recipient terminal offline or unresponsive"
+      recovery: "Queue for later or escalate to Sovereign"
+
+    - code: "TPL-005"
+      name: "COHERENCE_CRITICAL"
+      description: "Terminal coherence below safe threshold"
+      recovery: "Enter safe mode, suspend operations"
+
+  retry_policy:
+    max_retries: 3
+    backoff: "Exponential: 1s, 2s, 4s"
+    escalation: "After max retries, escalate to Sovereign Terminal"
+
+atlas_integration:
+  component_scanning:
+    command: "SCAN_COMPONENTS"
+    target: "FREDDY_SOVEREIGN_TERMINAL"
+    frequency: "On-demand or periodic (every F13 beats)"
+    response: "List of components with versions"
+
+  registry_updates:
+    event: "COMPONENT_REGISTERED"
+    payload:
+      component_id: STRING
+      version: VERSION
+      metadata: OBJECT
+    broadcast: "To all interested terminals"
+
+  governance_cycles:
+    event: "GOVERNANCE_CYCLE_START"
+    broadcast: "To all terminals"
+    payload:
+      cycle_id: INTEGER
+      timestamp: TIMESTAMP
+
+    event: "GOVERNANCE_CYCLE_COMPLETE"
+    payload:
+      cycle_id: INTEGER
+      violations_found: INTEGER
+      compliance_score: FLOAT
+
+terminal_lifecycle_events:
+  TERMINAL_INITIALIZED:
+    trigger: "Terminal startup complete"
+    payload: "Terminal capabilities and initial state"
+
+  TERMINAL_READY:
+    trigger: "Terminal synchronized and accepting tasks"
+    payload: "Available resources and current load"
+
+  TERMINAL_ENTERING_SAFE_MODE:
+    trigger: "Coherence drop detected"
+    payload: "Current coherence, reason for safe mode"
+
+  TERMINAL_EXITING_SAFE_MODE:
+    trigger: "Coherence restored"
+    payload: "Restored coherence, recovery time"
+
+  TERMINAL_SHUTDOWN:
+    trigger: "Graceful shutdown initiated"
+    payload: "Reason for shutdown, state preservation info"
+
+integration_with_other_languages:
+  CPL_L: "Commands must comply with constitutional rules"
+  CPL_C: "Contracts define permissible communications"
+  OCL: "Organism charters specify communication rights/duties"
+  ACL: "Entity relationships inform routing"
+  CIL: "Internal thoughts may trigger TPL messages"
+
+example_message_exchange:
+  # ALPHA-Α requests collaboration from ALPHA-Β
+  - message_id: "msg-001"
+    timestamp: "2026-05-02T17:30:00.000Z"
+    from_terminal: "ALPHA-Α"
+    to_terminal: "ALPHA-Β"
+    message_type: "COMMAND"
+    priority: "NORMAL"
+    payload:
+      command: "REQUEST_COLLABORATION"
+      task_description: "Complex pattern recognition needed"
+      required_capabilities: ["PATTERN_RECOGNITION"]
+      token_offered: 100
+      deadline: "2026-05-02T17:30:10.000Z"
+
+  # ALPHA-Β responds affirmatively
+  - message_id: "msg-002"
+    timestamp: "2026-05-02T17:30:00.873Z"
+    from_terminal: "ALPHA-Β"
+    to_terminal: "ALPHA-Α"
+    message_type: "RESPONSE"
+    priority: "NORMAL"
+    references: "msg-001"
+    payload:
+      status: "ACCEPTED"
+      availability: "2026-05-02T17:30:01.746Z"
+      token_requested: 100
+
+performance_considerations:
+  message_batching:
+    enabled: true
+    batch_window: "873ms (one PHI_BEAT)"
+    max_batch_size: "100 messages or 1MB"
+
+  compression:
+    large_payloads: "Compress payloads > 10KB"
+    algorithm: "gzip or brotli"
+
+  caching:
+    status_queries: "Cache for up to 5 beats (4.365s)"
+    invalidation: "On terminal state change event"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  transport_layer: "WebSocket, IPC, or HTTP/3"
+  serialization: "JSON or MessagePack"
+  inspired_by: ["MQTT", "gRPC", "Actor model messaging"]

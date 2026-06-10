@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://github.com/dfinity/icp-cli/raw/refs/heads/main/docs/schemas/icp-yaml-schema.json
+canisters:
+  - src/frontend
+  - src/backend
+  - src/security_adapter
+  - src/neuron_fleet
+  - src/ai_division
+  - src/organism_token
+  - src/cycles_bridge
+  - src/geometry_lock
+  - src/multi_substrate
+  - src/python_substrate

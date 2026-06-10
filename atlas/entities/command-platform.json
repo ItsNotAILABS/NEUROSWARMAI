@@ -1,0 +1,87 @@
+{
+  "entity_id": "COMMAND_PLATFORM",
+  "entity_type": "INFRASTRUCTURE_PLATFORM",
+  "version": "1.0.0",
+  "status": "ACTIVE",
+  "description": "MEDINA COMMAND PLATFORM - Infrastructure that hosts MERIDIANUS and all integrations",
+  "parent_entity": "MERIDIANUS",
+  "components": [
+    "SLACK_PUSH_ORCHESTRATOR",
+    "DISCORD_PUSH_ORCHESTRATOR",
+    "TEAMS_PUSH_ORCHESTRATOR",
+    "EMAIL_PUSH_ORCHESTRATOR",
+    "VOICE_PUSH_ORCHESTRATOR",
+    "WEB_PUSH_ORCHESTRATOR"
+  ],
+  "capabilities": [
+    "MULTI_PLATFORM_INTEGRATION",
+    "REAL_TIME_PUSH",
+    "WEBHOOK_MANAGEMENT",
+    "ADAPTIVE_CARDS",
+    "VOICE_SYNTHESIS",
+    "EMAIL_DELIVERY",
+    "WEBSOCKET_STREAMING",
+    "SSE_BROADCASTING"
+  ],
+  "integration_endpoints": [
+    {
+      "platform": "Slack",
+      "component": "SLACK_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["WEBHOOK", "EVENTS_API"]
+    },
+    {
+      "platform": "Discord",
+      "component": "DISCORD_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["WEBHOOK", "BOT_API"]
+    },
+    {
+      "platform": "Microsoft Teams",
+      "component": "TEAMS_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["WEBHOOK", "BOT_FRAMEWORK", "GRAPH_API"]
+    },
+    {
+      "platform": "Email",
+      "component": "EMAIL_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["SMTP", "SENDGRID", "SES"]
+    },
+    {
+      "platform": "Voice",
+      "component": "VOICE_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["WEBRTC", "TWILIO"]
+    },
+    {
+      "platform": "Web",
+      "component": "WEB_PUSH_ORCHESTRATOR",
+      "version": "1.0.0",
+      "protocols": ["WEBSOCKET", "SSE", "WEB_PUSH_API"]
+    }
+  ],
+  "ontology": {
+    "domain": "integration_orchestration",
+    "paradigm": "PUSH_ARCHITECTURE",
+    "governance": "CPL_COMPLIANT"
+  },
+  "contracts": [
+    {
+      "contract_id": "C-PLATFORM-001",
+      "template": "TMPL-ORCH-001",
+      "parties": ["COMMAND_PLATFORM", "SOVEREIGN_INTEGRATION_ORCHESTRATOR"],
+      "token_allocation": "MODERATE",
+      "status": "ACTIVE"
+    }
+  ],
+  "upgrade_policy": {
+    "current_version": "1.0.0",
+    "next_version": "1.1.0",
+    "upgrade_path": "INCREMENTAL",
+    "rollback_enabled": true,
+    "approval_required": "SOVEREIGN_REVIEW"
+  },
+  "created": "2026-05-02T00:00:00Z",
+  "last_updated": "2026-05-02T00:00:00Z"
+}

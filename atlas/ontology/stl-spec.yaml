@@ -1,0 +1,26 @@
+# STL Specification v1.0.0
+# Story Thread Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "STL"
+title: "Story Thread Language"
+description: "How arcs are woven: seasons, chapters, sagas - 'This era was about X; the next era is about Y'"
+
+core_concepts:
+  thread: "Narrative strand"
+  arc: "Story progression"
+  season: "Thematic period"
+  chapter: "Discrete episode"
+
+narrative_structures:
+  - LINEAR
+  - CYCLICAL
+  - BRANCHING
+  - NESTED
+  - FRACTAL
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

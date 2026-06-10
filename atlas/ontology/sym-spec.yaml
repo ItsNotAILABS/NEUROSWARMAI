@@ -1,0 +1,30 @@
+# SYM Specification v1.0.0
+# Symbolic Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "SYM"
+title: "Symbolic Language"
+description: "Colors, numbers, shapes, sigils - encoded meaning in non-verbal primitives"
+
+core_concepts:
+  symbol: "Non-verbal meaningful unit"
+  sigil: "Condensed symbolic representation"
+  glyph: "Visual character with meaning"
+
+symbol_types:
+  COLOR: "Emotional and associative meanings"
+  NUMBER: "Mathematical and mystical significance"
+  SHAPE: "Geometric and topological meaning"
+  GLYPH: "Composite visual symbols"
+
+sacred_numbers:
+  PHI: 1.618033988749895
+  PI: 3.14159265358979
+  E: 2.71828182845905
+  F11: 89
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

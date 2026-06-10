@@ -1,0 +1,198 @@
+name: 🐍 Python Auto Agent — Build, Test & Deploy
+# Auto agent that validates, tests, benchmarks, and deploys the Python engines
+# Addresses verification concerns: reproducible benchmarks, scalability metrics, integration checks
+
+on:
+  push:
+    branches: [main, 'copilot/**']
+    paths:
+      - 'pythonista/**'
+      - 'src/python_substrate/**'
+      - 'tests/python/**'
+      - 'pyproject.toml'
+      - 'build_python.py'
+      - 'requirements.txt'
+  pull_request:
+    paths:
+      - 'pythonista/**'
+      - 'src/python_substrate/**'
+      - 'tests/python/**'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # ─── Lint & Type Check ──────────────────────────────────────────────────────
+  lint:
+    name: 🐍 Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dev tools
+        run: pip install ruff mypy
+      - name: Ruff lint
+        run: ruff check pythonista/ src/python_substrate/ tests/python/
+      - name: Ruff format check
+        run: ruff format --check pythonista/ src/python_substrate/ tests/python/
+      - name: MyPy type check
+        run: mypy pythonista/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true
+
+  # ─── Unit Tests ─────────────────────────────────────────────────────────────
+  test:
+    name: 🧪 Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio pytest-benchmark
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/python/ -v --tb=short --junitxml=test-results-${{ matrix.python-version }}.xml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: test-results-*.xml
+          retention-days: 30
+
+  # ─── Engine Verification Benchmarks ─────────────────────────────────────────
+  benchmark:
+    name: 📊 Engine Verification Benchmarks
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pytest pytest-benchmark
+      - name: Run engine benchmarks
+        run: |
+          python -m pytest tests/python/test_engine_verification.py -v --benchmark-json=benchmark-results.json --tb=short
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+          retention-days: 90
+      - name: Generate verification report
+        run: python tests/python/generate_verification_report.py
+      - name: Upload verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-report
+          path: docs/verification-report.md
+          retention-days: 90
+
+  # ─── Scalability Tests ──────────────────────────────────────────────────────
+  scalability:
+    name: 🔬 Scalability Verification
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pytest pytest-benchmark
+      - name: Run scalability tests
+        run: |
+          python -m pytest tests/python/test_scalability.py -v --tb=short
+      - name: Upload scalability results
+        uses: actions/upload-artifact@v4
+        with:
+          name: scalability-results
+          path: tests/python/scalability-results.json
+          retention-days: 90
+
+  # ─── Build Package ──────────────────────────────────────────────────────────
+  build:
+    name: 📦 Build Python Package
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: pip install build setuptools wheel
+      - name: Build package
+        run: python -m build --outdir dist/python
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package
+          path: dist/python/
+          retention-days: 30
+
+  # ─── Deploy Validation ──────────────────────────────────────────────────────
+  deploy-validation:
+    name: 🚀 Deploy Validation
+    runs-on: ubuntu-latest
+    needs: [build, benchmark, scalability]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package from build
+        run: |
+          pip install build setuptools wheel
+          python -m build --outdir dist/python
+          pip install dist/python/*.whl
+      - name: Validate installation
+        run: |
+          python -c "
+          from pythonista import AnimusEngine, NexusEngine, LinguaEngine, OpticaEngine, TactusEngine
+          from pythonista import PHI, PHI_INV, PHI_BEAT
+          
+          # Verify all engines initialize
+          engines = [AnimusEngine(), NexusEngine(), LinguaEngine(), OpticaEngine(), TactusEngine()]
+          for e in engines:
+              status = e.status()
+              assert isinstance(status, dict), f'Engine {e} status failed'
+          
+          # Verify constants
+          assert abs(PHI - 1.618033988749895) < 1e-10
+          assert abs(PHI_INV - 0.618033988749895) < 1e-10
+          assert PHI_BEAT == 873
+          
+          print('✓ All 5 engines validated. Deploy OK.')
+          "
+      - name: Commit verification status
+        run: |
+          git config user.name "python-auto-agent"
+          git config user.email "python-auto-agent[bot]@users.noreply.github.com"
+          
+          # Update system status
+          echo "" >> SYSTEM_STATUS.md
+          echo "## Python Auto Agent — Last Deploy Validation" >> SYSTEM_STATUS.md
+          echo "- Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> SYSTEM_STATUS.md
+          echo "- Python: 3.12" >> SYSTEM_STATUS.md
+          echo "- Engines: ANIMUS ✓ | NEXUS ✓ | LINGUA ✓ | OPTICA ✓ | TACTUS ✓" >> SYSTEM_STATUS.md
+          echo "- Package: chimeria-nova built and installable" >> SYSTEM_STATUS.md
+          echo "- Status: DEPLOYED" >> SYSTEM_STATUS.md
+          
+          git add SYSTEM_STATUS.md
+          git diff --staged --quiet || git commit -m "🐍 python-auto-agent: deploy validation passed"
+          git push || true

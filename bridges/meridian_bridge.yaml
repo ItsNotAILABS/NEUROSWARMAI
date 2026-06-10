@@ -1,0 +1,78 @@
+# MERIDIAN Bridge Configuration
+# Connects MERIDIANUS foundational organism to Sovereign Terminal
+
+bridge_id: "BRIDGE_MERIDIAN"
+version: "1.0.0"
+status: "ACTIVE"
+
+source:
+  entity_id: "MERIDIANUS"
+  entity_type: "FOUNDATIONAL_ORGANISM"
+  entity_path: "atlas/entities/meridian.json"
+
+target:
+  terminal_id: "FREDDY_SOVEREIGN_TERMINAL"
+  terminal_type: "GOVERNANCE_ENGINE"
+
+connection:
+  protocol: "NATIVE"
+  synchronization: "PHI_BEAT"  # 873ms
+  bidirectional: true
+
+data_flow:
+  - direction: "MERIDIANUS → SOVEREIGN_TERMINAL"
+    data_types:
+      - "component_versions"
+      - "coherence_metrics"
+      - "token_balances"
+      - "cognitive_state"
+    frequency: "on_change"
+
+  - direction: "SOVEREIGN_TERMINAL → MERIDIANUS"
+    data_types:
+      - "governance_decisions"
+      - "upgrade_approvals"
+      - "constitutional_violations"
+      - "resource_allocations"
+    frequency: "on_demand"
+
+monitored_components:
+  - component_id: "MEDINA_BEDROCK"
+    metrics: ["embedding_quality", "coherence", "latency"]
+
+  - component_id: "MEDINA_ARTIFACT_24_LAYER"
+    metrics: ["layer_activations", "coherence", "complexity"]
+
+  - component_id: "MICRO_TOKEN_SYSTEM"
+    metrics: ["token_allocations", "forma_balance", "conservation"]
+
+  - component_id: "ALPHA_AGI_TERMINALS"
+    metrics: ["kuramoto_coupling", "phase_sync", "task_queue_depth"]
+
+governance_binding:
+  constitution: "sovereign-constitution.cpl"
+  contracts:
+    - "C-MERIDIANUS-001"
+
+  enforced_rules:
+    - "IR-001"  # Identity Preservation
+    - "IR-002"  # Coherence Maintenance
+    - "IR-003"  # φ-Synchronization
+    - "IR-004"  # Token Conservation
+    - "IR-005"  # Audit Trail
+
+alerts:
+  coherence_drop:
+    threshold: 0.7
+    action: "ALERT_SOVEREIGN_TERMINAL"
+
+  token_exhaustion:
+    threshold: 100  # tokens remaining
+    action: "REQUEST_REALLOCATION"
+
+  phase_desync:
+    threshold: 0.3  # radians
+    action: "RESYNCHRONIZE"
+
+created: "2026-05-02T00:00:00Z"
+last_updated: "2026-05-02T00:00:00Z"

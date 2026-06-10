@@ -1,0 +1,461 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOVA.TOML — Master Platform Manifest
+# Brand: Nova by FreddyCreates
+# Versioning: Fibonacci Sequence (F-sequence) — the register of names
+# φ = 1.618033988749895 (Golden Ratio) — the law of everything
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[platform]
+brand         = "Nova"
+owner         = "FreddyCreates"
+platform      = "command-platform"
+manifest_version = "F12"       # Fibonacci index 12, value 144
+built         = "2026-05-07"
+description   = "Nova is the brand that makes all tools. Every tool lives in Nova. Every tool is called from Nova."
+
+# Golden Ratio — the heartbeat of the entire system
+phi           = 1.618033988749895
+phi_inverse   = 0.6180339887498949
+phi_squared   = 2.618033988749895
+phi_cubed     = 4.23606797749979
+phi_beat_ms   = 873             # φ-synchronized heartbeat: 1000/φ⁻¹ ≈ 873ms
+phi_beat_hz   = 1.1467          # 1/0.873
+golden_angle  = 137.5077640500378  # degrees — phyllotaxis, spiral growth
+
+# ─── FIBONACCI REGISTER ─────────────────────────────────────────────────────
+# The Fibonacci sequence IS the version register. Names emerge from numbers.
+# Every tool, every AIS, every protocol has a Fibonacci slot.
+# F(n) → version → identity. This is the law.
+[fibonacci]
+sequence = [1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181,6765]
+# Index:  [1,2,3,4,5,6, 7, 8, 9,10,11, 12, 13, 14, 15, 16,  17,  18,  19,  20]
+current_index   = 12        # We are at F12 = 144 — the platform is maturing
+current_value   = 144
+next_value      = 233       # F13 — next evolution
+registry_slots  = 20        # 20 tools = F1 through F20
+ais_slots       = 10        # 10 alpha AIS = F1 through F10
+multimodal_slots = 5        # 5 multimodal = F1 through F5
+
+# ─── REGISTRY ───────────────────────────────────────────────────────────────
+[registry]
+tools_path      = "nova/registry/tools.jsonl"
+ais_path        = "nova/registry/ais.jsonl"
+index           = "nova/registry/index.js"
+tool_count      = 20
+ais_count       = 10
+multimodal_count = 5
+namespace       = "nova"
+call_syntax     = "nova.call('<tool-name>', payload)"
+query_syntax    = "nova.query({ name, category, fib_index })"
+
+# ─── NATIVE RUNTIME ─────────────────────────────────────────────────────────
+[runtime]
+entry           = "nova/runtime/nova-runtime.js"
+port            = 8973          # φ-harmonic port: 8+9+7+3=27=3³, 89+73=162≈100φ
+host            = "0.0.0.0"
+streams         = true
+sse             = true
+phi_beat_ms     = 873
+agent_stream    = "nova/runtime/agent-stream.js"
+workflow_bridge = "nova/runtime/workflow-bridge.js"
+
+[runtime.endpoints]
+health          = "GET /health"
+tools_list      = "GET /tools"
+tool_get        = "GET /tools/:name"
+tool_call       = "POST /tools/:name/call"
+ais_list        = "GET /ais"
+ais_query       = "POST /ais/:name/query"
+agents_list     = "GET /agents"
+agent_stream    = "GET /agents/:name/stream"     # SSE
+workflows_list  = "GET /workflows"
+workflow_trigger = "POST /workflows/:name/trigger"
+phi_beat        = "GET /phi-beat"
+registry_query  = "POST /registry/query"         # aquarium caller
+
+# ─── 20 NOVA TOOLS (Fibonacci versioned) ────────────────────────────────────
+[tools]
+count           = 20
+path            = "nova/tools/"
+self_pack       = true         # nova-pack packs itself
+self_version    = true         # nova-version versions itself
+self_register   = true         # all tools register themselves on boot
+
+# Tool manifest — name: fib_slot
+# Slot = Fibonacci index (1-20), Version = F(slot) formatted as semver
+[tools.manifest]
+"nova-pack"       = { slot = 1,  fib = 1,    version = "0.1.0",    category = "build"      }
+"nova-registry"   = { slot = 2,  fib = 1,    version = "0.1.0",    category = "registry"   }
+"nova-build"      = { slot = 3,  fib = 2,    version = "0.2.0",    category = "build"      }
+"nova-deploy"     = { slot = 4,  fib = 3,    version = "0.3.0",    category = "deploy"     }
+"nova-test"       = { slot = 5,  fib = 5,    version = "0.5.0",    category = "quality"    }
+"nova-lint"       = { slot = 6,  fib = 8,    version = "0.8.0",    category = "quality"    }
+"nova-doc"        = { slot = 7,  fib = 13,   version = "0.13.0",   category = "docs"       }
+"nova-scaffold"   = { slot = 8,  fib = 21,   version = "0.21.0",   category = "build"      }
+"nova-compress"   = { slot = 9,  fib = 34,   version = "0.34.0",   category = "artifact"   }
+"nova-encrypt"    = { slot = 10, fib = 55,   version = "0.55.0",   category = "security"   }
+"nova-sign"       = { slot = 11, fib = 89,   version = "0.89.0",   category = "security"   }
+"nova-version"    = { slot = 12, fib = 144,  version = "1.44.0",   category = "registry"   }
+"nova-sync"       = { slot = 13, fib = 233,  version = "2.33.0",   category = "sync"       }
+"nova-audit"      = { slot = 14, fib = 377,  version = "3.77.0",   category = "audit"      }
+"nova-monitor"    = { slot = 15, fib = 610,  version = "6.10.0",   category = "ops"        }
+"nova-stream"     = { slot = 16, fib = 987,  version = "9.87.0",   category = "streaming"  }
+"nova-query"      = { slot = 17, fib = 1597, version = "15.97.0",  category = "registry"   }
+"nova-transform"  = { slot = 18, fib = 2584, version = "25.84.0",  category = "data"       }
+"nova-cache"      = { slot = 19, fib = 4181, version = "41.81.0",  category = "ops"        }
+"nova-orchestrate"= { slot = 20, fib = 6765, version = "67.65.0",  category = "orchestration" }
+
+# ─── 10 ALPHA AIS PROTOCOLS ─────────────────────────────────────────────────
+[ais.alpha]
+count           = 10
+protocol_prefix = "ALPHA"
+range           = "ALPHA-001 to ALPHA-010"
+path            = "nova/ais/"
+
+[ais.alpha.protocols]
+"ALPHA-001" = { name = "ANIMUS",   engine = "kuramoto+hebbian+deep-q",           fib = 1,    version = "0.1.0"   }
+"ALPHA-002" = { name = "LINGUA",   engine = "transformer+phi-loss+liquid-lang",   fib = 1,    version = "0.1.0"   }
+"ALPHA-003" = { name = "OPTICA",   engine = "gabor+cortical-map+edge-detect",     fib = 2,    version = "0.2.0"   }
+"ALPHA-004" = { name = "MEMORIA",  engine = "hippocampal-replay+quantum-memory",  fib = 3,    version = "0.3.0"   }
+"ALPHA-005" = { name = "FABRICA",  engine = "morphogenesis+turing-pattern+kan",   fib = 5,    version = "0.5.0"   }
+"ALPHA-006" = { name = "PROPHETA", engine = "kalman+predictive-coding+free-energy", fib = 8,  version = "0.8.0"   }
+"ALPHA-007" = { name = "VERITAS",  engine = "bayesian+information-theory+mcmc",   fib = 13,   version = "0.13.0"  }
+"ALPHA-008" = { name = "KOSMOS",   engine = "maxwell-boltzmann+entropy+lyapunov", fib = 21,   version = "0.21.0"  }
+"ALPHA-009" = { name = "TACTUS",   engine = "proprioception+interoception+soma",  fib = 34,   version = "0.34.0"  }
+"ALPHA-010" = { name = "NEXUS",    engine = "graph-theory+small-world+connectome",fib = 55,   version = "0.55.0"  }
+
+# ─── 5 MULTIMODAL AIS SYSTEMS ────────────────────────────────────────────────
+[ais.multimodal]
+count           = 5
+path            = "nova/ais/"
+
+[ais.multimodal.systems]
+"ANIMUS-NOVA" = { modalities = ["text","structured","logic"],       engines = ["ALPHA-001","ALPHA-002"], fib = 1 }
+"LINGUA-NOVA" = { modalities = ["text","audio","music","speech"],   engines = ["ALPHA-002","ALPHA-004"], fib = 1 }
+"OPTICA-NOVA" = { modalities = ["image","video","3d","spatial"],    engines = ["ALPHA-003","ALPHA-008"], fib = 2 }
+"TACTUS-NOVA" = { modalities = ["haptic","motion","sensor","iot"],  engines = ["ALPHA-009","ALPHA-005"], fib = 3 }
+"NEXUS-NOVA"  = { modalities = ["all"],                             engines = ["ALPHA-010","ALPHA-006","ALPHA-007"], fib = 5 }
+
+# ─── 4 COPILOT AGENTS ────────────────────────────────────────────────────────
+[agents]
+count           = 4
+path            = ".github/agents/"
+model           = "claude-sonnet-4-5"
+stream          = true
+
+[agents.roster]
+"sovereign"  = { role = "Unified master — all capabilities + all 7 papers",   version = "3.0", sections = 14 }
+"meridianus" = { role = "Sovereign architect — builds and reads all code",     version = "2.0", sections = 6  }
+"organism"   = { role = "Engineer/debugger — workers + bots + CI",            version = "2.0", sections = 5  }
+"magister"   = { role = "Visionary — holds all research + platform vision",   version = "1.0", sections = 4  }
+
+# ─── 27 GITHUB ACTIONS WORKFLOWS ─────────────────────────────────────────────
+[workflows]
+count           = 27
+path            = ".github/workflows/"
+
+[workflows.organism_bots]
+# 11 Organism Bill Bots
+count           = 11
+"BOT-001" = "organism-bot-aedificator.yml"
+"BOT-002" = "organism-bot-sartor.yml"
+"BOT-003" = "organism-bot-medicus.yml"
+"BOT-004" = "organism-bot-custos.yml"
+"BOT-005" = "organism-bot-inventor.yml"
+"BOT-006" = "organism-bot-scriptor.yml"
+"BOT-007" = "organism-bot-explorator.yml"
+"BOT-008" = "organism-bot-praetor.yml"
+"BOT-009" = "organism-bot-curator.yml"
+"BOT-010" = "organism-bot-legatus.yml"
+"BOT-011" = "organism-bot-auctor.yml"
+
+[workflows.system_bots]
+# 14 System + CI/CD bots
+"BUILD"      = "organism-build-bot.yml"
+"NEURAL"     = "organism-neural-bot.yml"
+"SDK"        = "organism-sdk-bot.yml"
+"PROTOCOL"   = "organism-protocol-bot.yml"
+"TEST"       = "organism-test-bot.yml"
+"DOCS"       = "organism-docs-bot.yml"
+"RELEASE"    = "organism-release-bot.yml"
+"DEPLOY_BOT" = "organism-deploy-bot.yml"
+"SENTINEL"   = "organism-sentinel-bot.yml"
+"CRAWLER"    = "organism-crawler-bot.yml"
+"ECONOMY"    = "organism-economy-bot.yml"
+"GOVERNANCE" = "organism-governance-cycle.yml"
+"LEARNING"   = "organism-learning-bot.yml"
+"ALPHA_BOT"  = "organism-alpha-bot.yml"
+
+[workflows.ci_cd]
+"BUILD_RELEASE" = "build-release.yml"
+"DEPLOY"        = "deploy-canister.yml"
+
+# ─── INTERNAL DIVISIONS (Back-end gut system) ────────────────────────────────
+[divisions]
+# These are back-end internals. The gut system. Real physics math.
+
+[divisions.genesis]
+path            = "src/backend/genesis/"
+canister_count  = 194
+description     = "194 Motoko physics/biology engines — the actual gut"
+
+[divisions.genesis.engines]
+# Real physics math — biology — it all works on math numbers
+kuramoto        = "macro-sphere-kuramoto.mo"           # coupled oscillators ω_i + K/N Σ sin(θ_j - θ_i)
+hebbian         = "deep-hebbian-engine.mo"              # Δw_ij = η × x_i × x_j (fire together wire together)
+maxwell_boltzmann = "maxwell-boltzmann-thermal-substrate.mo" # f(v) = 4π(m/2πkT)^(3/2) v² e^(-mv²/2kT)
+kalman          = "kalman-predictive-field.mo"          # x̂_k = A x̂_{k-1} + K_k(z_k - H x̂_{k-1})
+lyapunov        = "lyapunov-chaotic-core-router.mo"     # V̇(x) ≤ 0 → stability
+kan             = "kan-adaptive-activation-substrate.mo" # learnable activation: φ(x) = Σ spline_i(x)
+ising           = "ising-combinatorial-optimizer.mo"    # E = -J Σ s_i s_j - h Σ s_i
+quantum         = "deep-quantum-state-engine.mo"        # |ψ⟩ = Σ α_i |i⟩, ρ = |ψ⟩⟨ψ|
+free_energy     = "deep-free-energy-engine.mo"          # F = E[ln q(z) - ln p(x,z)]
+nca             = "nca-wound-healing-substrate.mo"      # neural cellular automata: dx/dt = f(N(x))
+fractal         = "fractal-mathematics-engine.mo"       # z_{n+1} = z_n² + c, Hausdorff dim D
+electromagnetic = "electromagnetic-substrate-engine.mo" # ∇×E = -∂B/∂t, ∇×B = μ₀J + μ₀ε₀∂E/∂t
+
+[divisions.icp_canisters]
+path            = "src/"
+count           = 8
+canisters       = ["backend","ai_division","neuron_fleet","organism_token","geometry_lock","security_adapter","cycles_bridge","intelligence_core"]
+
+[divisions.cloudflare_fleet]
+path            = "organism/cloudflare/"
+worker_count    = 73
+description     = "73 Cloudflare AIS workers — Latin-named intelligence fleet"
+
+[divisions.web_workers]
+path            = "organism/web/"
+worker_count    = 37
+description     = "37 browser web workers — protocol + feature layer"
+
+[divisions.cognitive_languages]
+path            = "languages/"
+count           = 40
+description     = "40 cognitive language specifications"
+
+[divisions.atlas]
+path            = "atlas/"
+ontology_count  = 36
+registry_entries = 40
+terminal_types  = 11
+
+# ─── REAL MATH CONSTANTS (the gut of everything) ─────────────────────────────
+[math]
+# Biology + Physics — it's all math numbers. Math format is built-in engines.
+
+# Fundamental constants
+phi             = 1.618033988749895    # Golden ratio — growth, proportion, harmony
+phi_inv         = 0.6180339887498949   # φ⁻¹ = φ - 1 — the injection ceiling
+planck_h        = 6.62607015e-34       # J·s — quantum of action
+boltzmann_k     = 1.380649e-23         # J/K — thermal energy bridge
+avogadro_n      = 6.02214076e23        # mol⁻¹ — scale of matter
+speed_of_light  = 299792458            # m/s — information speed limit
+electron_charge = 1.602176634e-19      # C — charge quantum
+
+# Biology math (how life actually works — it's all this)
+hebbian_lr      = 0.0001618            # φ⁻⁴ ≈ 0.000162 — Hebbian learning rate
+kuramoto_K      = 2.618033988749895    # φ+1 — Kuramoto coupling constant
+phi_beat_ms     = 873                  # 1000×φ⁻¹ ≈ 618 → tuned to 873 for coherence
+synaptic_decay  = 0.95                 # τ_decay — synaptic weight decay per beat
+neural_threshold = 0.618               # φ⁻¹ — firing threshold
+golden_angle_rad = 2.399963229728653   # 2π/φ² — phyllotaxis spiral
+
+# Phi-encoded loss (Paper VII — Liquid Language)
+phi_loss_formula = "L_nova = L_CE × (1 + φ⁻¹ × CS)"   # CS = coherence score
+injection_ceiling = 0.618                                # φ⁻¹ hard cap
+
+# Fibonacci versioning law
+fib_law = "version(n) = F(n) where F is Fibonacci sequence. Names emerge from numbers."
+
+# ─── LAUNCH SYSTEM ─────────────────────────────────────────────────────────
+[launch]
+# Commercial infrastructure: Labs → License → Sell
+path            = "launch/"
+version         = "0.18.0"
+ip_value        = 38300000  # $38.3M USD
+paper           = "docs/research/paper-17-commercial-model.md"
+
+[launch.components]
+"NLAB" = { name = "Nova Labs",       path = "launch/nova-labs.js",       ip = 8200000,  desc = "Research & IP licensing" }
+"NPUB" = { name = "Nova Public",     path = "launch/nova-public.js",     ip = 9500000,  desc = "Free tools for mass adoption" }
+"NENT" = { name = "Nova Enterprise", path = "launch/nova-enterprise.js", ip = 12400000, desc = "Revenue generation" }
+"NDAT" = { name = "Nova Data Lake",  ip = 8200000,                       desc = "Intelligence amplification" }
+
+[launch.public_products]
+# Free products for mass adoption — get users, collect data
+"NOVA_CODE"     = { tagline = "AI coding that remembers",    limit = "1000/mo", domain = "nova.ai/code" }
+"NOVA_DEBUG"    = { tagline = "AI that understands errors",  limit = "500/mo",  domain = "nova.ai/debug" }
+"NOVA_DATA"     = { tagline = "Data → insights",             limit = "100/mo",  domain = "nova.ai/data" }
+"NOVA_CREATE"   = { tagline = "AI creativity partner",       limit = "500/mo",  domain = "nova.ai/create" }
+"NOVA_STUDIO"   = { tagline = "AI creative workspace",       limit = "200/mo",  domain = "nova.ai/studio" }
+"NOVA_LEARN"    = { tagline = "AI tutor that adapts",        limit = "unlimited basic", domain = "nova.ai/learn" }
+"NOVA_RESEARCH" = { tagline = "Knowledge synthesis",         limit = "100/mo",  domain = "nova.ai/research" }
+"NOVA_DOCS"     = { tagline = "Document intelligence",       limit = "50/mo",   domain = "nova.ai/docs" }
+
+[launch.tiers]
+# Revenue model: FREE → CREATOR → PRO → TEAM → ENTERPRISE
+"FREE"       = { price = 0,    api_calls = 100,   storage_gb = 1  }
+"CREATOR"    = { price = 0,    api_calls = 500,   storage_gb = 5  }
+"PRO"        = { price = 49,   api_calls = 5000,  storage_gb = 50 }
+"TEAM"       = { price = 199,  api_calls = 20000, storage_gb = 200 }
+"ENTERPRISE" = { price = 2499, api_calls = "unlimited", storage_gb = "unlimited" }
+
+[launch.social]
+# Social media brands for launch
+brands = [
+  { name = "Nova AI",     handle = "@nova_ai",     domain = "nova.ai",       primary = true },
+  { name = "Nova Code",   handle = "@novacode",    domain = "novacode.dev"  },
+  { name = "Nova Labs",   handle = "@novalabs",    domain = "novalabs.ai"   },
+  { name = "Nova Create", handle = "@novacreate",  domain = "novacreate.ai" },
+  { name = "Nova Learn",  handle = "@novalearn",   domain = "novalearn.ai"  }
+]
+
+[launch.revenue_targets]
+year_1 = 10000000   # $10M ARR
+year_2 = 40000000   # $40M ARR
+year_3 = 100000000  # $100M ARR
+
+[launch.enterprise_products]
+# Enterprise pricing tiers
+"NOVA_PLATFORM"      = { price = 2499,  unit = "per month", includes = "All 15 platforms + SLA" }
+"NOVA_PRIVATE_CLOUD" = { price = 9999,  unit = "per month", includes = "Dedicated infrastructure" }
+"NOVA_API_PRO"       = { price = 0.001, unit = "per call",  includes = "Volume discounts 10-40%" }
+"NOVA_OEM"           = { price = "custom", unit = "license", includes = "White-label rights" }
+"NOVA_SERVICES"      = { price = "250-500", unit = "per hour", includes = "Implementation & training" }
+
+[launch.revenue_streams]
+# 5 revenue streams that power the business
+streams = [
+  { name = "Subscription",       desc = "Pro/Team/Enterprise tiers",          target_pct = 60 },
+  { name = "Usage-based",        desc = "API calls, compute, storage",        target_pct = 20 },
+  { name = "Licensing",          desc = "OEM and white-label",                target_pct = 10 },
+  { name = "Professional Services", desc = "Implementation and training",     target_pct = 5  },
+  { name = "Partnerships",       desc = "Reseller and integration commissions", target_pct = 5  }
+]
+
+[launch.usage_pricing]
+api_calls   = { rate = 0.001, unit = "per call" }
+compute     = { rate = 0.02,  unit = "per compute-minute" }
+storage     = { rate = 0.10,  unit = "per GB-month" }
+
+[launch.volume_discounts]
+tier_1 = { threshold = 100000,   discount = 0.10 }  # 10% off at 100K calls
+tier_2 = { threshold = 1000000,  discount = 0.25 }  # 25% off at 1M calls
+tier_3 = { threshold = 10000000, discount = 0.40 }  # 40% off at 10M calls
+
+[launch.partnerships]
+# Partner program tiers
+"RESELLER"   = { commission = 0.20, requirements = ["Sales certification", "5+ deals/year"] }
+"TECHNOLOGY" = { commission = 0.15, requirements = ["Tech certification", "Integration built"] }
+"CONSULTING" = { commission = 0.25, requirements = ["AI expertise", "3+ implementations"] }
+"STRATEGIC"  = { commission = "custom", requirements = ["Large customer base", "Strategic alignment"] }
+
+[launch.target_audiences]
+# Who we're building for
+developers = { platforms = ["Twitter", "Reddit", "HackerNews", "Dev.to"], product = "NOVA_CODE" }
+creators   = { platforms = ["Twitter", "Instagram", "TikTok", "YouTube"], product = "NOVA_CREATE" }
+students   = { platforms = ["TikTok", "Instagram", "Discord", "Reddit"], product = "NOVA_LEARN" }
+researchers = { platforms = ["Twitter", "LinkedIn", "ResearchGate"], product = "NOVA_RESEARCH" }
+enterprise = { platforms = ["LinkedIn", "Twitter"], product = "NOVA_ENTERPRISE" }
+
+[launch.social_extended]
+# Complete social media handles for all products
+handles = [
+  { product = "Primary",     handle = "@nova_ai",       domain = "nova.ai" },
+  { product = "NOVA_CODE",   handle = "@novacode",      domain = "novacode.dev" },
+  { product = "NOVA_DEBUG",  handle = "@novadebug",     domain = "nova.ai/debug" },
+  { product = "NOVA_DATA",   handle = "@novadata",      domain = "nova.ai/data" },
+  { product = "NOVA_CREATE", handle = "@novacreate",    domain = "novacreate.ai" },
+  { product = "NOVA_STUDIO", handle = "@novastudio",    domain = "nova.ai/studio" },
+  { product = "NOVA_LEARN",  handle = "@novalearn",     domain = "novalearn.ai" },
+  { product = "NOVA_RESEARCH", handle = "@novaresearch", domain = "nova.ai/research" },
+  { product = "NOVA_DOCS",   handle = "@novadocs",      domain = "nova.ai/docs" },
+  { product = "Labs",        handle = "@novalabs",      domain = "novalabs.ai" }
+]
+
+# ─── COMPLETE IP PORTFOLIO ────────────────────────────────────────────────────
+[portfolio]
+# Total IP value across all divisions
+total_ip_value       = 215400000  # $215.4M USD
+total_components     = 62         # platforms, products, workspace, launch, organism
+
+[portfolio.divisions]
+command              = { path = "command/",    components = 8,  ip = 46700000,  desc = "Enterprise Command Platforms" }
+platforms            = { path = "platforms/",  components = 15, ip = 55000000,  desc = "Cognitive Garment Platforms" }
+enterprise           = { path = "enterprise/", components = 5,  ip = 11100000,  desc = "Enterprise Products" }
+workspace            = { path = "workspace/",  components = 7,  ip = 38900000,  desc = "AI Workspaces + Engines" }
+launch               = { path = "launch/",     components = 4,  ip = 38300000,  desc = "Commercial Launch System" }
+organism             = { path = "organism/",   components = 22, ip = 25400000,  desc = "Living AI Infrastructure" }
+
+[portfolio.research]
+papers               = 18
+path                 = "docs/research/"
+latest               = "paper-18-organism-integration.md"
+
+# ─── ORGANISM LAYER ─────────────────────────────────────────────────────────
+[organism]
+path            = "organism/"
+version         = "0.19.0"
+ip_value        = 25400000  # $25.4M USD
+paper           = "docs/research/paper-18-organism-integration.md"
+description     = "Living AI Infrastructure — the system that cares for itself"
+
+[organism.transformers]
+path            = "organism/transformers/"
+ip_value        = 8400000   # $8.4M USD
+count           = 12
+types           = ["INPUT", "PROCESS", "OUTPUT", "SYNC", "CARE"]
+
+[organism.transformers.manifest]
+# Input Transformers
+"USRI" = { name = "User Input",       type = "INPUT",   ip = 600000  }
+"APII" = { name = "API Input",        type = "INPUT",   ip = 700000  }
+"EVTI" = { name = "Event Input",      type = "INPUT",   ip = 550000  }
+# Process Transformers
+"COGP" = { name = "Cognitive Processor", type = "PROCESS", ip = 1200000 }
+"DFLW" = { name = "Data Flow",        type = "PROCESS", ip = 800000  }
+"CTXP" = { name = "Context Processor", type = "PROCESS", ip = 900000  }
+# Output Transformers
+"USRO" = { name = "User Output",      type = "OUTPUT",  ip = 650000  }
+"APIO" = { name = "API Output",       type = "OUTPUT",  ip = 700000  }
+# Sync Transformers
+"DBSN" = { name = "Database Sync",    type = "SYNC",    ip = 750000  }
+"NTSN" = { name = "Network Sync",     type = "SYNC",    ip = 800000  }
+# Care Transformers
+"HLTH" = { name = "Health",           type = "CARE",    ip = 450000  }
+"RECO" = { name = "Recovery",         type = "CARE",    ip = 500000  }
+
+[organism.terminals]
+path            = "organism/terminals/"
+ip_value        = 7800000   # $7.8M USD
+count           = 5
+
+[organism.terminals.manifest]
+"HQTM" = { name = "HQ Terminal",    type = "workspace", ip = 1600000, access = "Enterprise HQ" }
+"HMTM" = { name = "Home Terminal",  type = "workspace", ip = 1400000, access = "Personal Homes" }
+"VTTM" = { name = "Vault Terminal", type = "storage",   ip = 1200000, access = "Data Vault" }
+"ERTM" = { name = "Error Terminal", type = "knowledge", ip = 1000000, access = "Error Library" }
+"MNTM" = { name = "Main Terminal",  type = "master",    ip = 2600000, access = "Full Platform" }
+
+[organism.care]
+path            = "organism/care/"
+ip_value        = 9200000   # $9.2M USD
+count           = 5
+phi_beat_ms     = 1618      # φ * 1000
+
+[organism.care.manifest]
+"HEAL"  = { name = "Healer",       role = "recovery",       ip = 2200000 }
+"SYNC"  = { name = "Synchronizer", role = "synchronization", ip = 1800000 }
+"PREP"  = { name = "Preparer",     role = "initialization", ip = 1600000 }
+"MAINT" = { name = "Maintainer",   role = "maintenance",    ip = 1900000 }
+"WATCH" = { name = "Watcher",      role = "monitoring",     ip = 1700000 }
+
+# ─── BUILD ───────────────────────────────────────────────────────────────────
+[build]
+runtime_command  = "node nova/runtime/nova-runtime.js"
+pack_command     = "node nova/tools/nova-pack.js"
+registry_command = "node nova/registry/index.js"
+launch_command   = "node -e \"import('./launch/index.js').then(m => console.log(m.getLaunchPortfolio()))\""
+query_example    = "node nova/registry/index.js query --name nova-build"
+call_example     = "node nova/registry/index.js call nova-orchestrate --workflow organism-bot-praetor"

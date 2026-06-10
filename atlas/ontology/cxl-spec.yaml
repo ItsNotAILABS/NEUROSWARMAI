@@ -1,0 +1,26 @@
+# CXL Specification v1.0.0
+# Creation Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "CXL"
+title: "Creation Language"
+description: "How new things emerge from nothing: idea → sketch → prototype → organism → civilization"
+
+core_concepts:
+  creation_process: "Stages of manifestation"
+  emergence: "Spontaneous arising"
+  iteration: "Refinement through cycles"
+
+creation_stages:
+  - SPARK: "Initial idea or inspiration"
+  - SKETCH: "Rough outline"
+  - PROTOTYPE: "First working version"
+  - REFINEMENT: "Improvement iterations"
+  - ORGANISM: "Living autonomous system"
+  - CIVILIZATION: "Thriving ecosystem"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

@@ -1,0 +1,15 @@
+node_modules/
+*.wasm
+.dfx/
+package-lock.json
+
+# Electron Forge build output (large binaries — build locally or via CI)
+desktop/out/
+desktop/node_modules/
+
+# Python build artifacts
+dist/python/
+build/
+*.egg-info/
+__pycache__/
+*.pyc

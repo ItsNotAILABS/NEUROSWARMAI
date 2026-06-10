@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — CHIMERIA Defense Systems</title>
+  <meta name="description" content="CHIMERIA Defense Systems user dashboard — real-time defense metrics, agent status, and threat intelligence.">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">CHIMERIA DEFENSE</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="status.html">Status</a></li>
+      <li><a href="documentation.html">Docs</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="account.html">Account</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="page-content">
+  <div class="container">
+    <h1 class="section-title">Defense Dashboard</h1>
+    <p class="section-subtitle">Real-time overview of all defense systems and threat intelligence</p>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">10/10</div>
+        <div class="stat-label">Agents Active</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">481</div>
+        <div class="stat-label">Controls Passing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Active Threats</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">99.99%</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+    </div>
+
+    <!-- Agent Status Grid -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Agent Fleet Status</h2>
+    <div class="grid-3" style="margin-bottom: 48px;">
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">SENTINEL</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Patient Data Protection — PHI/ePHI shield</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 98%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 98%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">AEGIS-HC</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Network Perimeter — Zero-trust micro-segmentation</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 100%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">VITALS</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Medical Device Security — IoMT hardening</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 97%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 97%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">CORTEX</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>AI Threat Intelligence — Behavioral anomaly detection</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 99%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 99%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">MERIDIAN-HC</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Compliance Orchestration — HIPAA/SOC2/FedRAMP</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 100%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">PHOENIX</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Incident Response — Clinical continuity & recovery</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 96%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 96%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">GUARDIAN</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Identity & Access — Privilege escalation defense</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 100%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">HELIX</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Supply Chain Risk — Vendor scoring & BAA enforcement</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 95%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 95%</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">NEXUS</h3>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <p>Cross-Domain Coordination — Kuramoto defense pulse</p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 99%;"></div></div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Health: 99%</div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Recent Activity</h2>
+    <div class="card" style="padding: 24px;">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">2 minutes ago</div>
+          <div class="timeline-content"><span class="badge badge-success">SCAN</span> Full healthcare perimeter scan completed — 0 threats detected</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">14 minutes ago</div>
+          <div class="timeline-content"><span class="badge badge-info">UPDATE</span> CORTEX model weights synchronized — anomaly detection accuracy: 99.7%</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">28 minutes ago</div>
+          <div class="timeline-content"><span class="badge badge-success">AUDIT</span> Compliance audit cycle completed — 481/481 controls passing</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">1 hour ago</div>
+          <div class="timeline-content"><span class="badge badge-warning">ALERT</span> Elevated brute-force attempts on endpoint auth — GUARDIAN auto-blocked 47 IPs</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">2 hours ago</div>
+          <div class="timeline-content"><span class="badge badge-info">DEPLOY</span> ORACLE predictive model v4.2 deployed — 12% improvement in threat forecasting</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">4 hours ago</div>
+          <div class="timeline-content"><span class="badge badge-success">HEAL</span> PHOENIX recovered node chimeria-east-03 from transient failure — RTO: 340ms</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="platform-footer">
+  <div class="container">
+    <p>CHIMERIA Defense Systems — Sovereign AI Platform</p>
+    <p style="margin-top: 6px;">Copyright © 2024-2026 Alfredo Medina Hernandez. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="assets/js/platform.js"></script>
+</body>
+</html>

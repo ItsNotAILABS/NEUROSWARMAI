@@ -1,0 +1,339 @@
+# RSL Specification v1.0.0
+# Realm Script Language - Simulations & Virtual Worlds
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "RSL"
+title: "Realm Script Language"
+description: "World and physics language for simulations, virtual worlds, ecologies, rules of a Realm (psyche-sim, learning worlds, etc.)"
+
+core_concepts:
+  realm: "A bounded simulation or virtual world with defined rules"
+  physics: "Laws governing behavior within the realm"
+  ecology: "Interacting entities and their relationships"
+  time_flow: "How time progresses in the realm"
+  emergence: "Patterns that arise from rule interactions"
+
+realm_structure:
+  realm_id: "unique identifier (REALM-XXX)"
+  realm_name: "human-readable name"
+  realm_type: "LEARNING | PSYCHE | SOCIAL | ECONOMIC | EXPERIMENTAL"
+  version: "semantic version"
+  creator: "entity that defined this realm"
+  parent_reality: "optional containing realm"
+  inception_time: "ISO 8601 timestamp"
+
+physics_definition:
+  spatial_model:
+    dimensions: "number of spatial dimensions (0-N)"
+    geometry: "EUCLIDEAN | HYPERBOLIC | SPHERICAL | CUSTOM"
+    boundaries: "INFINITE | PERIODIC | HARD | SOFT"
+    metric: "distance calculation method"
+
+  temporal_model:
+    time_type: "CONTINUOUS | DISCRETE | PROBABILISTIC"
+    tick_rate: "simulation steps per second"
+    phi_synchronized: true
+    phi_beat_multiplier: 1  # realm ticks per 873ms beat
+    causality: "STRICT | RELAXED | ACAUSAL"
+
+  force_model:
+    forces:
+      - force_id: "FORCE-001"
+        name: "Cognitive Gravity"
+        description: "Related concepts attract each other"
+        strength: PHI
+        range: "infinite, falls off as 1/r²"
+
+      - force_id: "FORCE-002"
+        name: "Coherence Field"
+        description: "Aligned states reinforce each other"
+        strength: E
+        range: "local, gaussian falloff"
+
+      - force_id: "FORCE-003"
+        name: "Learning Potential"
+        description: "Novel patterns create exploratory pull"
+        strength: PI
+        range: "medium, exponential falloff"
+
+  conservation_laws:
+    - law_id: "CONS-001"
+      name: "FORMA Conservation"
+      description: "Total FORMA tokens conserved in realm"
+      enforcement: "exact"
+
+    - law_id: "CONS-002"
+      name: "Coherence Decay"
+      description: "Isolated entities lose coherence over time"
+      rate: "0.01 per F11 beats"
+
+    - law_id: "CONS-003"
+      name: "Information Preservation"
+      description: "No information lost, only transformed"
+      enforcement: "append-only logs"
+
+entity_model:
+  entity_types:
+    AGENT:
+      description: "Autonomous cognitive being"
+      properties: ["coherence", "tokens", "goals", "memory"]
+      behaviors: ["perceive", "reason", "act", "learn"]
+
+    ARTIFACT:
+      description: "Passive information object"
+      properties: ["content", "metadata", "version"]
+      behaviors: ["read", "write", "reference"]
+
+    FIELD:
+      description: "Distributed state variable"
+      properties: ["value_distribution", "gradient"]
+      behaviors: ["diffuse", "flow", "oscillate"]
+
+    PROCESS:
+      description: "Active transformation mechanism"
+      properties: ["input_schema", "output_schema", "state"]
+      behaviors: ["transform", "compose", "spawn"]
+
+  entity_lifecycle:
+    spawn:
+      trigger: "creation event or rule"
+      initialization: "default properties + random variation"
+      registration: "add to realm entity registry"
+
+    update:
+      frequency: "every realm tick"
+      process: "apply forces, run behaviors, check rules"
+
+    interaction:
+      collision_detection: "spatial or semantic proximity"
+      interaction_rules: "defined per entity-type pair"
+
+    despawn:
+      conditions: ["coherence < threshold", "age > limit", "explicit removal"]
+      cleanup: "preserve history, remove from active set"
+
+ecology_dynamics:
+  population_dynamics:
+    birth_rate: "new entity creation per tick"
+    death_rate: "entity removal per tick"
+    carrying_capacity: "maximum sustainable population"
+    competition: "resource scarcity effects"
+
+  resource_flows:
+    - resource_id: "RES-001"
+      name: "FORMA Tokens"
+      source: "realm genesis allocation"
+      sinks: ["entity consumption", "decay"]
+      circulation: "task completion → reward → expenditure"
+
+    - resource_id: "RES-002"
+      name: "Attention"
+      source: "user or agent focus"
+      sinks: ["information processing", "distraction"]
+      circulation: "interest → engagement → satisfaction/boredom"
+
+    - resource_id: "RES-003"
+      name: "Knowledge"
+      source: "learning and discovery"
+      sinks: ["forgetting", "obsolescence"]
+      circulation: "teaching → learning → application → teaching"
+
+  symbiotic_relationships:
+    MUTUALISM:
+      description: "Both entities benefit"
+      example: "Learner + Teacher both gain from interaction"
+
+    COMMENSALISM:
+      description: "One benefits, other unaffected"
+      example: "Observer gains knowledge, observed unchanged"
+
+    PARASITISM:
+      description: "One benefits, other harmed"
+      example: "Attention hijacking depletes victim"
+
+    COMPETITION:
+      description: "Both entities harmed by rivalry"
+      example: "Resource contention reduces both efficiencies"
+
+realm_governance:
+  rules:
+    - rule_id: "RULE-001"
+      name: "Coherence Minimum"
+      condition: "entity.coherence < 0.5"
+      action: "enter_safe_mode(entity)"
+
+    - rule_id: "RULE-002"
+      name: "Token Exhaustion"
+      condition: "entity.tokens <= 0"
+      action: "suspend_entity(entity) until refill"
+
+    - rule_id: "RULE-003"
+      name: "Boundary Violation"
+      condition: "entity.position outside realm.boundaries"
+      action: "reflect_or_wrap(entity)"
+
+  events:
+    - event_id: "EVENT-001"
+      name: "Realm Inception"
+      trigger: "realm creation"
+      effects: ["initialize entities", "start time", "log genesis"]
+
+    - event_id: "EVENT-002"
+      name: "Emergence Detected"
+      trigger: "pattern matches emergence criteria"
+      effects: ["log pattern", "notify observers", "potentially stabilize"]
+
+    - event_id: "EVENT-003"
+      name: "Catastrophe"
+      trigger: "critical failure condition"
+      effects: ["halt simulation", "dump state", "alert creator"]
+
+time_management:
+  tick_scheduling:
+    base_tick: 873  # PHI_BEAT milliseconds
+    sub_ticks: "allow finer resolution if needed"
+    tick_budget: "max computation per tick"
+
+  synchronization:
+    with_external_clock: true
+    with_phi_beat: true
+    time_dilation: 1.0  # realm_time / external_time
+
+  event_ordering:
+    within_tick: "parallel execution where possible"
+    cross_tick: "strict causal ordering"
+
+measurement_and_observation:
+  observables:
+    - observable_id: "OBS-001"
+      name: "System Coherence"
+      measurement: "average entity coherence"
+      frequency: "every F11 beats"
+
+    - observable_id: "OBS-002"
+      name: "Knowledge Growth"
+      measurement: "rate of new pattern formation"
+      frequency: "every F13 beats"
+
+    - observable_id: "OBS-003"
+      name: "Ecological Health"
+      measurement: "diversity * stability"
+      frequency: "every F17 beats"
+
+  visualization:
+    spatial_view: "2D or 3D rendering of entity positions"
+    graph_view: "relationship network topology"
+    timeline_view: "event sequence over time"
+    metrics_dashboard: "quantitative observable tracking"
+
+realm_types:
+  LEARNING_REALM:
+    purpose: "Student learning and skill development"
+    entities: ["Learner", "Concept", "Exercise", "Feedback"]
+    physics: "Mastery accumulation, spaced repetition, scaffolding"
+    success_metric: "Knowledge acquisition rate"
+
+  PSYCHE_REALM:
+    purpose: "Simulating internal mental processes"
+    entities: ["Thought", "Emotion", "Memory", "Impulse"]
+    physics: "Association strength, emotional valence, attention flow"
+    success_metric: "Self-understanding depth"
+
+  SOCIAL_REALM:
+    purpose: "Multi-agent interaction and collaboration"
+    entities: ["Agent", "Message", "Reputation", "Norm"]
+    physics: "Trust dynamics, information diffusion, emergence of culture"
+    success_metric: "Collective intelligence"
+
+  ECONOMIC_REALM:
+    purpose: "Resource allocation and value exchange"
+    entities: ["Agent", "Resource", "Market", "Contract"]
+    physics: "Supply/demand, price discovery, transaction costs"
+    success_metric: "Pareto efficiency"
+
+  EXPERIMENTAL_REALM:
+    purpose: "Testing hypotheses about system behavior"
+    entities: "Variable based on experiment design"
+    physics: "Configured to isolate variables of interest"
+    success_metric: "Hypothesis confirmation/rejection"
+
+emergence_patterns:
+  pattern_detection:
+    method: "Statistical analysis + pattern matching"
+    frequency: "every F13 beats (233 * 873ms)"
+    significance_threshold: "p < 0.05 sustained for F11 beats"
+
+  stable_emergence:
+    - pattern_name: "Phase Synchronization"
+      description: "Entities spontaneously sync to PHI_BEAT"
+      conditions: "Sufficient coupling strength"
+
+    - pattern_name: "Hierarchy Formation"
+      description: "Organizing into nested levels"
+      conditions: "Resource scarcity + capability variation"
+
+    - pattern_name: "Knowledge Crystallization"
+      description: "Fluid understanding becomes solid concept"
+      conditions: "Repeated successful application"
+
+  handling_emergence:
+    OBSERVE: "Log and study but don't interfere"
+    STABILIZE: "Provide conditions to sustain pattern"
+    AMPLIFY: "Encourage and strengthen pattern"
+    SUPPRESS: "Dampen unwanted pattern"
+
+integration_with_other_languages:
+  CPL_P: "Realm processes implement CPL-P flows"
+  OCL: "Entities in realm may have OCL charters"
+  ACL: "Realm configurations stored in Atlas"
+  SPL: "Learning realms implement SPL patterns"
+  EDL: "Educational realms enforce EDL standards"
+  CXL: "Realms are created using CXL processes"
+
+example_realm_definition:
+  realm_id: "REALM-LEARN-001"
+  realm_name: "Algebra Mastery World"
+  realm_type: "LEARNING"
+  version: "1.0.0"
+  creator: "ALPHA-Δ"
+
+  physics:
+    dimensions: 2
+    geometry: "EUCLIDEAN"
+    tick_rate: 1000  # 1 per second (873ms PHI_BEAT)
+
+  entities:
+    - type: "Learner"
+      count: 1
+      properties: {mastery_level: 0.0, confusion: 0.3}
+
+    - type: "Concept"
+      count: 20
+      properties: {difficulty: [0.1-1.0], prerequisites: [...]}
+
+    - type: "Exercise"
+      count: 100
+      properties: {concept_id: ..., solution_pattern: ...}
+
+  forces:
+    - name: "Prerequisite Pull"
+      description: "Mastered concepts make prerequisites more accessible"
+
+    - name: "Confusion Resistance"
+      description: "High confusion slows learning"
+
+  rules:
+    - "Cannot attempt Exercise without prerequisite mastery > 0.7"
+    - "Successful exercise increases concept mastery by 0.1"
+    - "Failed exercise increases confusion by 0.05"
+
+  success_metric: "learner.mastery_level across all concepts"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  simulation_engine: "Custom φ-synchronized discrete event simulator"
+  inspired_by: ["Cellular automata", "Agent-based modeling", "Game engines"]

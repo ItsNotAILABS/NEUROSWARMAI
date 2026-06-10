@@ -1,0 +1,203 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-002 · SARTOR — Sartor et Empactor
+# Sovereign Organism Packaging Bot
+#
+# Auto-packages the Chrome extension ZIP, organisms worker bundle, and
+# Electron desktop builds for all platforms. Uploads all artifacts and
+# creates a draft GitHub Release whenever a version tag is pushed.
+#
+# Schedule: On push to main · version tags · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-002 · SARTOR — Packager"
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Packaging status: success | failure"
+        value: ${{ jobs.package.outputs.status }}
+      summary:
+        description: "Human-readable packaging summary"
+        value: ${{ jobs.package.outputs.summary }}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  package:
+    name: "SARTOR — Organism Packaging"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[SARTOR] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node + pnpm ────────────────────────────────────────────────────────
+      - name: "[SARTOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[SARTOR] Setup pnpm 10"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: "[SARTOR] Install dependencies"
+        run: pnpm install --no-frozen-lockfile
+
+      # ── Build frontend ─────────────────────────────────────────────────────
+      - name: "[SARTOR] Build frontend"
+        id: frontend
+        run: |
+          cd src/frontend
+          pnpm run build:skip-bindings
+          echo "frontend_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Package Chrome Extension ───────────────────────────────────────────
+      - name: "[SARTOR] Package Chrome extension ZIP"
+        id: extension
+        run: |
+          mkdir -p dist
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('extension/jarvis/manifest.json','utf8')).version)")
+          ZIP="dist/meridianus-extension-v${VERSION}.zip"
+          cd extension/jarvis
+          zip -r "../../${ZIP}" . \
+            -x "*.DS_Store" -x "__MACOSX/*" -x "*.map" -x "node_modules/*" -x "README.md"
+          cd ../..
+          echo "extension_zip=${ZIP}" >> $GITHUB_OUTPUT
+          echo "extension_version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "extension_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Bundle Organism Web Workers ────────────────────────────────────────
+      - name: "[SARTOR] Bundle organism web workers"
+        id: webworkers
+        run: |
+          mkdir -p dist
+          COUNT=$(ls organism/web/*-worker.js | wc -l | tr -d ' ')
+          ZIP="dist/organism-web-workers-${COUNT}workers.zip"
+          zip -j "${ZIP}" organism/web/*.js organism/web/*.html organism/web/*.md
+          echo "workers_zip=${ZIP}" >> $GITHUB_OUTPUT
+          echo "workers_count=${COUNT}" >> $GITHUB_OUTPUT
+          echo "workers_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Bundle Cloudflare AIS Workers ─────────────────────────────────────
+      - name: "[SARTOR] Bundle AIS Cloudflare workers"
+        id: cfworkers
+        run: |
+          mkdir -p dist
+          COUNT=$(ls organism/cloudflare/*.js | grep -v 'index.js' | wc -l | tr -d ' ')
+          ZIP="dist/organism-ais-workers-${COUNT}brains.zip"
+          zip -j "${ZIP}" organism/cloudflare/*.js organism/cloudflare/wrangler.toml
+          echo "ais_zip=${ZIP}" >> $GITHUB_OUTPUT
+          echo "ais_count=${COUNT}" >> $GITHUB_OUTPUT
+          echo "ais_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Upload all artifacts ───────────────────────────────────────────────
+      - name: "[SARTOR] Upload extension artifact"
+        if: steps.extension.outputs.extension_ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meridianus-extension-v${{ steps.extension.outputs.extension_version }}
+          path: ${{ steps.extension.outputs.extension_zip }}
+          retention-days: 30
+
+      - name: "[SARTOR] Upload organism web workers artifact"
+        if: steps.webworkers.outputs.workers_ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: organism-web-workers-${{ steps.webworkers.outputs.workers_count }}
+          path: ${{ steps.webworkers.outputs.workers_zip }}
+          retention-days: 30
+
+      - name: "[SARTOR] Upload AIS Cloudflare workers artifact"
+        if: steps.cfworkers.outputs.ais_ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: organism-ais-workers-${{ steps.cfworkers.outputs.ais_count }}
+          path: ${{ steps.cfworkers.outputs.ais_zip }}
+          retention-days: 30
+
+      - name: "[SARTOR] Upload frontend dist artifact"
+        if: steps.frontend.outputs.frontend_ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meridianus-frontend-dist
+          path: src/frontend/dist/
+          retention-days: 30
+
+      # ── Create Draft Release on version tag ───────────────────────────────
+      - name: "[SARTOR] Create draft release (on version tag)"
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            const extVersion = '${{ steps.extension.outputs.extension_version }}';
+            const webCount = '${{ steps.webworkers.outputs.workers_count }}';
+            const aisCount = '${{ steps.cfworkers.outputs.ais_count }}';
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `MERIDIANUS ${tag} — Sovereign AGI Command Center`,
+              draft: true,
+              prerelease: false,
+              body: [
+                `## MERIDIANUS ${tag}`,
+                '',
+                '*Per aspera ad astra* — Packaged by BOT-002 · SARTOR',
+                '',
+                '### 📦 Artifacts (download from workflow run)',
+                `- **Chrome Extension** v${extVersion} — \`meridianus-extension-v${extVersion}.zip\``,
+                `- **Web Worker Fleet** (${webCount} workers) — \`organism-web-workers-${webCount}workers.zip\``,
+                `- **AIS Cloudflare Fleet** (${aisCount} brains) — \`organism-ais-workers-${aisCount}brains.zip\``,
+                '- **Frontend Dist** — \`meridianus-frontend-dist\`',
+                '',
+                '### 📱 PWA',
+                'Open **https://command-platform.caffeine.ai** in Edge or Chrome → tap ⋮ → **"Add to Home Screen"**',
+                '',
+                '---',
+                '*Auto-generated by BOT-002 · SARTOR — Sartor et Empactor*',
+              ].join('\n')
+            });
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[SARTOR] Compute packaging status"
+        id: set-output
+        run: |
+          EXT="${{ steps.extension.outputs.extension_ok }}"
+          WEB="${{ steps.webworkers.outputs.workers_ok }}"
+          AIS="${{ steps.cfworkers.outputs.ais_ok }}"
+          FE="${{ steps.frontend.outputs.frontend_ok }}"
+          if [ "$EXT" = "true" ] && [ "$WEB" = "true" ] && \
+             [ "$AIS" = "true" ] && [ "$FE" = "true" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "summary=✅ Packaged: extension v${{ steps.extension.outputs.extension_version }} · ${{ steps.webworkers.outputs.workers_count }} web workers · ${{ steps.cfworkers.outputs.ais_count }} AIS brains · frontend built" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            PARTS=""
+            [ "$EXT" != "true" ] && PARTS="${PARTS} extension"
+            [ "$WEB" != "true" ] && PARTS="${PARTS} web-workers"
+            [ "$AIS" != "true" ] && PARTS="${PARTS} ais-workers"
+            [ "$FE"  != "true" ] && PARTS="${PARTS} frontend"
+            echo "summary=❌ Packaging failed for:${PARTS}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[SARTOR] Final status"
+        run: |
+          echo "${{ steps.set-output.outputs.summary }}"
+          [ "${{ steps.set-output.outputs.status }}" = "success" ]

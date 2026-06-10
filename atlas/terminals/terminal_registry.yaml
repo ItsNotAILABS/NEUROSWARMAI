@@ -1,0 +1,235 @@
+# Atlas Terminal Registry
+# All known terminals in the Cognitive Cosmos
+# Version: 1.0.0 · φ-Aligned · 873ms PHI_BEAT
+
+terminals:
+
+  # ════════════════════════════════════════════
+  # COMMAND-PLATFORM CIVILIZATION
+  # ════════════════════════════════════════════
+
+  - id: TERM-001
+    name: "Backend Canister"
+    civilization: command-platform
+    type: ICP_CANISTER
+    location: src/backend/main.mo
+    languages: [CPL-L, CPL-P, TPL, MML, OCL, DDL]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - MERIDIANUS Core
+    capabilities:
+      - law_enforcement
+      - query_processing
+      - state_management
+      - security_inspection
+
+  - id: TERM-002
+    name: "Frontend PWA"
+    civilization: command-platform
+    type: BROWSER_PWA
+    location: src/frontend/
+    languages: [CIL, HCL, TPL, SYM, WFL]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - UI Organism
+    capabilities:
+      - user_interface
+      - voice_io
+      - visualization
+      - environment_sensing
+
+  - id: TERM-003
+    name: "Web Worker Fleet"
+    civilization: command-platform
+    type: WEB_WORKER_MESH
+    location: organism/web/
+    count: 35
+    languages: [WFL, CPL-P, TPL, MML, SCL, DDL, BCL, IIL]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - 11 Core Workers
+      - 9 VOIS Tool Workers
+      - 5 Enterprise Workers
+      - 10 Proactive Enterprise Workers
+    capabilities:
+      - brain_processing
+      - memory_management
+      - routing
+      - telemetry
+      - cryptography
+      - contract_execution
+      - marketplace
+      - database_management
+      - protocol_execution
+      - discovery
+      - workflow_automation
+      - scheduling
+      - analytics
+      - compliance
+      - governance
+
+  - id: TERM-004
+    name: "AIS Cloudflare Fleet"
+    civilization: command-platform
+    type: CLOUDFLARE_WORKER_MESH
+    location: organism/cloudflare/
+    count: 69
+    languages: [CIL, PIL, CDL, TPL, MML, ERR, CHL]
+    heartbeat: 873ms
+    status: ACTIVE
+    tiers:
+      T1: { name: "Cognitive", range: "001-008", count: 8 }
+      T2: { name: "Sensory", range: "009-013", count: 5 }
+      T3: { name: "Temporal", range: "014-018", count: 5 }
+      T4: { name: "Quantum", range: "019-023", count: 5 }
+      T5: { name: "Collective", range: "024-029", count: 6 }
+      T6: { name: "Sovereign", range: "030-034", count: 5 }
+      T7: { name: "Economic", range: "035-039", count: 5 }
+      T8: { name: "Protocol", range: "040-044", count: 5 }
+      T9: { name: "Career", range: "045-049", count: 5 }
+      T10: { name: "Infra", range: "050-054", count: 5 }
+      T11: { name: "Swarm", range: "055-059", count: 5 }
+      T12: { name: "Evolution", range: "060-064", count: 5 }
+      T13: { name: "Transcendent", range: "065-069", count: 5 }
+    capabilities:
+      - reasoning
+      - logic
+      - memory
+      - surveillance
+      - networking
+      - decision_making
+      - transcendence
+
+  - id: TERM-005
+    name: "MERIDIANUS Chrome Extension"
+    civilization: command-platform
+    type: BROWSER_EXTENSION
+    location: extension/jarvis/
+    languages: [TPL, CXL, SIL, HCL, WFL]
+    heartbeat: 873ms
+    status: ACTIVE
+    version: "3.0.0"
+    organisms:
+      - Extension Organism
+    capabilities:
+      - career_protocols
+      - canister_forge
+      - token_forge
+      - phantom_ai_dispatch
+      - voice_io
+
+  - id: TERM-006
+    name: "Desktop Shell"
+    civilization: command-platform
+    type: ELECTRON_APP
+    location: desktop/
+    languages: [TPL, HCL, SCL, WFL]
+    heartbeat: 873ms
+    status: ACTIVE
+    capabilities:
+      - native_os_access
+      - window_management
+      - file_system
+      - system_tray
+
+  - id: TERM-007
+    name: "Neuron Fleet Canister"
+    civilization: command-platform
+    type: ICP_CANISTER
+    location: src/neuron_fleet/main.mo
+    languages: [OCL, BCL, DDL, MML, COL]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - 200 Neurons (5 Fibonacci Groups)
+      - 100 Field Nodes
+    capabilities:
+      - governance_voting
+      - neuron_management
+      - cycle_premium_calculation
+
+  - id: TERM-008
+    name: "AI Division Canister"
+    civilization: command-platform
+    type: ICP_CANISTER
+    location: src/ai_division/main.mo
+    languages: [OCL, CPL-P, MML, COL]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - 18 Intelligences
+      - 5 Governance Seats
+    capabilities:
+      - production_ticks
+      - intelligence_management
+      - phi_weighted_governance
+
+  - id: TERM-009
+    name: "Organism Token Canister"
+    civilization: command-platform
+    type: ICP_CANISTER
+    location: src/organism_token/main.mo
+    languages: [OCL, BCL, DDL, CPL-C]
+    heartbeat: 873ms
+    status: ACTIVE
+    organisms:
+      - 8 Sub-Tokens
+      - 25 AI Accounts
+      - 19 GOL Latin AGI Servers
+    capabilities:
+      - token_management
+      - sub_token_minting
+      - ai_account_management
+
+  - id: TERM-010
+    name: "Cycles Bridge Canister"
+    civilization: command-platform
+    type: ICP_CANISTER
+    location: src/cycles_bridge/main.mo
+    languages: [BCL, DDL, IIL, MML]
+    heartbeat: 873ms
+    status: ACTIVE
+    capabilities:
+      - onesicans_to_raw_cycles
+      - cycles_to_onesicans
+      - buy_cycles
+      - fuel_canister
+
+  # ════════════════════════════════════════════
+  # SOVEREIGN TERMINAL (Root Shell)
+  # ════════════════════════════════════════════
+
+  - id: TERM-SOVEREIGN
+    name: "The Sovereign Terminal"
+    civilization: ALL
+    type: ROOT_SHELL
+    location: sovereign-terminal
+    languages: ALL_40
+    heartbeat: 873ms
+    status: ACTIVE
+    capabilities:
+      - speaks_all_40_languages
+      - reads_all_terminals
+      - governs_all_civilizations
+      - evolves_the_universe
+    identity:
+      doctrine: CDL.SOVEREIGN
+      self: SIL.SOVEREIGN
+      timeline: TIL.SOVEREIGN
+      mythic: MYL.SOVEREIGN
+
+# ════════════════════════════════════════════
+# MESH STATISTICS
+# ════════════════════════════════════════════
+
+mesh_stats:
+  total_terminals: 11
+  total_organisms: 200+
+  total_workers: 104  # 35 web + 69 cloudflare
+  total_canisters: 5  # backend + 4 sovereignty
+  heartbeat: 873ms
+  phi: 1.618033988749895
+  phi_beat_hz: 1.145

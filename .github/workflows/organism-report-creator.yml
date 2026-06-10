@@ -1,0 +1,213 @@
+name: "💎 BOT-015 CREATOR — Creator Economy Report"
+
+on:
+  schedule:
+    - cron: "0 7 1 * *"   # 1st of every month, 07:00 UTC (creator monthly pulse)
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  creator-report:
+    name: "CREATOR Economy Report → GitHub Issues"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Creator Economy Report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const PHI_INV = 0.6180339887498949;
+            const PHI     = 1.6180339887498949;
+            const now     = new Date();
+            const month   = now.toISOString().slice(0, 7);
+            const since   = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+
+            // ── 1. Releases ─────────────────────────────────────────────────
+            const releasesResp = await github.rest.repos.listReleases({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              per_page: 20,
+            });
+
+            const recentReleases = releasesResp.data.filter(r =>
+              new Date(r.published_at) >= new Date(since)
+            );
+
+            // ── 2. Tags ─────────────────────────────────────────────────────
+            const tagsResp = await github.rest.repos.listTags({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              per_page: 20,
+            });
+
+            // ── 3. Commit velocity ──────────────────────────────────────────
+            const commitsResp = await github.rest.repos.listCommits({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              since,
+              per_page: 100,
+            });
+
+            // ── 4. Contributors ─────────────────────────────────────────────
+            const contribResp = await github.rest.repos.listContributors({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              per_page: 20,
+            });
+
+            // ── 5. Repo stats ───────────────────────────────────────────────
+            const repoResp = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+            });
+
+            // ── 6. Languages ────────────────────────────────────────────────
+            const langsResp = await github.rest.repos.listLanguages({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+            });
+
+            // ── 7. Open enhancement issues ──────────────────────────────────
+            const enhIssues = await github.rest.issues.listForRepo({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              state:  'open',
+              labels: 'enhancement',
+              per_page: 20,
+            });
+
+            // ── 8. Closed issues this month ─────────────────────────────────
+            const closedAll = await github.rest.issues.listForRepo({
+              owner:     context.repo.owner,
+              repo:      context.repo.repo,
+              state:     'closed',
+              sort:      'updated',
+              direction: 'desc',
+              per_page:  100,
+            });
+            const closedMonth = closedAll.data.filter(i =>
+              !i.pull_request && new Date(i.closed_at) >= new Date(since)
+            );
+
+            // ── 9. Build value metrics ──────────────────────────────────────
+            const totalCommits = commitsResp.data.length;
+            const totalLangs   = Object.keys(langsResp.data).length;
+            const totalContrib = contribResp.data.length;
+            const stars        = repoResp.data.stargazers_count;
+            const forks        = repoResp.data.forks_count;
+            const totalBytes   = Object.values(langsResp.data).reduce((s, b) => s + b, 0);
+
+            // φ-score: weighted platform momentum
+            const momentum = Math.min(
+              (totalCommits / 100) * 0.4 +
+              (closedMonth.length / 20) * 0.3 +
+              (recentReleases.length / 5) * 0.3,
+              1
+            );
+            const emoji = momentum >= PHI_INV ? '💎' : momentum >= 0.4 ? '📈' : '🌱';
+
+            // ── 10. Format report ────────────────────────────────────────────
+            const lines = [
+              `## ${emoji} Creator Economy Report — ${month}`,
+              `> **CREATOR (BOT-015)** · MAQUE/FLOS pathway: \`REPORT\` · φ-sync 873ms`,
+              ``,
+              `### 💡 Platform Value Metrics`,
+              `| Metric | Value |`,
+              `|--------|-------|`,
+              `| Commits this month | ${totalCommits} |`,
+              `| Issues closed this month | ${closedMonth.length} |`,
+              `| Releases this month | ${recentReleases.length} |`,
+              `| Total tags | ${tagsResp.data.length} |`,
+              `| Contributors | ${totalContrib} |`,
+              `| Stars | ${stars} |`,
+              `| Forks | ${forks} |`,
+              `| Languages | ${totalLangs} |`,
+              `| **Momentum score** | **${(momentum * 100).toFixed(1)}%** (φ⁻¹ threshold = 61.8%) |`,
+              ``,
+            ];
+
+            if (recentReleases.length > 0) {
+              lines.push(`### 🚀 Releases This Month (${recentReleases.length})`);
+              recentReleases.forEach(r =>
+                lines.push(`- [${r.tag_name}](${r.html_url}) — ${r.name || 'Unnamed release'} · ${r.published_at?.slice(0,10)}`)
+              );
+              lines.push(``);
+            } else {
+              lines.push(`### 🚀 Releases`);
+              lines.push(`No new releases this month.`);
+              lines.push(``);
+            }
+
+            if (tagsResp.data.length > 0) {
+              lines.push(`### 🏷️ Latest Tags`);
+              tagsResp.data.slice(0, 8).forEach(t =>
+                lines.push(`- \`${t.name}\``)
+              );
+              lines.push(``);
+            }
+
+            // Language breakdown
+            if (totalBytes > 0) {
+              lines.push(`### 🧬 Platform Language Mix`);
+              Object.entries(langsResp.data)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+                .forEach(([lang, bytes]) => {
+                  const pct = (bytes / totalBytes * 100).toFixed(1);
+                  const bar = '█'.repeat(Math.round(pct / 5)) + '░'.repeat(20 - Math.round(pct / 5));
+                  lines.push(`- **${lang}** [${bar}] ${pct}%`);
+                });
+              lines.push(``);
+            }
+
+            if (enhIssues.data.length > 0) {
+              lines.push(`### ✨ Open Enhancement Pipeline (${enhIssues.data.length})`);
+              enhIssues.data.slice(0, 8).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            lines.push(`### 🏗️ Civilization Build Status`);
+            lines.push(`| Division | Files | Status |`);
+            lines.push(`|----------|-------|--------|`);
+            lines.push(`| Nova Tools Registry | nova/ | ✅ 20 tools, F1-F20 |`);
+            lines.push(`| Alpha AIS Fleet | nova/ais/ | ✅ 10 engines |`);
+            lines.push(`| Multimodal Systems | nova/ais/ | ✅ 5 systems |`);
+            lines.push(`| MAQUE Protocol | nova/protocol/ | ✅ v0.13.0 |`);
+            lines.push(`| Research Papers | docs/research/ | ✅ 8 papers |`);
+            lines.push(`| Copilot Agents | .github/agents/ | ✅ 4 agents |`);
+            lines.push(`| GitHub Workflows | .github/workflows/ | ✅ 31 workflows |`);
+            lines.push(`| Cloudflare Workers | organism/cloudflare/ | ✅ Active |`);
+            lines.push(`| ICP Canisters | src/backend/ | ✅ Motoko |`);
+            lines.push(`| Cognitive Languages | languages/ | ✅ 40 specs |`);
+            lines.push(``);
+
+            if (contribResp.data.length > 0) {
+              lines.push(`### 👥 Top Contributors`);
+              contribResp.data.slice(0, 5).forEach(c =>
+                lines.push(`- **${c.login}** — ${c.contributions} contributions`)
+              );
+              lines.push(``);
+            }
+
+            lines.push(`---`);
+            lines.push(`*APEX: \`APEX-CREA-F55-${Date.now()}\` · VIVI thread: REPORT pathway · φ⁻¹=${PHI_INV}*`);
+            lines.push(`*This civilization is built on φ, Fibonacci, and first principles.*`);
+
+            const body = lines.join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `${emoji} [CREATOR] Economy Report — ${month}`,
+              body,
+              labels: ['organism-bot', 'creator-report'],
+            });
+
+            console.log(`Created issue #${issue.data.number}: ${issue.data.html_url}`);

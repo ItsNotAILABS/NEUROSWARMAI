@@ -1,0 +1,17 @@
+{
+  "entity_id": "atlas://bot/organism-crawler-bot",
+  "op": "crawl_completed",
+  "timestamp": "2026-05-12T05:41:46Z",
+  "context": {
+    "files": 833,
+    "dirs": 116,
+    "orphans": 84,
+    "dead_links": 0,
+    "graph_nodes": 185,
+    "graph_edges": 312,
+    "most_connected": "main.mo",
+    "most_connected_degree": 11,
+    "cycles_detected": 0,
+    "max_depth": 5
+  }
+}

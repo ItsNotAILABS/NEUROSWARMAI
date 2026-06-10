@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMMAND SHIELD — Self-Healing Multi-Agent Protection</title>
+  <meta name="description" content="Enterprise AI safety platform with Sentinel-Shield-Sensor feedback loops. 55 protocols, 200 tools, self-healing architecture.">
+  <style>
+    :root {
+      --phi: 1.618033988749895;
+      --gold: #D4AF37;
+      --gold-dim: #B8941E;
+      --dark: #0A0A0F;
+      --dark-card: #12121A;
+      --dark-border: #1E1E2E;
+      --text: #E8E8F0;
+      --text-dim: #9898A8;
+      --green: #00FF88;
+      --red: #FF3366;
+      --blue: #3388FF;
+      --purple: #8833FF;
+      --cyan: #00DDFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Hero ────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(0,255,136,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(212,175,55,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(136,51,255,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--gold-dim);
+      border-radius: 999px;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 2rem;
+      text-transform: uppercase;
+    }
+    .hero-badge .pulse {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.5); }
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 span { color: var(--gold); }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-dim);
+      max-width: 720px;
+      margin-bottom: 2.5rem;
+    }
+    .cta-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--gold);
+      color: var(--dark);
+    }
+    .btn-primary:hover { background: #E8C44A; transform: translateY(-2px); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--dark-border);
+    }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ─── Stats Bar ───────────────────────────────────── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--dark-border);
+      border: 1px solid var(--dark-border);
+      max-width: 1100px;
+      margin: -3rem auto 0;
+      position: relative;
+      z-index: 2;
+    }
+    .stat {
+      background: var(--dark-card);
+      padding: 1.5rem 2rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.25rem;
+    }
+
+    /* ─── Section ─────────────────────────────────────── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .section-desc {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin-bottom: 3rem;
+    }
+
+    /* ─── Product Grid ────────────────────────────────── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .product-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+    .product-card:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-4px);
+    }
+    .product-card.featured {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, var(--dark-card) 0%, #1a1a2e 100%);
+    }
+    .product-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .product-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .product-card p {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .tag-gold { background: rgba(212,175,55,0.15); color: var(--gold); }
+    .tag-green { background: rgba(0,255,136,0.12); color: var(--green); }
+    .tag-blue { background: rgba(51,136,255,0.12); color: var(--blue); }
+    .tag-purple { background: rgba(136,51,255,0.12); color: var(--purple); }
+    .tag-red { background: rgba(255,51,102,0.12); color: var(--red); }
+
+    /* ─── Protocol Table ──────────────────────────────── */
+    .protocol-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+    .protocol-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .protocol-table td {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(30,30,46,0.5);
+    }
+    .protocol-table tr:hover { background: rgba(212,175,55,0.03); }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--cyan); }
+
+    /* ─── Research Papers ─────────────────────────────── */
+    .paper-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .paper-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .paper-card .authors {
+      font-size: 0.9rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .paper-card .abstract {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .paper-card .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    /* ─── Architecture Diagram ────────────────────────── */
+    .arch-diagram {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 16px;
+      padding: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--text-dim);
+    }
+    .arch-diagram .hl { color: var(--gold); }
+    .arch-diagram .g { color: var(--green); }
+    .arch-diagram .r { color: var(--red); }
+    .arch-diagram .b { color: var(--blue); }
+    .arch-diagram .p { color: var(--purple); }
+
+    /* ─── Pricing ─────────────────────────────────────── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .price-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .price-card.featured { border-color: var(--gold); }
+    .price-card h4 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+    .price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin: 1rem 0;
+    }
+    .price span { font-size: 1rem; color: var(--text-dim); font-weight: 400; }
+    .features { list-style: none; text-align: left; margin: 1.5rem 0; }
+    .features li {
+      padding: 0.4rem 0;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .features li::before {
+      content: '✓ ';
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    /* ─── Footer ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--dark-border);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    footer p { font-size: 0.85rem; color: var(--text-dim); }
+    footer .brand { color: var(--gold); font-weight: 700; }
+
+    /* ─── Live Dashboard ──────────────────────────────── */
+    .live-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .live-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .live-card h4 {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .live-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .live-value.green { color: var(--green); }
+    .live-value.gold { color: var(--gold); }
+    .live-bar {
+      height: 4px;
+      background: var(--dark-border);
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .live-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s;
+    }
+    .live-bar-fill.green { background: var(--green); }
+    .live-bar-fill.gold { background: var(--gold); }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      .stats-bar { margin-top: 0; }
+      section { padding: 3rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse"></span>
+    55 Protocols Live · 21 Workers Active · φ-Heartbeat 873ms
+  </div>
+  <h1>
+    <span>COMMAND</span> SHIELD
+  </h1>
+  <p>
+    Self-healing multi-agent protection for enterprise AI platforms.
+    55 protocols. 200 tools. Sentinel-Shield-Sensor feedback loops.
+    Managing 1,000+ clients autonomously.
+  </p>
+  <div class="cta-row">
+    <a href="#products" class="btn btn-primary">Explore Products →</a>
+    <a href="#papers" class="btn btn-secondary">Read the Research</a>
+    <a href="#sdk" class="btn btn-secondary">SDK Docs</a>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     STATS BAR
+     ════════════════════════════════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-value" id="protocol-count">55</div>
+    <div class="stat-label">Enterprise Protocols</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">200</div>
+    <div class="stat-label">VOIS Tools</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">21</div>
+    <div class="stat-label">Web Workers</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">1,597</div>
+    <div class="stat-label">Max Clients (F17)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">873ms</div>
+    <div class="stat-label">φ-Heartbeat</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PRODUCTS
+     ════════════════════════════════════════════════════════════════ -->
+<section id="products">
+  <div class="container">
+    <div class="section-label">Product Suite</div>
+    <h2 class="section-title">Four Products. One Platform.</h2>
+    <p class="section-desc">
+      Built on the same 55-protocol backbone, each product targets a different enterprise need.
+    </p>
+    <div class="product-grid">
+
+      <div class="product-card featured">
+        <div class="product-icon" style="background: rgba(0,255,136,0.1);">🛡️</div>
+        <h3>COMMAND SHIELD</h3>
+        <p>Self-healing multi-agent protection. Sentinel-Shield-Sensor feedback loops detect, contain, and remediate threats autonomously. Zero-trust gate in &lt;2s.</p>
+        <span class="tag tag-green">Serious Tech — AGI Safety</span>
+        <span class="tag tag-gold">PROTOCOL-016–020, 040</span>
+        <span class="tag tag-red">Critical</span>
+      </div>
+
+      <div class="product-card featured">
+        <div class="product-icon" style="background: rgba(136,51,255,0.1);">🧠</div>
+        <h3>COMMAND AGI</h3>
+        <p>Enterprise AGI orchestration. Multi-agent swarm coordination with consensus, negotiation, and self-healing. 555 Fibonacci agents across 4 ALPHA orchestrators.</p>
+        <span class="tag tag-purple">Serious Tech — AGI Core</span>
+        <span class="tag tag-gold">PROTOCOL-031–040</span>
+        <span class="tag tag-blue">Intelligence</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon" style="background: rgba(51,136,255,0.1);">⚡</div>
+        <h3>COMMAND SDK</h3>
+        <p>Developer toolkit for building on the Command Platform. REST/GraphQL/WebSocket APIs, batch operations, auto-generated docs. Ship in hours, not months.</p>
+        <span class="tag tag-blue">SDK & Developer</span>
+        <span class="tag tag-gold">PROTOCOL-046–055</span>
+        <span class="tag tag-green">Fun Release</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon" style="background: rgba(212,175,55,0.1);">📜</div>
+        <h3>COMMAND COMPLY</h3>
+        <p>Automated compliance engine. GDPR data requests in 30 days guaranteed. SOC2 audit prep. IP protection with cryptographic provenance. License enforcement.</p>
+        <span class="tag tag-gold">Compliance</span>
+        <span class="tag tag-gold">PROTOCOL-041–045</span>
+        <span class="tag tag-purple">Enterprise</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     LIVE DASHBOARD
+     ════════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-label">Live Platform Status</div>
+    <h2 class="section-title">Real-Time Organism Health</h2>
+    <div class="live-dashboard">
+      <div class="live-card">
+        <h4>Platform Status</h4>
+        <div class="live-value green" id="platform-status">● HEALTHY</div>
+        <div class="live-bar"><div class="live-bar-fill green" style="width: 100%"></div></div>
+      </div>
+      <div class="live-card">
+        <h4>Active Executions</h4>
+        <div class="live-value gold" id="active-executions">0 / 233</div>
+        <div class="live-bar"><div class="live-bar-fill gold" style="width: 0%"></div></div>
+      </div>
+      <div class="live-card">
+        <h4>Clients Managed</h4>
+        <div class="live-value gold" id="client-count">0 / 1,597</div>
+        <div class="live-bar"><div class="live-bar-fill gold" style="width: 0%"></div></div>
+      </div>
+      <div class="live-card">
+        <h4>Error Rate</h4>
+        <div class="live-value green" id="error-rate">0.00%</div>
+        <div class="live-bar"><div class="live-bar-fill green" style="width: 100%"></div></div>
+      </div>
+      <div class="live-card">
+        <h4>φ-Heartbeat</h4>
+        <div class="live-value gold" id="heartbeat-count">0</div>
+        <div class="live-bar"><div class="live-bar-fill gold" style="width: 50%"></div></div>
+      </div>
+      <div class="live-card">
+        <h4>Audit Trail</h4>
+        <div class="live-value green" id="audit-count">0 / 2,584</div>
+        <div class="live-bar"><div class="live-bar-fill green" style="width: 0%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ARCHITECTURE DIAGRAM
+     ════════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">Sentinel-Shield-Sensor Loop</h2>
+    <p class="section-desc">The self-healing feedback loop that makes COMMAND SHIELD autonomous.</p>
+    <div class="arch-diagram">
+<span class="hl">                    ┌─────────────────────────────────────┐</span>
+<span class="hl">                    │    PROTOCOL-040: sentinelShieldSensorLoop    │</span>
+<span class="hl">                    └────────────────┬────────────────────┘</span>
+                                 │
+            <span class="g">┌────────────────────┼────────────────────┐</span>
+            <span class="g">▼</span>                    <span class="g">▼</span>                    <span class="g">▼</span>
+   <span class="b">┌─────────────┐</span>    <span class="r">┌─────────────┐</span>    <span class="p">┌─────────────┐</span>
+   <span class="b">│   SENSORS   │</span>    <span class="r">│  SENTINEL   │</span>    <span class="p">│   SHIELDS   │</span>
+   <span class="b">│  20 Probes  │</span>    <span class="r">│  Watchdog   │</span>    <span class="p">│ 20 Guards   │</span>
+   <span class="b">│ TOOL-221–240│</span>    <span class="r">│ φ⁻⁶ decay   │</span>    <span class="p">│TOOL-241–260 │</span>
+   <span class="b">└──────┬──────┘</span>    <span class="r">└──────┬──────┘</span>    <span class="p">└──────┬──────┘</span>
+          <span class="b">│</span>                  <span class="r">│</span>                  <span class="p">│</span>
+          <span class="b">│ readings</span>        <span class="r">│ threats</span>          <span class="p">│ blocks</span>
+          <span class="b">▼</span>                  <span class="r">▼</span>                  <span class="p">▼</span>
+   <span class="hl">┌──────────────────────────────────────────────────┐</span>
+   <span class="hl">│              FEEDBACK LOOP ENGINE                 │</span>
+   <span class="hl">│                                                   │</span>
+   <span class="hl">│  1. sensor-sweep     → collect all 20 readings   │</span>
+   <span class="hl">│  2. anomaly-detect   → sentinel classifies       │</span>
+   <span class="hl">│  3. threat-classify  → AI grades severity        │</span>
+   <span class="hl">│  4. shield-activate  → circuit breaker opens     │</span>
+   <span class="hl">│  5. contain-isolate  → bulkhead isolation        │</span>
+   <span class="hl">│  6. self-heal        → automated remediation     │</span>
+   <span class="hl">│  7. verify-recovery  → error rate check          │</span>
+   <span class="hl">│  8. update-posture   → GREEN/YELLOW/ORANGE/RED   │</span>
+   <span class="hl">│  9. feedback         → tune sensor thresholds    │</span>
+   <span class="hl">│ 10. audit-log        → immutable FNV-1a chain    │</span>
+   <span class="hl">└──────────────────────────────────────────────────┘</span>
+          <span class="g">│</span>
+          <span class="g">│  φ-weighted priority (1.618...)</span>
+          <span class="g">▼</span>
+   <span class="g">┌──────────────────────────────────────────────────┐</span>
+   <span class="g">│  HEARTBEAT: 873ms · MAX CONTAINMENTS: 89 (F11)   │</span>
+   <span class="g">│  DECAY THRESHOLD: φ⁻⁶ = 0.055728...              │</span>
+   <span class="g">│  DEFENSE POSTURE: GREEN → YELLOW → ORANGE → RED  │</span>
+   <span class="g">└──────────────────────────────────────────────────┘</span></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PROTOCOL TABLE
+     ════════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-label">All 55 Protocols</div>
+    <h2 class="section-title">Protocol Registry</h2>
+    <p class="section-desc">Every protocol is licensed under CPEL-1.0 with full audit trail.</p>
+    <div style="overflow-x: auto;">
+      <table class="protocol-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Protocol</th>
+            <th>Category</th>
+            <th>Steps</th>
+            <th>License</th>
+            <th>Critical</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">001</td><td>clientOnboard</td><td>Client Lifecycle</td><td>9</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">002</td><td>clientOffboard</td><td>Client Lifecycle</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">003</td><td>clientSuspend</td><td>Client Lifecycle</td><td>5</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">004</td><td>clientMigrate</td><td>Client Lifecycle</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">005</td><td>clientHealthCheck</td><td>Client Lifecycle</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">006</td><td>aiRequestPipeline</td><td>AI Pipeline</td><td>12</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">007</td><td>aiFailoverChain</td><td>AI Pipeline</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">008</td><td>aiCostGovernor</td><td>AI Pipeline</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">009</td><td>aiQualityGate</td><td>AI Pipeline</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">010</td><td>aiModelRouter</td><td>AI Pipeline</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">011</td><td>dataIngestPipeline</td><td>Data Governance</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">012</td><td>dataExportPipeline</td><td>Data Governance</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">013</td><td>dataRetention</td><td>Data Governance</td><td>5</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">014</td><td>privacyCompliance</td><td>Data Governance</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">015</td><td>dataLineage</td><td>Data Governance</td><td>5</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">016</td><td>zeroTrustGate</td><td>Security</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">017</td><td>threatResponse</td><td>Security</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">018</td><td>auditTrail</td><td>Security</td><td>5</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">019</td><td>secretsRotation</td><td>Security</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">020</td><td>incidentEscalation</td><td>Security</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">021</td><td>autoScaling</td><td>Platform Ops</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">022</td><td>canaryDeployment</td><td>Platform Ops</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">023</td><td>circuitBreaker</td><td>Platform Ops</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">024</td><td>healthOrchestrator</td><td>Platform Ops</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">025</td><td>capacityPlanning</td><td>Platform Ops</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">026</td><td>usageMetering</td><td>Billing</td><td>5</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">027</td><td>billingCycle</td><td>Billing</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">028</td><td>quotaEnforcement</td><td>Billing</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">029</td><td>experimentPipeline</td><td>Research</td><td>9</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">030</td><td>feedbackLoop</td><td>Research</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">031</td><td>agentSwarmDeploy</td><td>Multi-Agent</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">032</td><td>agentConsensus</td><td>Multi-Agent</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">033</td><td>agentNegotiation</td><td>Multi-Agent</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">034</td><td>agentSelfHeal</td><td>Multi-Agent</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">035</td><td>agentLoadBalance</td><td>Multi-Agent</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">036</td><td>continuousLearning</td><td>Intelligence</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">037</td><td>anomalyDetection</td><td>Intelligence</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">038</td><td>knowledgeDistill</td><td>Intelligence</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">039</td><td>predictiveAnalytics</td><td>Intelligence</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+          <tr><td class="mono">040</td><td>sentinelShieldSensorLoop</td><td>Intelligence</td><td>10</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">041</td><td>gdprDataRequest</td><td>Compliance</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">042</td><td>gdprDataDeletion</td><td>Compliance</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">043</td><td>soc2AuditPrep</td><td>Compliance</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">044</td><td>licenseEnforcement</td><td>Compliance</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">045</td><td>ipProtection</td><td>Compliance</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">046</td><td>webhookPipeline</td><td>Integration</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">047</td><td>apiGateway</td><td>Integration</td><td>9</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">048</td><td>eventBridge</td><td>Integration</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">049</td><td>dataSync</td><td>Integration</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">050</td><td>graphqlFederation</td><td>Integration</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">051</td><td>sdkApiCall</td><td>SDK</td><td>8</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">052</td><td>sdkAuth</td><td>SDK</td><td>6</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">053</td><td>sdkBatchOperation</td><td>SDK</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">054</td><td>sdkWebSocket</td><td>SDK</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>✓</td></tr>
+          <tr><td class="mono">055</td><td>sdkDocGenerate</td><td>SDK</td><td>7</td><td><span class="tag tag-gold">CPEL-1.0</span></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     RESEARCH PAPERS
+     ════════════════════════════════════════════════════════════════ -->
+<section id="papers">
+  <div class="container">
+    <div class="section-label">Research</div>
+    <h2 class="section-title">Three Research Papers</h2>
+    <p class="section-desc">Peer-reviewable foundations for the products above.</p>
+
+    <div class="paper-card">
+      <span class="tag tag-green">Paper 1 — COMMAND SHIELD</span>
+      <h3>Self-Healing Multi-Agent Systems via Sentinel-Shield-Sensor Feedback Loops</h3>
+      <div class="authors">Alfredo Medina Hernandez · Command Platform Research · 2026</div>
+      <div class="abstract">
+        We present a three-layer protection architecture for autonomous multi-agent systems: 
+        <strong>Sentinels</strong> (watchdog processes with Fibonacci-bounded containment at φ⁻⁶ decay threshold), 
+        <strong>Shields</strong> (20 typed guard tools from input sanitization to circuit breakers), and 
+        <strong>Sensors</strong> (20 continuous monitoring probes sampling system state at 1s intervals). 
+        These three layers form a closed feedback loop (PROTOCOL-040) where sensor readings trigger sentinel 
+        threat classification, which activates appropriate shields, whose containment outcomes feed back into 
+        sensor threshold calibration. We demonstrate that this architecture achieves autonomous self-healing 
+        with mean time to recovery (MTTR) of 873ms (one φ-heartbeat cycle) and supports up to 89 concurrent 
+        containment operations (Fibonacci F11). Defense posture transitions (GREEN→YELLOW→ORANGE→RED) 
+        are shown to be stable under adversarial load at 4x nominal throughput.
+      </div>
+      <div class="keywords">
+        <span class="tag tag-green">self-healing systems</span>
+        <span class="tag tag-purple">multi-agent safety</span>
+        <span class="tag tag-blue">feedback loops</span>
+        <span class="tag tag-gold">golden ratio scaling</span>
+        <span class="tag tag-red">containment architecture</span>
+      </div>
+    </div>
+
+    <div class="paper-card">
+      <span class="tag tag-purple">Paper 2 — COMMAND AGI</span>
+      <h3>φ-Scaled Autonomous Agent Orchestration: Consensus, Negotiation, and Emergent Intelligence in Fibonacci-Bounded Swarms</h3>
+      <div class="authors">Alfredo Medina Hernandez · Command Platform Research · 2026</div>
+      <div class="abstract">
+        We introduce a novel multi-agent coordination framework where agent populations follow Fibonacci 
+        sequences (89, 144, 233 agents per orchestrator domain) and communication is synchronized on 
+        φ-scaled heartbeats (873ms = 1000/φ × φ⁻¹). Four domain orchestrators — CHIMERA (physical, 89+144), 
+        PHANTOM (virtual, 89+233), ORBITAL (spatial, 55+89), IRONVEIL (infrastructure, 55+89) — coordinate 
+        555 total agents through a central SignalBus with quorum-sensing consensus at φ⁻¹ threshold. 
+        We formalize five new coordination protocols: SwarmDeploy, AgentConsensus, AgentNegotiation, 
+        AgentSelfHeal, and AgentLoadBalance. Experiments show the system achieves convergent consensus 
+        in O(log_φ(n)) rounds, sustains negotiation across adversarial agent populations, and maintains 
+        emergent intelligence properties (Kuramoto coherence R > 0.85) under 40% agent failure rates.
+      </div>
+      <div class="keywords">
+        <span class="tag tag-purple">AGI orchestration</span>
+        <span class="tag tag-gold">Fibonacci scaling</span>
+        <span class="tag tag-blue">swarm intelligence</span>
+        <span class="tag tag-green">consensus protocols</span>
+        <span class="tag tag-red">emergent behavior</span>
+      </div>
+    </div>
+
+    <div class="paper-card">
+      <span class="tag tag-blue">Paper 3 — COMMAND SDK</span>
+      <h3>Protocol-as-Code: Compositional Enterprise APIs from Typed Multi-Worker Orchestration Graphs</h3>
+      <div class="authors">Alfredo Medina Hernandez · Command Platform Research · 2026</div>
+      <div class="abstract">
+        We present Protocol-as-Code, a paradigm where enterprise API operations are defined as typed, 
+        composable protocol graphs that bind directly to worker-tool pairs in a multi-worker Web Worker 
+        fleet. Each protocol is a DAG of steps, where each step specifies a target {worker, toolId} 
+        pair from a registry of 200 tools across 9 categories. We formalize the protocol execution model: 
+        step dispatch via postMessage, φ-weighted priority scheduling, Fibonacci-bounded concurrency 
+        (F13 = 233 max concurrent), and immutable FNV-1a hash-chained audit trails. The SDK layer 
+        (PROTOCOL-051–055) exposes these protocols through REST, GraphQL, WebSocket, and batch APIs 
+        with auto-generated OpenAPI documentation. We evaluate the system under production load 
+        (1,597 concurrent clients, F17) and demonstrate sub-second protocol execution for 92% of 
+        operations, with the query/call API supporting 10 read queries and 7 mutating calls with 
+        full GDPR/CCPA/SOC2 compliance logging.
+      </div>
+      <div class="keywords">
+        <span class="tag tag-blue">protocol-as-code</span>
+        <span class="tag tag-gold">enterprise SDK</span>
+        <span class="tag tag-purple">worker orchestration</span>
+        <span class="tag tag-green">API design</span>
+        <span class="tag tag-red">compliance automation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SDK SECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section id="sdk">
+  <div class="container">
+    <div class="section-label">Developer Experience</div>
+    <h2 class="section-title">Query & Call API</h2>
+    <p class="section-desc">10 read-only queries. 7 mutating calls. Full audit trail. Type-safe.</p>
+
+    <div class="product-grid">
+      <div class="product-card">
+        <h3>Queries (Read-Only)</h3>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 2;">
+          <span style="color: var(--cyan);">queryProtocol</span>(id)<br>
+          <span style="color: var(--cyan);">queryProtocolsByCategory</span>(cat)<br>
+          <span style="color: var(--cyan);">queryClient</span>(clientId)<br>
+          <span style="color: var(--cyan);">queryClientUsage</span>(clientId)<br>
+          <span style="color: var(--cyan);">queryCapacity</span>()<br>
+          <span style="color: var(--cyan);">queryHealth</span>()<br>
+          <span style="color: var(--cyan);">queryLicense</span>(protocolId)<br>
+          <span style="color: var(--cyan);">queryAuditFiltered</span>(filters)<br>
+        </p>
+        <span class="tag tag-blue">Read-Only</span>
+        <span class="tag tag-green">No Side Effects</span>
+      </div>
+      <div class="product-card">
+        <h3>Calls (Mutating)</h3>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 2;">
+          <span style="color: var(--gold);">callBatchExecute</span>(executions[])<br>
+          <span style="color: var(--gold);">callSuspendClient</span>(id, reason)<br>
+          <span style="color: var(--gold);">callReactivateClient</span>(id)<br>
+          <span style="color: var(--gold);">callUpgradeClient</span>(id, tier)<br>
+          <span style="color: var(--gold);">callRotateSecret</span>(id)<br>
+          <span style="color: var(--gold);">callExportClientData</span>(id, fmt)<br>
+          <span style="color: var(--gold);">callEmergencyShutdown</span>(reason)<br>
+        </p>
+        <span class="tag tag-gold">Mutating</span>
+        <span class="tag tag-red">Audit Logged</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PRICING
+     ════════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Five Tiers</h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h4>Starter</h4>
+        <div class="price">$99<span>/mo</span></div>
+        <ul class="features">
+          <li>500 AI calls/day</li>
+          <li>5 GB storage</li>
+          <li>3 concurrent protocols</li>
+          <li>Core 30 protocols</li>
+          <li>Email support</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">Get Started</a>
+      </div>
+      <div class="price-card">
+        <h4>Standard</h4>
+        <div class="price">$299<span>/mo</span></div>
+        <ul class="features">
+          <li>1,000 AI calls/day</li>
+          <li>10 GB storage</li>
+          <li>5 concurrent protocols</li>
+          <li>All 55 protocols</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">Get Started</a>
+      </div>
+      <div class="price-card featured">
+        <h4>Professional</h4>
+        <div class="price">$999<span>/mo</span></div>
+        <ul class="features">
+          <li>5,000 AI calls/day</li>
+          <li>50 GB storage</li>
+          <li>13 concurrent protocols (F7)</li>
+          <li>All 55 protocols + SDK</li>
+          <li>Dedicated support</li>
+          <li>COMMAND SHIELD included</li>
+        </ul>
+        <a href="#" class="btn btn-primary" style="width: 100%; justify-content: center;">Most Popular →</a>
+      </div>
+      <div class="price-card">
+        <h4>Enterprise</h4>
+        <div class="price">$4,999<span>/mo</span></div>
+        <ul class="features">
+          <li>50,000 AI calls/day</li>
+          <li>500 GB storage</li>
+          <li>34 concurrent protocols (F9)</li>
+          <li>Full suite + AGI + Comply</li>
+          <li>SLA 99.99%</li>
+          <li>Custom integrations</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">Contact Sales</a>
+      </div>
+      <div class="price-card">
+        <h4>Sovereign</h4>
+        <div class="price">Custom</div>
+        <ul class="features">
+          <li>Unlimited AI calls</li>
+          <li>Unlimited storage</li>
+          <li>89 concurrent protocols (F11)</li>
+          <li>Full source access</li>
+          <li>On-premise deployment</li>
+          <li>Dedicated team</li>
+          <li>Medina Doctrine access</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">Talk to Founder</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════════════════════════ -->
+<footer>
+  <p>
+    <span class="brand">COMMAND PLATFORM</span> · 
+    © 2024-2026 Alfredo Medina Hernandez · All Rights Reserved ·
+    Licensed under <span style="color: var(--gold);">CPEL-1.0</span> ·
+    Framework: <span style="color: var(--gold);">Medina Doctrine</span>
+  </p>
+  <p style="margin-top: 0.5rem;">
+    55 Protocols · 200 Tools · 21 Workers · 555 Agents · φ = 1.618033988749895
+  </p>
+</footer>
+
+<script>
+  // ── Simulated live dashboard ─────────────────────────
+  let beat = 0;
+  setInterval(() => {
+    beat++;
+    const el = document.getElementById('heartbeat-count');
+    if (el) el.textContent = beat.toLocaleString();
+  }, 873);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Status — CHIMERIA Defense Systems</title>
+  <meta name="description" content="Real-time operational status of all CHIMERIA Defense Systems infrastructure, agents, and services.">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">CHIMERIA DEFENSE</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="status.html" class="active">Status</a></li>
+      <li><a href="documentation.html">Docs</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="account.html">Account</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="page-content">
+  <div class="container">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+      <h1 class="section-title" style="margin-bottom: 0;">System Status</h1>
+      <span class="badge badge-success" style="font-size: 0.8rem; padding: 6px 14px;">All Systems Operational</span>
+    </div>
+    <p class="section-subtitle">Real-time infrastructure and service monitoring</p>
+
+    <!-- Overall Uptime -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">99.99%</div>
+        <div class="stat-label">Current Uptime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">2.3s</div>
+        <div class="stat-label">Last Health Check</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Incidents (30d)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">340ms</div>
+        <div class="stat-label">Avg Response Time</div>
+      </div>
+    </div>
+
+    <!-- Services Table -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Core Services</h2>
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 48px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Uptime (30d)</th>
+            <th>Response Time</th>
+            <th>Region</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>API Gateway</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.99%</td>
+            <td>45ms</td>
+            <td>US-East, US-West, EU</td>
+          </tr>
+          <tr>
+            <td><strong>Defense Agent Orchestrator</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.99%</td>
+            <td>12ms</td>
+            <td>US-East (Primary)</td>
+          </tr>
+          <tr>
+            <td><strong>ICP Canister Network</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>100%</td>
+            <td>180ms</td>
+            <td>Decentralized</td>
+          </tr>
+          <tr>
+            <td><strong>Compliance Engine</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.99%</td>
+            <td>89ms</td>
+            <td>US-East, EU</td>
+          </tr>
+          <tr>
+            <td><strong>Threat Intelligence Feed</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.98%</td>
+            <td>210ms</td>
+            <td>Global</td>
+          </tr>
+          <tr>
+            <td><strong>Kuramoto Sync Engine</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>100%</td>
+            <td>8ms</td>
+            <td>US-East</td>
+          </tr>
+          <tr>
+            <td><strong>PHI Encryption Vault</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>100%</td>
+            <td>23ms</td>
+            <td>US-East (HIPAA)</td>
+          </tr>
+          <tr>
+            <td><strong>Report Generator</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.97%</td>
+            <td>450ms</td>
+            <td>US-East</td>
+          </tr>
+          <tr>
+            <td><strong>Webhook Dispatcher</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>99.99%</td>
+            <td>67ms</td>
+            <td>US-East, US-West</td>
+          </tr>
+          <tr>
+            <td><strong>Authentication Service</strong></td>
+            <td><span class="status-dot online"></span>Operational</td>
+            <td>100%</td>
+            <td>34ms</td>
+            <td>Global (CDN)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Agent Status -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Defense Agent Fleet</h2>
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 48px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Status</th>
+            <th>Coherence (R)</th>
+            <th>Last Pulse</th>
+            <th>Threat Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SENTINEL</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.97</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>AEGIS-HC</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.99</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>VITALS</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.95</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>CORTEX</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.98</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>MERIDIAN-HC</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.99</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>PHOENIX</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.94</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>GUARDIAN</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.98</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>HELIX</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.93</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>NEXUS</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.97</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong>ORACLE</strong></td>
+            <td><span class="status-dot online"></span>Active</td>
+            <td>0.96</td>
+            <td>873ms ago</td>
+            <td><span class="badge badge-success">Low</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Incident History -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Incident History</h2>
+    <div class="card">
+      <div style="text-align: center; padding: 40px; color: var(--text-dim);">
+        <div style="font-size: 2rem; margin-bottom: 12px;">✓</div>
+        <p>No incidents in the last 90 days</p>
+        <p style="font-size: 0.8rem; margin-top: 8px;">All systems have maintained 99.99%+ uptime</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="platform-footer">
+  <div class="container">
+    <p>CHIMERIA Defense Systems — Sovereign AI Platform</p>
+    <p style="margin-top: 6px;">Copyright © 2024-2026 Alfredo Medina Hernandez. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="assets/js/platform.js"></script>
+</body>
+</html>

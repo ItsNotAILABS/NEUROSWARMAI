@@ -1,0 +1,212 @@
+name: 🕷️ Organism Crawler Bot — Topology Mapper
+# organism-crawler-bot: Crawls the repository graph and maps organism topology
+# Emits topology_state governance event to dist/governance/events/topology_state.json
+# Part of the Governance Integration — Bot-to-Brain Event System
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 02:00 UTC
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  topology-crawl:
+    name: 🕷️ Topology Crawl & Graph Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🕷️ Run Topology Crawl
+        id: crawl
+        run: |
+          echo "## 🕷️ Organism Crawler Bot — Topology Crawl" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Count all tracked files (excluding .git)
+          FILES=$(git ls-files | wc -l | tr -d ' ')
+          FILES=${FILES:-0}
+
+          # Count directories
+          DIRS=$(git ls-files | xargs -I{} dirname {} | sort -u | wc -l | tr -d ' ')
+          DIRS=${DIRS:-0}
+
+          # Detect dead links in markdown files
+          # A dead link is a markdown link [text](path) pointing to a non-existent local file
+          DEAD_LINKS=0
+          for mdfile in $(git ls-files '*.md' 2>/dev/null); do
+            while IFS= read -r link; do
+              [ -z "$link" ] && continue
+              linkpath="${link%%#*}"
+              [ -z "$linkpath" ] && continue
+              basedir=$(dirname "$mdfile")
+              fullpath="$basedir/$linkpath"
+              [ ! -e "$fullpath" ] && DEAD_LINKS=$((DEAD_LINKS + 1))
+            done < <(grep -oP '(?<=\]\()(?!https?://)([^)#][^)]*?)(?=[\)#])' "$mdfile" 2>/dev/null || true)
+          done
+
+          # Collect all import/require references once to avoid O(n²) scanning
+          ALL_IMPORTS_FILE=$(mktemp)
+          grep -r "require\|import" organism/web/ organism/cloudflare/ \
+            --include="*.js" --include="*.ts" --include="*.yaml" --include="*.yml" \
+            2>/dev/null > "$ALL_IMPORTS_FILE" || true
+
+          # Detect orphaned files: JS/TS files not imported anywhere
+          ORPHANS=0
+          for srcfile in $(git ls-files 'organism/web/*.js' 'organism/cloudflare/*.js' 2>/dev/null); do
+            basename_no_ext=$(basename "${srcfile%.*}")
+            if ! grep -q "$basename_no_ext" "$ALL_IMPORTS_FILE"; then
+              ORPHANS=$((ORPHANS + 1))
+            fi
+          done
+
+          # Build dependency graph from import/require statements in organism/web/
+          GRAPH_NODES=$(git ls-files 'organism/web/*.js' 'organism/cloudflare/*.js' 'src/**/*.ts' 2>/dev/null | wc -l | tr -d ' ')
+          GRAPH_NODES=${GRAPH_NODES:-0}
+
+          GRAPH_EDGES=$(grep -r "require\|^import" organism/web/ organism/cloudflare/ src/ \
+            --include="*.js" --include="*.ts" 2>/dev/null | wc -l | tr -d ' ')
+          GRAPH_EDGES=${GRAPH_EDGES:-0}
+
+          # Most connected node: file with most incoming references
+          MOST_CONNECTED=""
+          MOST_CONNECTED_DEGREE=0
+          for candidate in organism/web/orchestrator.js organism/web/brain-worker.js src/backend/main.mo; do
+            if [ -f "$candidate" ]; then
+              basename_c=$(basename "$candidate")
+              REFS=$(grep -r "$basename_c" --include="*.js" --include="*.ts" --include="*.yaml" . \
+                2>/dev/null | grep -v ".git" | wc -l | tr -d ' ')
+              if [ "$REFS" -gt "$MOST_CONNECTED_DEGREE" ]; then
+                MOST_CONNECTED_DEGREE=$REFS
+                MOST_CONNECTED=$(basename "$candidate" .js)
+              fi
+            fi
+          done
+
+          # Detect cycles: circular imports (detect if any file imports itself by name)
+          CYCLES_DETECTED=0
+          for srcfile in $(git ls-files 'organism/web/*.js' 2>/dev/null); do
+            base=$(basename "${srcfile%.*}")
+            if grep -E "require.*['\"].*$base|import.*['\"].*$base" "$srcfile" 2>/dev/null | grep -q .; then
+              CYCLES_DETECTED=$((CYCLES_DETECTED + 1))
+            fi
+          done
+
+          rm -f "$ALL_IMPORTS_FILE"
+
+          # Max depth: estimate from directory nesting
+          MAX_DEPTH=$(git ls-files | awk -F'/' '{print NF-1}' | sort -n | tail -1 | tr -d ' ')
+          MAX_DEPTH=${MAX_DEPTH:-0}
+
+          echo "### Topology Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Files | $FILES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Directories | $DIRS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Orphaned Files | $ORPHANS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dead Links | $DEAD_LINKS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Graph Nodes | $GRAPH_NODES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Graph Edges | $GRAPH_EDGES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Most Connected | $MOST_CONNECTED (degree: $MOST_CONNECTED_DEGREE) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cycles Detected | $CYCLES_DETECTED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Max Depth | $MAX_DEPTH |" >> $GITHUB_STEP_SUMMARY
+
+          echo "files=$FILES"                               >> $GITHUB_OUTPUT
+          echo "dirs=$DIRS"                                 >> $GITHUB_OUTPUT
+          echo "orphans=$ORPHANS"                           >> $GITHUB_OUTPUT
+          echo "dead_links=$DEAD_LINKS"                     >> $GITHUB_OUTPUT
+          echo "graph_nodes=$GRAPH_NODES"                   >> $GITHUB_OUTPUT
+          echo "graph_edges=$GRAPH_EDGES"                   >> $GITHUB_OUTPUT
+          echo "most_connected=$MOST_CONNECTED"             >> $GITHUB_OUTPUT
+          echo "most_connected_degree=$MOST_CONNECTED_DEGREE" >> $GITHUB_OUTPUT
+          echo "cycles_detected=$CYCLES_DETECTED"           >> $GITHUB_OUTPUT
+          echo "max_depth=$MAX_DEPTH"                       >> $GITHUB_OUTPUT
+
+      - name: 📡 Emit topology_state Governance Event
+        run: |
+          mkdir -p dist/governance/events
+
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          FILES="${{ steps.crawl.outputs.files }}"
+          DIRS="${{ steps.crawl.outputs.dirs }}"
+          ORPHANS="${{ steps.crawl.outputs.orphans }}"
+          DEAD_LINKS="${{ steps.crawl.outputs.dead_links }}"
+          NODES="${{ steps.crawl.outputs.graph_nodes }}"
+          EDGES="${{ steps.crawl.outputs.graph_edges }}"
+          MOST_CONN="${{ steps.crawl.outputs.most_connected }}"
+          MOST_DEG="${{ steps.crawl.outputs.most_connected_degree }}"
+          CYCLES="${{ steps.crawl.outputs.cycles_detected }}"
+          MAX_D="${{ steps.crawl.outputs.max_depth }}"
+
+          cat > dist/governance/events/topology_state.json << EOF
+          {
+            "entity_id": "atlas://bot/organism-crawler-bot",
+            "op": "crawl_completed",
+            "timestamp": "$TIMESTAMP",
+            "context": {
+              "files": $FILES,
+              "dirs": $DIRS,
+              "orphans": $ORPHANS,
+              "dead_links": $DEAD_LINKS,
+              "graph_nodes": $NODES,
+              "graph_edges": $EDGES,
+              "most_connected": "$MOST_CONN",
+              "most_connected_degree": $MOST_DEG,
+              "cycles_detected": $CYCLES,
+              "max_depth": $MAX_D
+            }
+          }
+          EOF
+
+          echo "📡 Emitted topology_state event to dist/governance/events/topology_state.json"
+          cat dist/governance/events/topology_state.json
+
+      - name: ⚖️ Run Governance Cycle
+        id: governance
+        run: |
+          node governance/governance-cycle.js
+        continue-on-error: true
+
+      - name: 🚨 Alert on CRITICAL Violations
+        if: steps.governance.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[GUARDIAN] 🚨 CRITICAL Topology Violations — ${today}`,
+              body: [
+                '## 🚨 GUARDIAN Safety Alert — CRITICAL',
+                '',
+                'The Crawler Bot topology scan detected CRITICAL governance violations.',
+                'The release pipeline has been **BLOCKED**.',
+                '',
+                '### Possible Causes',
+                '- Dead links detected in markdown files',
+                '- Circular dependencies in the dependency graph',
+                '',
+                '### Required Actions',
+                '1. Review `dist/governance/audit.jsonl` for violation details',
+                '2. Fix all dead links before the next release',
+                '3. Resolve any circular dependencies',
+                '4. Re-run the Crawler Bot to verify resolution',
+                '',
+                '---',
+                '*Auto-generated by organism-crawler-bot (GUARDIAN enforcement)*',
+              ].join('\n'),
+              labels: ['organism-bot', 'governance', 'critical']
+            });
+
+      - name: 💾 Commit Governance Artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "organism-crawler-bot"
+          git config user.email "organism-crawler-bot[bot]@users.noreply.github.com"
+          git add dist/governance/
+          git diff --staged --quiet || git commit -m "🕷️ organism-crawler-bot: topology crawl + governance event [skip ci]"
+          git push || true

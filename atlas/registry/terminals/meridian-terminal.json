@@ -1,0 +1,20 @@
+{
+  "id": "atlas://terminal/meridian",
+  "host_entity_id": "atlas://entity/meridian-intelligence-systems",
+  "archetypes": ["CognitiveTerminal", "GovernanceEngine"],
+  "languages": [
+    "atlas://language/tpl",
+    "atlas://language/cpl-l",
+    "atlas://language/cpl-c",
+    "atlas://language/ocl",
+    "atlas://language/cpl-p",
+    "atlas://language/cil",
+    "atlas://language/ril",
+    "atlas://language/err",
+    "atlas://language/chl"
+  ],
+  "state": {
+    "lifecycle": "active",
+    "immutable": true
+  }
+}

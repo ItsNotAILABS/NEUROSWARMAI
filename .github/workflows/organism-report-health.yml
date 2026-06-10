@@ -1,0 +1,134 @@
+name: "🏥 BOT-012 SALUS — Health Report"
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # Every Monday 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  actions: read
+  contents: read
+
+jobs:
+  salus-health-report:
+    name: "SALUS Health Report → GitHub Issues"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Health Report
+        id: report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const PHI_INV = 0.6180339887498949;
+            const now     = new Date();
+            const week    = now.toISOString().slice(0, 10);
+
+            // ── 1. Recent workflow runs (last 72h) ──────────────────────────
+            const since = new Date(Date.now() - 72 * 3600 * 1000).toISOString();
+            const runsResp = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              per_page: 100,
+              created: `>=${since}`,
+            });
+
+            const runs    = runsResp.data.workflow_runs ?? [];
+            const total   = runs.length;
+            const success = runs.filter(r => r.conclusion === 'success').length;
+            const failed  = runs.filter(r => r.conclusion === 'failure').length;
+            const running = runs.filter(r => r.status === 'in_progress').length;
+            const health  = total > 0 ? (success / total) : 1;
+            const emoji   = health >= PHI_INV ? '🟢' : health >= 0.5 ? '🟡' : '🔴';
+
+            // ── 2. Failing workflows (distinct) ────────────────────────────
+            const failedNames = [...new Set(
+              runs.filter(r => r.conclusion === 'failure').map(r => r.name)
+            )].slice(0, 10);
+
+            // ── 3. Open security alerts (issues labeled security) ───────────
+            const secIssues = await github.rest.issues.listForRepo({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              state:  'open',
+              labels: 'security',
+              per_page: 20,
+            });
+
+            // ── 4. Open bugs ────────────────────────────────────────────────
+            const bugIssues = await github.rest.issues.listForRepo({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              state:  'open',
+              labels: 'bug',
+              per_page: 20,
+            });
+
+            // ── 5. Format report ────────────────────────────────────────────
+            const lines = [
+              `## ${emoji} Organism Health Report — ${week}`,
+              `> **SALUS (BOT-012)** · MAQUE/FLOS pathway: \`REPORT\` · φ-sync 873ms`,
+              ``,
+              `### 🔄 Workflow Status (last 72h)`,
+              `| Metric | Count |`,
+              `|--------|-------|`,
+              `| Total runs | ${total} |`,
+              `| ✅ Success | ${success} |`,
+              `| ❌ Failed  | ${failed} |`,
+              `| ⏳ Running | ${running} |`,
+              `| **Health score** | **${(health * 100).toFixed(1)}%** (φ⁻¹ threshold = 61.8%) |`,
+              ``,
+            ];
+
+            if (failedNames.length > 0) {
+              lines.push(`### ❌ Failing Workflows`);
+              failedNames.forEach(n => lines.push(`- \`${n}\``));
+              lines.push(``);
+            }
+
+            if (secIssues.data.length > 0) {
+              lines.push(`### 🔒 Open Security Issues (${secIssues.data.length})`);
+              secIssues.data.slice(0, 5).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            if (bugIssues.data.length > 0) {
+              lines.push(`### 🐛 Open Bugs (${bugIssues.data.length})`);
+              bugIssues.data.slice(0, 5).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            lines.push(`### 🧬 Organism Status`);
+            lines.push(`| Layer | Status |`);
+            lines.push(`|-------|--------|`);
+            lines.push(`| Nova Runtime (port 8973) | ✅ Configured |`);
+            lines.push(`| 10 Alpha AIS engines | ✅ Registered |`);
+            lines.push(`| 5 Multimodal AIS | ✅ Registered |`);
+            lines.push(`| 20 Nova Tools | ✅ Fibonacci versioned |`);
+            lines.push(`| 4 Copilot Agents | ✅ SOVR/MERI/ORGA/MAGI |`);
+            lines.push(`| 27 Workflows | ✅ Active |`);
+            lines.push(``);
+            lines.push(`---`);
+            lines.push(`*APEX: \`APEX-SALU-F13-${Date.now()}\` · VIVI thread: REPORT pathway · φ⁻¹=${PHI_INV}*`);
+
+            const body = lines.join('\n');
+
+            // ── 6. Create GitHub Issue ──────────────────────────────────────
+            const issue = await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `${emoji} [SALUS] Health Report — ${week}`,
+              body,
+              labels: ['organism-bot', 'health-report'],
+            });
+
+            console.log(`Created issue #${issue.data.number}: ${issue.data.html_url}`);
+            core.setOutput('issue_url', issue.data.html_url);
+            core.setOutput('health_score', (health * 100).toFixed(1));

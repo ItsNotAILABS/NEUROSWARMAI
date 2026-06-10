@@ -1,0 +1,27 @@
+# RCL Specification v1.0.0
+# Resource Circulation Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "RCL"
+title: "Resource Circulation Language"
+description: "How resources move: tokens, favors, credits, access, bandwidth"
+
+core_concepts:
+  circulation: "Movement of resources"
+  flow: "Direction and rate of transfer"
+  accumulation: "Resource pooling"
+  distribution: "Resource allocation"
+
+resource_types:
+  - TOKENS
+  - FAVORS
+  - CREDITS
+  - ACCESS
+  - BANDWIDTH
+  - REPUTATION
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

@@ -1,0 +1,35 @@
+# PWL Specification v1.0.0
+# Pathway Language - Multi-Year Trajectories
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "PWL"
+title: "Pathway Language"
+description: "Life and education path language defining multi-year trajectories: courses, projects, colleges, careers, branching options"
+
+core_concepts:
+  pathway: "Sequence of educational and career milestones"
+  trajectory: "Long-term development arc"
+  branch_point: "Decision point with multiple options"
+  milestone: "Significant achievement or transition"
+
+pathway_structure:
+  pathway_id: STRING
+  student_id: STRING
+  start_date: TIMESTAMP
+  target_completion: TIMESTAMP
+  milestones: ARRAY[MILESTONE]
+  branches: ARRAY[BRANCH_POINT]
+
+milestone_types:
+  COURSE_COMPLETION: "Finish a specific course"
+  SKILL_ACQUISITION: "Master a particular skill"
+  PROJECT_DELIVERY: "Complete significant project"
+  CREDENTIAL_EARNED: "Degree, certificate, certification"
+  CAREER_TRANSITION: "Job change or promotion"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

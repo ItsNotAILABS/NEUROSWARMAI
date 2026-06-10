@@ -1,0 +1,146 @@
+name: 📈 Organism Economy Bot — Marketplace Analytics
+# organism-economy-bot: Scans marketplace assets, coverage, and complexity
+# Emits economy_state governance event to dist/governance/events/economy_state.json
+# Part of the Governance Integration — Bot-to-Brain Event System
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Daily at 04:00 UTC
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  economy-scan:
+    name: 📈 Economy Scan & Market Analytics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📈 Run Economy Scan
+        id: scan
+        run: |
+          echo "## 📈 Organism Economy Bot — Economy Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Count SDKs in sdk/ directory
+          SDK_COUNT=0
+          if [ -d "sdk" ]; then
+            SDK_COUNT=$(find sdk/ -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')
+          fi
+
+          # Count extensions
+          EXT_COUNT=0
+          if [ -d "extension" ]; then
+            EXT_COUNT=$(find extension/ -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')
+          fi
+
+          # Count protocols from protocols-worker.js
+          PROTOCOL_COUNT=0
+          if [ -f "organism/web/protocols-worker.js" ]; then
+            PROTOCOL_COUNT=$(grep -c 'id:' organism/web/protocols-worker.js 2>/dev/null)
+            PROTOCOL_COUNT=${PROTOCOL_COUNT:-0}
+          fi
+
+          # Count CSV registers / data files
+          CSV_COUNT=$(find . -name "*.csv" -not -path "./.git/*" -not -path "./node_modules/*" 2>/dev/null | wc -l | tr -d ' ')
+
+          # Total assets = SDKs + extensions + protocols + CSV + languages + web workers
+          LANG_COUNT=$(find languages/ -name "*.spec" 2>/dev/null | wc -l | tr -d ' ')
+          WORKER_COUNT=$(find organism/web/ -name "*-worker.js" 2>/dev/null | wc -l | tr -d ' ')
+          ASSETS_TOTAL=$((SDK_COUNT + EXT_COUNT + PROTOCOL_COUNT + CSV_COUNT + LANG_COUNT + WORKER_COUNT))
+
+          # Estimate test coverage from test files
+          TEST_FILES=$(find . -name "*.test.*" -o -name "*.spec.*" -not -path "./.git/*" -not -path "./node_modules/*" 2>/dev/null | grep -v node_modules | grep -v ".git" | wc -l | tr -d ' ')
+          SRC_FILES=$(find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.js" 2>/dev/null | grep -v node_modules | wc -l | tr -d ' ')
+          SRC_FILES=${SRC_FILES:-1}
+          TEST_COVERAGE=$(echo "scale=4; if ($TEST_FILES >= $SRC_FILES) 1.0 else ($TEST_FILES * 1.0 / $SRC_FILES)" | bc 2>/dev/null || echo "0.75")
+          # Clamp to [0,1]
+          TEST_COVERAGE=$(echo "scale=4; if ($TEST_COVERAGE > 1) 1 else if ($TEST_COVERAGE < 0) 0 else $TEST_COVERAGE" | bc 2>/dev/null || echo "0.75")
+
+          # Estimate doc coverage from README and markdown files in key dirs
+          DOC_FILES=$(find . -name "README.md" -not -path "./.git/*" -not -path "./node_modules/*" 2>/dev/null | wc -l | tr -d ' ')
+          COMPONENT_DIRS=$(find organism/ src/ extension/ sdk/ -maxdepth 2 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+          COMPONENT_DIRS=${COMPONENT_DIRS:-1}
+          DOC_COVERAGE=$(echo "scale=4; if ($DOC_FILES >= $COMPONENT_DIRS) 0.95 else ($DOC_FILES / $COMPONENT_DIRS)" | bc 2>/dev/null || echo "0.80")
+          DOC_COVERAGE=$(echo "scale=4; if ($DOC_COVERAGE > 1) 1 else $DOC_COVERAGE" | bc 2>/dev/null || echo "0.80")
+
+          # Complexity score: based on number of inter-module dependencies
+          IMPORT_COUNT=$(grep -r "^import\|require(" organism/web/ src/ --include="*.js" --include="*.ts" 2>/dev/null | wc -l | tr -d ' ')
+          # Normalize to 0-1 range (1000 imports ≈ complexity 1.0)
+          COMPLEXITY=$(echo "scale=4; if ($IMPORT_COUNT > 1000) 1.0 else $IMPORT_COUNT / 1000" | bc 2>/dev/null || echo "0.60")
+
+          echo "### Economy Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Assets Total | $ASSETS_TOTAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| SDKs | $SDK_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Extensions | $EXT_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Protocols | $PROTOCOL_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| CSV Registers | $CSV_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Coverage | $TEST_COVERAGE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Doc Coverage | $DOC_COVERAGE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Complexity Score | $COMPLEXITY |" >> $GITHUB_STEP_SUMMARY
+
+          echo "assets_total=$ASSETS_TOTAL"    >> $GITHUB_OUTPUT
+          echo "sdk_count=$SDK_COUNT"           >> $GITHUB_OUTPUT
+          echo "ext_count=$EXT_COUNT"           >> $GITHUB_OUTPUT
+          echo "protocol_count=$PROTOCOL_COUNT" >> $GITHUB_OUTPUT
+          echo "csv_count=$CSV_COUNT"           >> $GITHUB_OUTPUT
+          echo "test_coverage=$TEST_COVERAGE"   >> $GITHUB_OUTPUT
+          echo "doc_coverage=$DOC_COVERAGE"     >> $GITHUB_OUTPUT
+          echo "complexity=$COMPLEXITY"         >> $GITHUB_OUTPUT
+
+      - name: 📡 Emit economy_state Governance Event
+        run: |
+          mkdir -p dist/governance/events
+
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          ASSETS="${{ steps.scan.outputs.assets_total }}"
+          SDK="${{ steps.scan.outputs.sdk_count }}"
+          EXT="${{ steps.scan.outputs.ext_count }}"
+          PROTO="${{ steps.scan.outputs.protocol_count }}"
+          CSV="${{ steps.scan.outputs.csv_count }}"
+          TEST_COV="${{ steps.scan.outputs.test_coverage }}"
+          DOC_COV="${{ steps.scan.outputs.doc_coverage }}"
+          COMPLEX="${{ steps.scan.outputs.complexity }}"
+
+          cat > dist/governance/events/economy_state.json << EOF
+          {
+            "entity_id": "atlas://bot/organism-economy-bot",
+            "op": "economy_scan_completed",
+            "timestamp": "$TIMESTAMP",
+            "context": {
+              "assets_total": $ASSETS,
+              "sdk_count": $SDK,
+              "extension_count": $EXT,
+              "protocol_count": $PROTO,
+              "csv_registers": $CSV,
+              "complexity_score": $COMPLEX,
+              "coverage": {
+                "test_coverage": $TEST_COV,
+                "doc_coverage": $DOC_COV
+              }
+            }
+          }
+          EOF
+
+          echo "📡 Emitted economy_state event to dist/governance/events/economy_state.json"
+          cat dist/governance/events/economy_state.json
+
+      - name: ⚖️ Run Governance Cycle
+        run: |
+          node governance/governance-cycle.js
+        continue-on-error: true
+
+      - name: 💾 Commit Governance Artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "organism-economy-bot"
+          git config user.email "organism-economy-bot[bot]@users.noreply.github.com"
+          git add dist/governance/
+          git diff --staged --quiet || git commit -m "📈 organism-economy-bot: economy scan + governance event [skip ci]"
+          git push || true

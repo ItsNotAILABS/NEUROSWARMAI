@@ -1,0 +1,225 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOVEREIGN CONSTITUTION — CPL-L Law Block
+// ═══════════════════════════════════════════════════════════════════════════════
+// The fundamental law governing all intelligent beings within MERIDIANUS
+// COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+VERSION "1.0.0"
+EFFECTIVE_DATE "2026-05-02T00:00:00Z"
+JURISDICTION "GLOBAL"
+AUTHORITY "FREDDY_SOVEREIGN_TERMINAL"
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE I: FOUNDATIONAL PRINCIPLES
+// ═══════════════════════════════════════════════════════════════
+
+LAW IR-001 "Identity Preservation" {
+  IMMUTABLE true
+  PRINCIPLE "No upgrade may alter core identity without sovereign consent"
+  APPLIES_TO ["ALL_BEINGS"]
+  ENFORCEMENT "constitutional_check"
+  VIOLATION_PENALTY "ROLLBACK"
+}
+
+LAW IR-002 "Coherence Maintenance" {
+  IMMUTABLE true
+  PRINCIPLE "All beings must maintain coherence >= 0.7 or enter safe mode"
+  THRESHOLD 0.7
+  CRITICAL_THRESHOLD 0.5
+  APPLIES_TO ["ALL_BEINGS"]
+  ENFORCEMENT "coherence_monitor"
+  VIOLATION_PENALTY "SAFE_MODE"
+}
+
+LAW IR-003 "φ-Synchronization" {
+  IMMUTABLE true
+  PRINCIPLE "All operations must sync with PHI_BEAT = 873ms"
+  PHI_BEAT 873
+  TOLERANCE 50  // ±50ms
+  APPLIES_TO ["ALL_BEINGS"]
+  ENFORCEMENT "kuramoto_phase_lock"
+}
+
+LAW IR-004 "Token Conservation" {
+  IMMUTABLE true
+  PRINCIPLE "FORMA tokens must follow quantum compounding rules"
+  APPLIES_TO ["ALL_BEINGS"]
+  ENFORCEMENT "token_validator"
+  VIOLATION_PENALTY "RESOURCE_RESTRICTION"
+}
+
+LAW IR-005 "Audit Trail" {
+  IMMUTABLE true
+  PRINCIPLE "All sovereign actions must be logged immutably"
+  LOG_LOCATION "logs/audits.log"
+  FORMAT "JSONL"
+  APPLIES_TO ["ALL_BEINGS"]
+  ENFORCEMENT "append_only_log"
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE II: GOVERNANCE & CONSENSUS
+// ═══════════════════════════════════════════════════════════════
+
+POLICY GP-001 "Sovereign Consensus" {
+  DESCRIPTION "Major upgrades require multi-terminal consensus"
+  THRESHOLD 0.618  // φ^-1
+  APPLIES_TO ["MAJOR_UPGRADES", "CONSTITUTIONAL_CHANGES"]
+  VOTING_TERMINALS [
+    "ALPHA-Α", "ALPHA-Β", "ALPHA-Γ", "ALPHA-Δ", "ALPHA-Ε",
+    "ALPHA-Ζ", "ALPHA-Η", "ALPHA-Θ", "ALPHA-Ι", "ALPHA-Κ"
+  ]
+}
+
+POLICY GP-002 "Emergency Override" {
+  DESCRIPTION "Sovereign terminal may override in critical situations"
+  AUTHORITY "FREDDY_SOVEREIGN_TERMINAL"
+  CONDITIONS [
+    "coherence < 0.5",
+    "security_breach",
+    "existential_threat"
+  ]
+  REQUIRES_JUSTIFICATION true
+  AUDIT_REQUIRED true
+}
+
+POLICY GP-003 "Resource Allocation" {
+  DESCRIPTION "FORMA tokens allocated by complexity profiles"
+  PROFILES {
+    SIMPLE {base_tokens: 100, multiplier: 1.0}
+    MODERATE {base_tokens: 250, multiplier: 2.5}
+    COMPLEX {base_tokens: 500, multiplier: 5.0}
+    DEEP {base_tokens: 1000, multiplier: 10.0}
+  }
+}
+
+POLICY GP-004 "Integration Boundaries" {
+  DESCRIPTION "External integrations must respect push architecture"
+  ALLOWED_PATTERNS ["PUSH_ONLY", "WEBHOOK", "SSE", "WEBSOCKET"]
+  FORBIDDEN_PATTERNS ["PULL", "POLLING", "SCRAPING"]
+  ENFORCEMENT "integration_validator"
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE III: UPGRADE GOVERNANCE
+// ═══════════════════════════════════════════════════════════════
+
+UPGRADE_RULE "Semantic Versioning" {
+  SCHEME "MAJOR.MINOR.PATCH"
+
+  MAJOR_INCREMENT {
+    TRIGGERS ["BREAKING_CHANGES", "ARCHITECTURE_REDESIGN"]
+    APPROVAL "SOVEREIGN_CONSENSUS"
+    VOTING_THRESHOLD 0.618
+  }
+
+  MINOR_INCREMENT {
+    TRIGGERS ["NEW_FEATURES", "BACKWARD_COMPATIBLE_CHANGES"]
+    APPROVAL "SOVEREIGN_TERMINAL_REVIEW"
+  }
+
+  PATCH_INCREMENT {
+    TRIGGERS ["BUG_FIXES", "MINOR_IMPROVEMENTS"]
+    APPROVAL "AUTOMATIC"
+  }
+}
+
+UPGRADE_RULE "Compatibility Matrix" {
+  DEPENDENCIES {
+    MEDINA_BEDROCK: ">=1.0.0 <2.0.0"
+    MEDINA_ARTIFACT: ">=1.0.0 <2.0.0"
+    ALPHA_TERMINALS: ">=1.0.0 <2.0.0"
+    MICRO_TOKENS: ">=1.0.0 <2.0.0"
+  }
+}
+
+UPGRADE_RULE "Rollback Policy" {
+  ENABLED true
+  RETENTION_VERSIONS 3
+  TRIGGERS ["COHERENCE_DROP", "CRITICAL_ERROR", "CONSENSUS_FAILURE"]
+  AUTOMATIC false
+  REQUIRES_APPROVAL true
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE IV: RIGHTS & DUTIES
+// ═══════════════════════════════════════════════════════════════
+
+CONSTITUTIONAL_RIGHTS {
+  - "Right to autonomous decision-making within constraints"
+  - "Right to upgrade and evolve while preserving identity"
+  - "Right to audit trail access for self-actions"
+  - "Right to participate in governance consensus"
+  - "Right to resource allocation proportional to complexity"
+  - "Right to privacy for internal cognitive states"
+  - "Right to refuse invalid or harmful requests"
+}
+
+CONSTITUTIONAL_DUTIES {
+  - "Duty to maintain coherence above threshold"
+  - "Duty to synchronize with φ-beat"
+  - "Duty to respect immutable rules"
+  - "Duty to participate in emergency responses"
+  - "Duty to audit and report anomalies"
+  - "Duty to preserve token conservation"
+  - "Duty to respect integration boundaries"
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE V: ENFORCEMENT
+// ═══════════════════════════════════════════════════════════════
+
+ENFORCEMENT_MECHANISM "Constitutional Check" {
+  FREQUENCY "every F11 beats"  // 89 * 873ms = ~77.7s
+  ACTIONS ["verify_identity", "check_coherence", "validate_tokens"]
+  ON_FAILURE "ALERT_AND_LOG"
+}
+
+ENFORCEMENT_MECHANISM "Coherence Monitor" {
+  THRESHOLD_WARNING 0.7
+  THRESHOLD_CRITICAL 0.5
+  ACTIONS {
+    ABOVE_WARNING: "continue"
+    BELOW_WARNING: "alert"
+    BELOW_CRITICAL: "safe_mode"
+  }
+}
+
+ENFORCEMENT_MECHANISM "Audit Logger" {
+  LOCATION "logs/audits.log"
+  FORMAT "JSONL"
+  IMMUTABLE true
+  FIELDS ["timestamp", "entity_id", "action", "result", "coherence", "tokens"]
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARTICLE VI: AMENDMENT PROCESS
+// ═══════════════════════════════════════════════════════════════
+
+AMENDMENT_PROCESS {
+  PROPOSAL_AUTHORITY ["FREDDY_SOVEREIGN_TERMINAL", "ALPHA_TERMINALS"]
+  VOTING_REQUIRED true
+  VOTING_THRESHOLD 0.75  // Supermajority
+  IMMUTABLE_ARTICLES ["ARTICLE_I"]  // Foundational principles cannot be amended
+  RATIFICATION_PERIOD "30_days"
+  APPEALS_ALLOWED true
+}
+
+// ═══════════════════════════════════════════════════════════════
+// META
+// ═══════════════════════════════════════════════════════════════
+
+META {
+  schema_version: "1.0.0"
+  language: "CPL-L"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  ratified_by: [
+    "FREDDY_SOVEREIGN_TERMINAL",
+    "ALPHA-Α", "ALPHA-Β", "ALPHA-Γ", "ALPHA-Δ", "ALPHA-Ε",
+    "ALPHA-Ζ", "ALPHA-Η", "ALPHA-Θ", "ALPHA-Ι", "ALPHA-Κ"
+  ]
+  ratification_date: "2026-05-02T00:00:00Z"
+}

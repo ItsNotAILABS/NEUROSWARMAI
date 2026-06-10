@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MERIDIANUS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0a0a0b; --bg-card:#111113; --bg-input:#18181b; --border:#27272a;
+      --text:#e5e5e5; --text-dim:#a1a1aa; --accent:#22d3ee; --accent-fg:#0a0a0b;
+      --danger:#ef4444; --success:#22c55e; --warning:#f59e0b; --radius:8px;
+      --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32; --copper:#B87333;
+      --elemental:#7DF9FF; --spinner:#DA70D6; --phantom:#8B5CF6; --blockchain:#22D3EE;
+      --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+    }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; overflow:hidden; }
+
+    .jarvis-root { display:flex; flex-direction:column; height:100vh; }
+
+    /* Header */
+    .jarvis-header { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; background:linear-gradient(180deg,rgba(34,211,238,0.04) 0%,transparent 100%); }
+    .jarvis-logo { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#22d3ee 0%,#0891b2 100%); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--accent-fg); flex-shrink:0; box-shadow:0 0 14px rgba(34,211,238,0.35); position:relative; }
+    .jarvis-logo::after { content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(34,211,238,0.3); animation:logo-orbit 4s linear infinite; }
+    @keyframes logo-orbit { 0%{transform:rotate(0deg);border-color:rgba(34,211,238,0.4)} 50%{border-color:rgba(34,211,238,0.1)} 100%{transform:rotate(360deg);border-color:rgba(34,211,238,0.4)} }
+    .header-info { flex:1; min-width:0; }
+    .jarvis-title { font-size:14px; font-weight:700; letter-spacing:1px; color:var(--accent); }
+    .jarvis-subtitle { font-size:10px; color:var(--text-dim); letter-spacing:0.5px; }
+    .jarvis-status { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-dim); flex-shrink:0; }
+    .status-dot { width:7px; height:7px; border-radius:50%; background:var(--success); animation:pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 4px rgba(34,197,94,0.5)} 50%{opacity:0.4;box-shadow:none} }
+
+    /* Career role badge */
+    .career-badge { font-size:8px; font-weight:700; padding:2px 6px; border-radius:10px; background:rgba(34,211,238,0.12); color:var(--accent); letter-spacing:0.5px; text-transform:uppercase; margin-top:2px; display:inline-block; }
+
+    /* Waveform */
+    .agi-orb-container { padding:10px 14px 6px; display:flex; flex-direction:column; align-items:center; border-bottom:1px solid var(--border); flex-shrink:0; position:relative; overflow:hidden; }
+    .agi-orb-container::before { content:''; position:absolute; top:50%; left:50%; width:120px; height:120px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%); pointer-events:none; }
+    .waveform-canvas { width:100%; height:44px; display:block; }
+    .orb-status { display:flex; align-items:center; gap:10px; margin-top:4px; font-size:8px; color:var(--text-dim); flex-wrap:wrap; justify-content:center; }
+    .orb-stat { display:flex; align-items:center; gap:3px; }
+    .orb-stat .dot { width:4px; height:4px; border-radius:50%; }
+
+    /* Tab bar */
+    .tab-bar { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+    .tab-bar::-webkit-scrollbar { display:none; }
+    .tab-btn { flex:0 0 auto; padding:6px 8px; font-size:8px; font-weight:600; text-align:center; background:none; color:var(--text-dim); border:none; border-bottom:2px solid transparent; cursor:pointer; transition:color 0.15s,border-color 0.15s; white-space:nowrap; font-family:var(--font); text-transform:uppercase; letter-spacing:0.3px; }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+    /* Panels */
+    .tab-panels { flex:1; overflow:hidden; position:relative; }
+    .tab-panel { display:none; flex-direction:column; height:100%; overflow-y:auto; }
+    .tab-panel.active { display:flex; }
+
+    /* Chat */
+    .chat-messages { flex:1; overflow-y:auto; padding:8px 14px; display:flex; flex-direction:column; gap:5px; }
+    .chat-msg { max-width:92%; padding:7px 11px; border-radius:var(--radius); font-size:12px; line-height:1.5; word-break:break-word; }
+    .chat-msg.user { align-self:flex-end; background:#164e63; color:#cffafe; border-bottom-right-radius:2px; }
+    .chat-msg.jarvis { align-self:flex-start; background:var(--bg-card); border:1px solid var(--border); border-bottom-left-radius:2px; }
+    .chat-msg.jarvis .msg-label { font-size:7px; font-weight:700; color:var(--accent); letter-spacing:1px; margin-bottom:2px; display:flex; align-items:center; gap:4px; }
+    .chat-msg.jarvis .msg-label::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); display:inline-block; }
+    .chat-msg.system { align-self:center; font-size:10px; color:var(--text-dim); background:none; padding:3px 0; font-style:italic; }
+    .chat-input-area { display:flex; gap:5px; padding:6px 14px 8px; border-top:1px solid var(--border); flex-shrink:0; align-items:center; }
+    .chat-input { flex:1; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:12px; font-family:var(--font); outline:none; transition:border-color 0.15s; }
+    .chat-input:focus { border-color:var(--accent); }
+    .chat-input::placeholder { color:var(--text-dim); }
+
+    /* Voice */
+    .voice-btn { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--border); background:var(--bg-input); color:var(--text-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; font-size:15px; }
+    .voice-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .voice-btn.active { background:var(--accent); border-color:var(--accent); color:var(--accent-fg); box-shadow:0 0 16px rgba(34,211,238,0.4); animation:voice-pulse 1s ease-in-out infinite; }
+    @keyframes voice-pulse { 0%,100%{box-shadow:0 0 8px rgba(34,211,238,0.3)} 50%{box-shadow:0 0 20px rgba(34,211,238,0.5)} }
+    .voice-status { font-size:9px; color:var(--accent); text-align:center; padding:1px 14px 0; min-height:12px; }
+
+    /* Buttons */
+    .btn { padding:6px 12px; border-radius:var(--radius); border:none; font-size:10px; font-weight:600; cursor:pointer; font-family:var(--font); transition:background 0.15s; }
+    .btn-primary { background:var(--accent); color:var(--accent-fg); }
+    .btn-primary:hover { background:#06b6d4; }
+    .btn-ghost { background:transparent; color:var(--text-dim); border:1px solid var(--border); }
+    .btn-ghost:hover { color:var(--text); border-color:var(--text-dim); }
+    .btn-danger { background:transparent; color:var(--danger); border:1px solid rgba(239,68,68,0.3); }
+    .btn-danger:hover { background:rgba(239,68,68,0.1); }
+    .btn-sm { padding:4px 10px; font-size:9px; }
+
+    /* Cards */
+    .card-list { padding:8px 14px; display:flex; flex-direction:column; gap:5px; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:9px 11px; }
+    .card-title { font-weight:600; font-size:11px; margin-bottom:2px; }
+    .card-meta { font-size:9px; color:var(--text-dim); }
+    .card-actions { display:flex; gap:5px; margin-top:5px; }
+
+    /* Status grid */
+    .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:8px 14px; }
+    .status-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:8px; }
+    .status-card .label { font-size:8px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+    .status-card .value { font-size:15px; font-weight:700; color:var(--accent); }
+    .status-card .sub { font-size:8px; color:var(--text-dim); margin-top:1px; }
+    .status-card.wide { grid-column:1/-1; }
+
+    /* Model selector */
+    .model-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:0 14px 8px; }
+    .model-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:7px 9px; cursor:pointer; transition:all 0.2s; text-align:center; }
+    .model-card:hover { border-color:var(--accent); }
+    .model-card.active { border-color:var(--accent); background:rgba(34,211,238,0.05); box-shadow:0 0 8px rgba(34,211,238,0.1); }
+    .model-card .model-name { font-size:11px; font-weight:700; }
+    .model-card .model-tier { font-size:8px; color:var(--accent); margin-top:1px; }
+    .model-card .model-desc { font-size:8px; color:var(--text-dim); margin-top:1px; }
+
+    /* Forms */
+    .form-section { padding:8px 14px; border-bottom:1px solid var(--border); }
+    .form-group { margin-bottom:5px; }
+    .form-label { display:block; font-size:9px; font-weight:600; color:var(--text-dim); margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px; }
+    .form-input,.form-textarea,.form-select { width:100%; padding:6px 9px; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:11px; font-family:var(--font); outline:none; transition:border-color 0.15s; }
+    .form-input:focus,.form-textarea:focus,.form-select:focus { border-color:var(--accent); }
+    .form-textarea { min-height:50px; resize:vertical; }
+    .form-select { cursor:pointer; appearance:auto; }
+
+    /* Screen */
+    .screen-info { padding:8px 14px; }
+    .screen-info .info-row { display:flex; gap:6px; margin-bottom:3px; font-size:10px; }
+    .info-row .label { color:var(--text-dim); min-width:36px; flex-shrink:0; }
+    .info-row .value { word-break:break-all; }
+    .screenshot-preview { margin:8px 14px; border-radius:var(--radius); border:1px solid var(--border); overflow:hidden; }
+    .screenshot-preview img { width:100%; display:block; }
+    .screen-actions { padding:0 14px 8px; display:flex; gap:5px; }
+
+    /* Tab item */
+    .tab-item { display:flex; align-items:center; gap:6px; }
+    .tab-item .tab-favicon { width:14px; height:14px; border-radius:2px; flex-shrink:0; }
+    .tab-item .tab-title { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+    .tab-active-badge { font-size:7px; padding:1px 4px; border-radius:3px; background:rgba(34,211,238,0.15); color:var(--accent); font-weight:700; flex-shrink:0; }
+
+    .empty-state { text-align:center; padding:20px 14px; color:var(--text-dim); font-size:10px; }
+
+    /* Forge — sovereign canister grid */
+    .forge-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:6px 14px; }
+    .forge-btn { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:9px; cursor:pointer; text-align:left; transition:all 0.15s; font-family:var(--font); color:var(--text); }
+    .forge-btn:hover { border-color:var(--accent); background:rgba(34,211,238,0.03); }
+    .forge-btn .forge-icon { font-size:16px; margin-bottom:3px; }
+    .forge-btn .forge-label { font-size:9px; font-weight:600; }
+    .forge-btn .forge-desc { font-size:8px; color:var(--text-dim); margin-top:1px; }
+
+    /* Canister type card with element color */
+    .canister-type-btn { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:8px; cursor:pointer; text-align:center; transition:all 0.2s; font-family:var(--font); color:var(--text); position:relative; overflow:hidden; }
+    .canister-type-btn:hover { transform:translateY(-1px); }
+    .canister-type-btn .ct-symbol { font-size:18px; font-weight:800; margin-bottom:2px; }
+    .canister-type-btn .ct-name { font-size:9px; font-weight:600; }
+    .canister-type-btn .ct-tier { font-size:7px; color:var(--text-dim); margin-top:1px; text-transform:uppercase; letter-spacing:0.5px; }
+    .canister-type-btn::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
+
+    /* Protocol cards */
+    .protocol-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; margin-bottom:4px; }
+    .protocol-card .proto-header { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+    .protocol-card .proto-id { font-size:8px; font-weight:700; color:var(--accent); font-family:monospace; }
+    .protocol-card .proto-name { font-size:10px; font-weight:600; }
+    .protocol-card .proto-role { font-size:7px; padding:1px 5px; border-radius:8px; background:rgba(139,92,246,0.15); color:#8B5CF6; font-weight:600; text-transform:uppercase; }
+    .protocol-card .proto-desc { font-size:9px; color:var(--text-dim); margin-top:2px; }
+    .protocol-card .proto-trigger { font-size:7px; color:var(--text-dim); margin-top:3px; font-style:italic; }
+    .protocol-card .proto-actions { margin-top:5px; }
+
+    .section-header { font-size:9px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; padding:8px 14px 3px; }
+
+    /* Canister inventory */
+    .canister-inv { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:var(--radius); background:var(--bg-card); border:1px solid var(--border); margin-bottom:3px; }
+    .canister-inv .ci-symbol { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:10px; color:#0a0a0b; flex-shrink:0; }
+    .canister-inv .ci-info { flex:1; min-width:0; }
+    .canister-inv .ci-name { font-size:10px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .canister-inv .ci-meta { font-size:8px; color:var(--text-dim); }
+    .canister-inv .ci-target { font-size:7px; padding:1px 4px; border-radius:3px; font-weight:700; flex-shrink:0; }
+
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    ::-webkit-scrollbar-thumb:hover { background:#3f3f46; }
+  </style>
+</head>
+<body>
+  <div class="jarvis-root">
+    <header class="jarvis-header">
+      <div class="jarvis-logo">M</div>
+      <div class="header-info">
+        <div class="jarvis-title">MERIDIANUS</div>
+        <div class="jarvis-subtitle">v3 · <span id="modelLabel">MERIDIANUS-8</span></div>
+        <span class="career-badge" id="careerBadge">🔬 Lab Manager · Forge Master</span>
+      </div>
+      <div class="jarvis-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">ALIVE</span>
+      </div>
+    </header>
+
+    <div class="agi-orb-container">
+      <canvas class="waveform-canvas" id="waveformCanvas"></canvas>
+      <div class="orb-status">
+        <span class="orb-stat"><span class="dot" style="background:var(--success)"></span> R=<span id="orbCoherence">0.94</span></span>
+        <span class="orb-stat"><span class="dot" style="background:var(--accent)"></span> Beat #<span id="orbBeat">4,217</span></span>
+        <span class="orb-stat"><span class="dot" style="background:var(--warning)"></span> <span id="orbPhantoms">8</span>φ</span>
+        <span class="orb-stat"><span class="dot" style="background:var(--gold)"></span> <span id="orbCanisters">0</span> cans</span>
+        <span class="orb-stat"><span class="dot" style="background:var(--phantom)"></span> <span id="orbProtocols">13</span> CP</span>
+      </div>
+    </div>
+
+    <nav class="tab-bar" id="tabBar">
+      <button class="tab-btn active" data-tab="chat">💬 Chat</button>
+      <button class="tab-btn" data-tab="protocols">📋 Career</button>
+      <button class="tab-btn" data-tab="forge">⚡ Forge</button>
+      <button class="tab-btn" data-tab="status">📊 Status</button>
+      <button class="tab-btn" data-tab="notes">📝 Notes</button>
+      <button class="tab-btn" data-tab="tabs">🗂 Tabs</button>
+      <button class="tab-btn" data-tab="screen">📷 Screen</button>
+    </nav>
+
+    <div class="tab-panels">
+      <!-- Chat Panel -->
+      <section class="tab-panel active" id="panel-chat">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg system">MERIDIANUS v3.0.0 initialized · Per aspera ad astra</div>
+        </div>
+        <div class="voice-status" id="voiceStatus"></div>
+        <div class="chat-input-area">
+          <button class="voice-btn" id="voiceBtn" title="Hold to speak">🎙</button>
+          <input class="chat-input" id="chatInput" type="text" placeholder="Command MERIDIANUS… (hold 🎙 to speak)" autocomplete="off" />
+          <button class="btn btn-primary btn-sm" id="chatSend">▶</button>
+        </div>
+      </section>
+
+      <!-- Career Protocols Panel -->
+      <section class="tab-panel" id="panel-protocols">
+        <div class="section-header">CAREER PROTOCOLS — 13 Active Scripts</div>
+        <div class="card-list" id="protocolsList"></div>
+      </section>
+
+      <!-- Forge Panel — Sovereign Canister Forge + Token Forge -->
+      <section class="tab-panel" id="panel-forge">
+        <div class="section-header">SOVEREIGN CANISTER FORGE</div>
+        <div class="forge-grid" id="canisterTypeGrid"></div>
+
+        <div class="form-section" id="forgeForm" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Canister Name</label>
+            <input class="form-input" id="forgeName" type="text" placeholder="Name your canister" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deploy Target</label>
+            <select class="form-select" id="forgeTarget">
+              <option value="sovereign">🏛 Sovereign (own realm)</option>
+              <option value="icp">🌐 ICP Mainnet</option>
+              <option value="web">🕸 Web (direct spin)</option>
+              <option value="blockchain">⛓ Blockchain</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" id="forgeSubmit">⚡ Forge Canister</button>
+          <button class="btn btn-ghost btn-sm" id="forgeCancel" style="margin-left:4px;">Cancel</button>
+        </div>
+
+        <div class="section-header">FORGED CANISTERS</div>
+        <div class="card-list" id="canisterInventory"></div>
+
+        <div class="section-header">TOKEN FORGE</div>
+        <div class="forge-grid">
+          <button class="forge-btn" data-forge="mint-forma"><div class="forge-icon">🪙</div><div class="forge-label">Mint FORMA</div><div class="forge-desc">Create sovereign tokens</div></button>
+          <button class="forge-btn" data-forge="check-balance"><div class="forge-icon">💰</div><div class="forge-label">Check Balance</div><div class="forge-desc">View token holdings</div></button>
+          <button class="forge-btn" data-forge="transfer"><div class="forge-icon">↗️</div><div class="forge-label">Transfer</div><div class="forge-desc">Send tokens</div></button>
+          <button class="forge-btn" data-forge="burn"><div class="forge-icon">🔥</div><div class="forge-label">Burn</div><div class="forge-desc">Deflationary burn</div></button>
+        </div>
+
+        <div class="section-header">PHANTOM AI</div>
+        <div class="forge-grid">
+          <button class="forge-btn" data-forge="phantom-status"><div class="forge-icon">👻</div><div class="forge-label">Phantom Status</div><div class="forge-desc">8 micro-AI agents</div></button>
+          <button class="forge-btn" data-forge="phantom-dispatch"><div class="forge-icon">🚀</div><div class="forge-label">Dispatch Task</div><div class="forge-desc">Assign to phantom</div></button>
+        </div>
+      </section>
+
+      <!-- Status Panel -->
+      <section class="tab-panel" id="panel-status">
+        <div class="section-header">ORGANISM STATE</div>
+        <div class="status-grid">
+          <div class="status-card"><div class="label">Model</div><div class="value" id="statModel">M-8</div><div class="sub">Sovereign tier</div></div>
+          <div class="status-card"><div class="label">Heartbeat</div><div class="value" id="statBeat">#4,217</div><div class="sub">873ms φ-cycle</div></div>
+          <div class="status-card"><div class="label">Coherence</div><div class="value" id="statCoherence">0.94</div><div class="sub">Kuramoto R</div></div>
+          <div class="status-card"><div class="label">Phantoms</div><div class="value" id="statPhantoms">8/8</div><div class="sub">Active α–θ</div></div>
+          <div class="status-card"><div class="label">FORMA</div><div class="value" id="statForma">2,584</div><div class="sub">Token balance</div></div>
+          <div class="status-card"><div class="label">Canisters</div><div class="value" id="statCanisters">0</div><div class="sub">Sovereign forged</div></div>
+          <div class="status-card"><div class="label">Protocols</div><div class="value" id="statProtocols">13</div><div class="sub">Career scripts</div></div>
+          <div class="status-card"><div class="label">Version</div><div class="value">v3</div><div class="sub">JARVIS-class</div></div>
+          <div class="status-card wide"><div class="label">ANIMA Chain</div><div class="value" style="font-size:10px;font-family:monospace;" id="statAnima">0xA7F3…E2D1</div><div class="sub">Hash head · immutable lineage</div></div>
+        </div>
+        <div class="section-header">MODEL FAMILY</div>
+        <div class="model-grid">
+          <div class="model-card" data-model="1"><div class="model-name">M-1</div><div class="model-tier">Base</div><div class="model-desc">Core assistant</div></div>
+          <div class="model-card" data-model="3"><div class="model-name">M-3</div><div class="model-tier">Pro</div><div class="model-desc">+ Sovereign Forge</div></div>
+          <div class="model-card active" data-model="8"><div class="model-name">M-8</div><div class="model-tier">Sovereign</div><div class="model-desc">+ 8 Phantom AI</div></div>
+          <div class="model-card" data-model="21"><div class="model-name">M-21</div><div class="model-tier">Architect</div><div class="model-desc">Full authority</div></div>
+        </div>
+      </section>
+
+      <!-- Notes Panel -->
+      <section class="tab-panel" id="panel-notes">
+        <div class="form-section">
+          <div class="form-group"><label class="form-label" for="noteTitle">Title</label><input class="form-input" id="noteTitle" type="text" placeholder="Note title" /></div>
+          <div class="form-group"><label class="form-label" for="noteContent">Content</label><textarea class="form-textarea" id="noteContent" placeholder="Write your note…"></textarea></div>
+          <button class="btn btn-primary btn-sm" id="noteSave" style="margin-top:3px;">Save Note</button>
+        </div>
+        <div class="card-list" id="notesList"></div>
+      </section>
+
+      <!-- Tabs Panel -->
+      <section class="tab-panel" id="panel-tabs">
+        <div style="padding:5px 14px 3px;display:flex;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" id="refreshTabs">↻ Refresh</button></div>
+        <div class="card-list" id="tabsList"></div>
+      </section>
+
+      <!-- Screen Panel -->
+      <section class="tab-panel" id="panel-screen">
+        <div class="screen-info">
+          <div class="info-row"><span class="label">Title</span><span class="value" id="screenTitle">—</span></div>
+          <div class="info-row"><span class="label">URL</span><span class="value" id="screenUrl">—</span></div>
+        </div>
+        <div class="screen-actions">
+          <button class="btn btn-primary btn-sm" id="captureBtn">📷 Capture</button>
+          <button class="btn btn-ghost btn-sm" id="refreshScreen">↻ Refresh</button>
+        </div>
+        <div class="screenshot-preview" id="screenshotPreview" style="display:none;"><img id="screenshotImg" alt="Screenshot" /></div>
+      </section>
+    </div>
+  </div>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+name: 🧠 Organism Learning Bot — Hebbian Training
+# organism-learning-bot: Runs a Hebbian learning cycle over recent repo activity
+# Emits learning_state governance event to dist/governance/events/learning_state.json
+# Part of the Governance Integration — Bot-to-Brain Event System
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  learning-cycle:
+    name: 🧠 Hebbian Learning Cycle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50  # Fetch recent commits for learning signals
+
+      - name: 🧠 Run Hebbian Learning Cycle
+        id: learning
+        run: |
+          echo "## 🧠 Organism Learning Bot — Hebbian Training" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          CYCLE_START=$(date +%s%N | cut -b1-13)
+
+          # Training signals = number of commits in last 24h
+          TRAINING_SIGNALS=$(git log --oneline --since="24 hours ago" 2>/dev/null | wc -l | tr -d ' ')
+          TRAINING_SIGNALS=${TRAINING_SIGNALS:-0}
+
+          # Hebbian synapses trained = unique files changed in recent commits
+          HEBBIAN_SYNAPSES=$(git log --since="24 hours ago" --name-only --format='' 2>/dev/null | grep -v '^$' | sort -u | wc -l | tr -d ' ')
+          HEBBIAN_SYNAPSES=${HEBBIAN_SYNAPSES:-0}
+
+          # Protocols evolved = governance/learning/protocol files changed recently
+          PROTOCOLS_EVOLVED=$(git log --oneline --since="48 hours ago" --name-only 2>/dev/null | \
+            grep -E "organism/web/protocols|governance/events|languages/" | sort -u | wc -l | tr -d ' ')
+          PROTOCOLS_EVOLVED=${PROTOCOLS_EVOLVED:-0}
+
+          # Load or initialize learning state
+          STATE_DIR="dist/learning"
+          mkdir -p "$STATE_DIR"
+
+          STATE_DATE=$(date -u +%Y-%m-%d)
+          STATE_PATH="$STATE_DIR/state-$STATE_DATE.json"
+
+          if [ -f "$STATE_DIR/current.json" ]; then
+            PREV_ERROR_RATE=$(node -e "const s=JSON.parse(require('fs').readFileSync('$STATE_DIR/current.json','utf8')); console.log(s.error_rate||0.1)" 2>/dev/null || echo "0.1")
+            PREV_LEARNING_RATE=$(node -e "const s=JSON.parse(require('fs').readFileSync('$STATE_DIR/current.json','utf8')); console.log(s.learning_rate||0.01)" 2>/dev/null || echo "0.01")
+          else
+            PREV_ERROR_RATE="0.15"
+            PREV_LEARNING_RATE="0.01"
+          fi
+
+          # Compute new error rate (improves when signals > 10, degrades when < 5)
+          if [ "$TRAINING_SIGNALS" -gt 10 ]; then
+            ERROR_RATE=$(echo "scale=4; $PREV_ERROR_RATE * 0.95" | bc 2>/dev/null || echo "0.10")
+          elif [ "$TRAINING_SIGNALS" -lt 5 ]; then
+            ERROR_RATE=$(echo "scale=4; $PREV_ERROR_RATE * 1.05" | bc 2>/dev/null || echo "0.15")
+          else
+            ERROR_RATE="$PREV_ERROR_RATE"
+          fi
+          # Clamp to [0, 0.5]
+          ERROR_RATE=$(echo "scale=4; if ($ERROR_RATE > 0.5) 0.5 else if ($ERROR_RATE < 0) 0 else $ERROR_RATE" | bc 2>/dev/null || echo "0.10")
+
+          # Adaptive learning rate
+          LEARNING_RATE="$PREV_LEARNING_RATE"
+
+          CYCLE_END=$(date +%s%N | cut -b1-13)
+          CYCLE_DURATION_MS=$((CYCLE_END - CYCLE_START))
+
+          echo "### Learning Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Training Signals | $TRAINING_SIGNALS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Hebbian Synapses | $HEBBIAN_SYNAPSES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Protocols Evolved | $PROTOCOLS_EVOLVED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Error Rate | $ERROR_RATE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Learning Rate | $LEARNING_RATE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cycle Duration | ${CYCLE_DURATION_MS}ms |" >> $GITHUB_STEP_SUMMARY
+
+          # Persist learning state
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          cat > "$STATE_DIR/current.json" << STATEEOF
+          {
+            "timestamp": "$TIMESTAMP",
+            "training_signals": $TRAINING_SIGNALS,
+            "hebbian_synapses_trained": $HEBBIAN_SYNAPSES,
+            "protocols_evolved": $PROTOCOLS_EVOLVED,
+            "error_rate": $ERROR_RATE,
+            "learning_rate": $LEARNING_RATE,
+            "cycle_duration_ms": $CYCLE_DURATION_MS
+          }
+          STATEEOF
+          cp "$STATE_DIR/current.json" "$STATE_PATH"
+
+          echo "training_signals=$TRAINING_SIGNALS"   >> $GITHUB_OUTPUT
+          echo "hebbian_synapses=$HEBBIAN_SYNAPSES"   >> $GITHUB_OUTPUT
+          echo "protocols_evolved=$PROTOCOLS_EVOLVED" >> $GITHUB_OUTPUT
+          echo "error_rate=$ERROR_RATE"               >> $GITHUB_OUTPUT
+          echo "learning_rate=$LEARNING_RATE"         >> $GITHUB_OUTPUT
+          echo "cycle_duration_ms=$CYCLE_DURATION_MS" >> $GITHUB_OUTPUT
+          echo "state_path=$STATE_PATH"               >> $GITHUB_OUTPUT
+
+      - name: 📡 Emit learning_state Governance Event
+        run: |
+          mkdir -p dist/governance/events
+
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          SIGNALS="${{ steps.learning.outputs.training_signals }}"
+          SYNAPSES="${{ steps.learning.outputs.hebbian_synapses }}"
+          PROTOCOLS="${{ steps.learning.outputs.protocols_evolved }}"
+          ERROR="${{ steps.learning.outputs.error_rate }}"
+          LR="${{ steps.learning.outputs.learning_rate }}"
+          DURATION="${{ steps.learning.outputs.cycle_duration_ms }}"
+          STATE="${{ steps.learning.outputs.state_path }}"
+
+          cat > dist/governance/events/learning_state.json << EOF
+          {
+            "entity_id": "atlas://bot/organism-learning-bot",
+            "op": "learning_cycle_completed",
+            "timestamp": "$TIMESTAMP",
+            "context": {
+              "training_signals": $SIGNALS,
+              "hebbian_synapses_trained": $SYNAPSES,
+              "protocols_evolved": $PROTOCOLS,
+              "state_path": "$STATE",
+              "learning_rate": $LR,
+              "cycle_duration_ms": $DURATION,
+              "error_rate": $ERROR
+            }
+          }
+          EOF
+
+          echo "📡 Emitted learning_state event to dist/governance/events/learning_state.json"
+          cat dist/governance/events/learning_state.json
+
+      - name: ⚖️ Run Governance Cycle
+        run: |
+          node governance/governance-cycle.js
+        continue-on-error: true
+
+      - name: 💾 Commit Governance Artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "organism-learning-bot"
+          git config user.email "organism-learning-bot[bot]@users.noreply.github.com"
+          git add dist/governance/ dist/learning/
+          git diff --staged --quiet || git commit -m "🧠 organism-learning-bot: learning cycle + governance event [skip ci]"
+          git push || true

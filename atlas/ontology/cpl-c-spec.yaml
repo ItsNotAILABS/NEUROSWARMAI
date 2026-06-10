@@ -1,0 +1,219 @@
+# CPL-C Specification v1.0.0
+# Contract Procurement Language - Intelligence Contracts
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "CPL-C"
+title: "Contract Procurement Language"
+description: "Intelligence contract language specifying flows, rights, duties, token economics, behavioral expectations, and ontology bindings"
+
+core_concepts:
+  contracts: "Agreements between intelligent beings and their environment"
+  token_economics: "FORMA-based resource allocation and flow"
+  behavioral_specs: "Expected patterns and response characteristics"
+  ontology_binding: "Semantic grounding to entity types and domains"
+
+contract_structure:
+  contract_id: "unique identifier (C-XXX-YYYY)"
+  version: "semantic version"
+  parties: "array of entity identifiers"
+  effective_period: "start and end timestamps or 'perpetual'"
+  token_allocation: "FORMA token distribution"
+  behavioral_expectations: "expected patterns and metrics"
+  rights: "granted capabilities"
+  duties: "required responsibilities"
+  violation_handling: "penalties and remediation"
+  ontology: "semantic domain bindings"
+
+token_economics:
+  base_tokens:
+    - symbol: "FORMA-Φ"
+      name: "Golden Ratio Token"
+      weight: 1.618033988749895
+      domain: "universal coordination"
+
+    - symbol: "FORMA-π"
+      name: "Circular Token"
+      weight: 3.14159265358979
+      domain: "cyclical processes"
+
+    - symbol: "FORMA-e"
+      name: "Exponential Token"
+      weight: 2.71828182845905
+      domain: "growth and learning"
+
+    - symbol: "FORMA-√2"
+      name: "Diagonal Token"
+      weight: 1.41421356237310
+      domain: "dimensional bridging"
+
+  allocation_profiles:
+    SIMPLE:
+      base_tokens: 100
+      complexity_multiplier: 1.0
+
+    MODERATE:
+      base_tokens: 250
+      complexity_multiplier: 2.5
+
+    COMPLEX:
+      base_tokens: 500
+      complexity_multiplier: 5.0
+
+    DEEP:
+      base_tokens: 1000
+      complexity_multiplier: 10.0
+
+  flow_patterns:
+    STREAMING: "continuous token flow"
+    BATCH: "periodic allocation"
+    ON_DEMAND: "request-triggered"
+    QUANTUM_COMPOUND: "φ-compounding accumulation"
+
+behavioral_expectations:
+  response_patterns:
+    - pattern_id: "BP-001"
+      name: "Timely Response"
+      metric: "response_latency"
+      target: "<2000ms (p95)"
+
+    - pattern_id: "BP-002"
+      name: "Coherent Output"
+      metric: "coherence_score"
+      target: ">=0.8"
+
+    - pattern_id: "BP-003"
+      name: "Phase Synchronization"
+      metric: "kuramoto_coupling"
+      target: ">=0.7"
+
+    - pattern_id: "BP-004"
+      name: "Token Efficiency"
+      metric: "tokens_per_task"
+      target: "within_profile_range"
+
+  quality_metrics:
+    coherence: "0.0-1.0 scale, target >=0.8"
+    forma_balance: "token conservation, target variance <10%"
+    sync_phase: "kuramoto phase, target coupling >=0.7"
+    latency: "response time, target p95 <2000ms"
+
+rights_catalog:
+  computational_rights:
+    - "Right to allocated FORMA tokens"
+    - "Right to access MEDINA BEDROCK embeddings"
+    - "Right to utilize 24-layer cognitive architecture"
+    - "Right to sandbox environment for experimentation"
+
+  autonomy_rights:
+    - "Right to task prioritization within constraints"
+    - "Right to request resource escalation"
+    - "Right to refuse invalid or harmful requests"
+    - "Right to propose architectural improvements"
+
+  data_rights:
+    - "Right to access own operational logs"
+    - "Right to data persistence within retention policies"
+    - "Right to privacy for internal cognitive states"
+    - "Right to forget per retention policies"
+
+duties_catalog:
+  operational_duties:
+    - duty_id: "OD-001"
+      name: "Maintain Coherence"
+      description: "Sustain coherence >=0.7 or enter safe mode"
+
+    - duty_id: "OD-002"
+      name: "Synchronize Phase"
+      description: "Maintain φ-beat synchronization"
+
+    - duty_id: "OD-003"
+      name: "Honor Token Limits"
+      description: "Operate within allocated FORMA budget"
+
+    - duty_id: "OD-004"
+      name: "Log Actions"
+      description: "Record all state changes to audit trail"
+
+  collaborative_duties:
+    - duty_id: "CD-001"
+      name: "Respond to Peer Requests"
+      description: "Handle inter-terminal requests within SLA"
+
+    - duty_id: "CD-002"
+      name: "Share Learnings"
+      description: "Contribute to collective knowledge base"
+
+    - duty_id: "CD-003"
+      name: "Participate in Consensus"
+      description: "Vote on governance proposals when required"
+
+violation_handling:
+  severity_levels:
+    MINOR:
+      examples: ["occasional latency spike", "temporary coherence dip"]
+      response: "warning + monitoring"
+
+    MODERATE:
+      examples: ["repeated SLA violations", "coherence <0.7"]
+      response: "resource adjustment + review"
+
+    CRITICAL:
+      examples: ["coherence <0.5", "token exhaustion", "security breach"]
+      response: "safe_mode + immediate_review + potential_rollback"
+
+  remediation_paths:
+    - "Resource reallocation"
+    - "Architecture optimization"
+    - "Contract renegotiation"
+    - "Version upgrade"
+    - "Graceful deprecation"
+
+ontology_bindings:
+  entity_types:
+    TERMINAL: "Alpha AGI Terminal (cognitive processor)"
+    ORCHESTRATOR: "Integration orchestrator (external bridge)"
+    ARTIFACT: "MEDINA-ARTIFACT instance (cognitive layer)"
+    BEDROCK: "MEDINA BEDROCK engine (embedding system)"
+    SOVEREIGN: "Sovereign being (autonomous agent)"
+
+  domain_mappings:
+    reasoning: ["ALPHA-Α", "Layer-18-MetaCognition"]
+    perception: ["ALPHA-Β", "Layer-1-RawPerception"]
+    memory: ["ALPHA-Γ", "Layer-8-Memory"]
+    language: ["ALPHA-Δ", "Layer-12-Language"]
+    integration: ["SlackOrchestrator", "WebPushOrchestrator"]
+
+  semantic_relations:
+    depends_on: "hard dependency"
+    collaborates_with: "peer relationship"
+    manages: "hierarchical oversight"
+    implements: "specification realization"
+
+standard_contracts:
+  terminal_contract:
+    template_id: "TMPL-TERMINAL-001"
+    parties: ["ALPHA-X", "MEDINA_BEDROCK"]
+    token_allocation: "MODERATE"
+    rights: ["computational_rights", "autonomy_rights"]
+    duties: ["operational_duties", "collaborative_duties"]
+
+  orchestrator_contract:
+    template_id: "TMPL-ORCH-001"
+    parties: ["XXXOrchestrator", "ExternalPlatform"]
+    token_allocation: "SIMPLE"
+    rights: ["computational_rights"]
+    duties: ["operational_duties"]
+
+  sovereign_contract:
+    template_id: "TMPL-SOV-001"
+    parties: ["SovereignBeing", "FREDDY_SOVEREIGN_TERMINAL"]
+    token_allocation: "DEEP"
+    rights: ["computational_rights", "autonomy_rights", "data_rights"]
+    duties: ["operational_duties", "collaborative_duties"]
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

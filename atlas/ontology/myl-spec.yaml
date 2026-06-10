@@ -1,0 +1,26 @@
+# MYL Specification v1.0.0
+# Mythic Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "MYL"
+title: "Mythic Language"
+description: "Trickster, lineage, gods, cosmology - stories that bind the organism together"
+
+core_concepts:
+  myth: "Foundational narrative"
+  archetype: "Universal pattern or character"
+  cosmology: "Story of origins and structure"
+  lineage: "Ancestral connections"
+
+archetypal_figures:
+  - TRICKSTER
+  - HERO
+  - SAGE
+  - CREATOR
+  - DESTROYER
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

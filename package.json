@@ -1,0 +1,36 @@
+{
+  "name": "@caffeine/template-app",
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0",
+    "pnpm": ">=7.0.0",
+    "npm": "please use pnpm"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present run build",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "check": "pnpm -r --if-present run check",
+    "fix": "pnpm -r --if-present run fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.4",
+    "typescript": "^6.0.2",
+    "vitest": "^3.1.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": ">=4.59.0",
+      "esbuild": ">=0.25.0",
+      "seroval": ">=1.4.1",
+      "minimatch": ">=9.0.7",
+      "lodash": ">=4.18.0",
+      "lodash-es": ">=4.18.0",
+      "picomatch": ">=2.3.2",
+      "glob": ">=10.5.0",
+      "brace-expansion": ">=2.0.3"
+    }
+  }
+}

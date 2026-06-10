@@ -1,0 +1,227 @@
+# Topology State Event Specification
+# Emitted by: organism-crawler-bot (Organism Mapper)
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+event_type: "topology_state"
+version: "1.0.0"
+source_organism: "organism-crawler-bot"
+entity_id: "atlas://bot/organism-crawler-bot"
+
+description: "Organism topology and graph structure analysis from Crawler Bot"
+
+schema:
+  entity_id:
+    type: STRING
+    required: true
+    pattern: "^atlas://bot/organism-crawler-bot$"
+    description: "Unique identifier for the Crawler Bot organism"
+
+  op:
+    type: STRING
+    required: true
+    enum: ["crawl_completed"]
+    description: "Operation that triggered this event"
+
+  timestamp:
+    type: TIMESTAMP
+    required: true
+    format: "ISO 8601"
+    description: "When the crawl completed"
+
+  context:
+    type: OBJECT
+    required: true
+    properties:
+      files:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Total files discovered"
+
+      dirs:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Total directories discovered"
+
+      orphans:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Files with no incoming references"
+
+      dead_links:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Broken references/links detected"
+
+      graph_nodes:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Nodes in the organism dependency graph"
+
+      graph_edges:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Edges in the organism dependency graph"
+
+      most_connected:
+        type: STRING
+        required: false
+        description: "ID of the most connected node"
+
+      most_connected_degree:
+        type: INTEGER
+        required: false
+        minimum: 0
+        description: "Degree of the most connected node"
+
+      cycles_detected:
+        type: INTEGER
+        required: false
+        minimum: 0
+        description: "Number of circular dependencies detected"
+
+      max_depth:
+        type: INTEGER
+        required: false
+        minimum: 0
+        description: "Maximum dependency chain depth"
+
+cpl_l_conditions:
+  NO_DEAD_LINKS_ALLOWED:
+    expression: "context.dead_links > 0"
+    severity: "CRITICAL"
+    description: "Triggers when any dead links are detected"
+    action: "Block releases until all dead links are resolved"
+
+  TOO_MANY_ORPHANS:
+    expression: "context.orphans > context.files * 0.1"
+    severity: "MEDIUM"
+    description: "Triggers when >10% of files are orphaned"
+    action: "Alert ORACLE, review unused components"
+
+  CIRCULAR_DEPENDENCIES:
+    expression: "context.cycles_detected > 0"
+    severity: "HIGH"
+    description: "Triggers when circular dependencies exist"
+    action: "Alert GUARDIAN, refactor dependency graph"
+
+  EXCESSIVE_DEPTH:
+    expression: "context.max_depth > 10"
+    severity: "MEDIUM"
+    description: "Triggers when dependency chains are too deep"
+    action: "Review architecture, consider flattening"
+
+  GRAPH_SPARSITY:
+    expression: "context.graph_edges < context.graph_nodes"
+    severity: "LOW"
+    description: "Triggers when graph is very sparse"
+    action: "Review integration completeness"
+
+meta_engine_metrics:
+  - metric_id: "topology.orphans"
+    expression: "context.orphans"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["topology", "orphans"]
+
+  - metric_id: "topology.dead_links"
+    expression: "context.dead_links"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["topology", "integrity"]
+
+  - metric_id: "topology.graph_centrality_max"
+    expression: "context.most_connected_degree"
+    type: "GAUGE"
+    unit: "degree"
+    labels: ["topology", "centrality"]
+
+  - metric_id: "topology.graph_nodes"
+    expression: "context.graph_nodes"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["topology", "graph"]
+
+  - metric_id: "topology.graph_edges"
+    expression: "context.graph_edges"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["topology", "graph"]
+
+  - metric_id: "topology.graph_density"
+    expression: "context.graph_edges / (context.graph_nodes * (context.graph_nodes - 1))"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["topology", "graph"]
+
+  - metric_id: "topology.cycles_detected"
+    expression: "context.cycles_detected"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["topology", "integrity"]
+
+  - metric_id: "topology.max_depth"
+    expression: "context.max_depth"
+    type: "GAUGE"
+    unit: "depth"
+    labels: ["topology", "complexity"]
+
+example_payload:
+  entity_id: "atlas://bot/organism-crawler-bot"
+  op: "crawl_completed"
+  timestamp: "2026-05-03T12:00:00Z"
+  context:
+    files: 342
+    dirs: 67
+    orphans: 12
+    dead_links: 0
+    graph_nodes: 89
+    graph_edges: 156
+    most_connected: "MEDINA_BEDROCK"
+    most_connected_degree: 24
+    cycles_detected: 0
+    max_depth: 7
+
+validation_rules:
+  - rule: "graph_nodes >= 0 and graph_edges >= 0"
+    message: "Graph metrics cannot be negative"
+
+  - rule: "orphans <= files"
+    message: "Orphans cannot exceed total files"
+
+  - rule: "dead_links >= 0"
+    message: "Dead links cannot be negative"
+
+  - rule: "most_connected_degree <= graph_edges"
+    message: "Node degree cannot exceed total edges"
+
+  - rule: "cycles_detected >= 0"
+    message: "Cycle count cannot be negative"
+
+governance_integration:
+  ingestion_path: "dist/governance/events/topology_state.json"
+  processing_frequency: "on_write"
+  retention_policy: "keep_last_100"
+  phi_synchronized: true
+  phi_beat_alignment: "F13"  # Every 233 beats (~3.4min)
+
+acl_integration:
+  relationship_tracking: true
+  ontology_validation: true
+  entity_registry_sync: true
+
+guardian_synthesis_hints:
+  safety_indicators:
+    - "dead_links > 0 indicates integrity violation"
+    - "cycles_detected > 0 suggests architectural instability"
+    - "max_depth > 10 indicates complexity risk"
+
+  integrity_indicators:
+    - "orphans indicates unused/dead code"
+    - "most_connected_degree shows central dependencies"
+    - "graph_density shows coupling levels"

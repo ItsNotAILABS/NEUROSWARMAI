@@ -1,0 +1,98 @@
+# Sovereign Terminal Configuration
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+terminal_id: "FREDDY_SOVEREIGN_TERMINAL"
+terminal_type: "GOVERNANCE_ENGINE"
+
+# Scan configuration
+scan:
+  root_path: "/home/runner/work/command-platform/command-platform"
+  scan_patterns:
+    - "**/*.mo"        # Motoko modules
+    - "**/*.js"        # JavaScript modules
+    - "**/*.meta.json" # Metadata sidecars
+  exclude_patterns:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/.git/**"
+
+# Registry configuration
+registry:
+  path: "atlas/registry/global_registry.jsonl"
+  format: "jsonl"
+  append_only: true
+  backup_enabled: true
+  backup_interval: "24h"
+
+# CPL specifications
+cpl:
+  cpl_l_path: "atlas/ontology/cpl-l-spec.yaml"
+  cpl_c_path: "atlas/ontology/cpl-c-spec.yaml"
+  cpl_p_path: "atlas/ontology/cpl-p-spec.yaml"
+
+# Entity configuration
+entities:
+  meridian_path: "atlas/entities/meridian.json"
+  command_platform_path: "atlas/entities/command-platform.json"
+
+# Governance configuration
+governance:
+  constitution_path: "atlas/policies/sovereign-constitution.cpl"
+
+  constitutional_check:
+    frequency: 89  # F11 beats
+    beat_duration: 873  # PHI_BEAT in ms
+
+  coherence_monitoring:
+    threshold_warning: 0.7
+    threshold_critical: 0.5
+
+  consensus:
+    voting_threshold: 0.618  # φ^-1
+    terminals:
+      - "ALPHA-Α"
+      - "ALPHA-Β"
+      - "ALPHA-Γ"
+      - "ALPHA-Δ"
+      - "ALPHA-Ε"
+      - "ALPHA-Ζ"
+      - "ALPHA-Η"
+      - "ALPHA-Θ"
+      - "ALPHA-Ι"
+      - "ALPHA-Κ"
+
+# Upgrade management
+upgrades:
+  auto_approve_patch: true
+  auto_approve_minor: false
+  auto_approve_major: false
+  rollback_enabled: true
+  retention_versions: 3
+
+  compatibility_matrix:
+    MEDINA_BEDROCK: ">=1.0.0 <2.0.0"
+    MEDINA_ARTIFACT_24_LAYER: ">=1.0.0 <2.0.0"
+    ALPHA_AGI_TERMINALS: ">=1.0.0 <2.0.0"
+    MICRO_TOKEN_SYSTEM: ">=1.0.0 <2.0.0"
+
+# Logging configuration
+logging:
+  sovereign_log: "logs/sovereign.log"
+  audit_log: "logs/audits.log"
+  log_level: "INFO"
+  log_format: "jsonl"
+
+# Mathematical constants
+constants:
+  PHI: 1.618033988749895
+  S_ZERO: 0.0036313133
+  PI: 3.14159265358979
+  E: 2.71828182845905
+  PHI_BEAT: 873  # milliseconds
+  F11: 89
+
+# Integration bridges
+bridges:
+  meridian_bridge: "bridges/meridian_bridge.yaml"
+  command_platform_bridge: "bridges/command_platform_bridge.yaml"

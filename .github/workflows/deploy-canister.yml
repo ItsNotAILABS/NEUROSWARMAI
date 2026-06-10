@@ -1,0 +1,62 @@
+name: Deploy MERIDIANUS to ICP Canister
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-canister
+  cancel-in-progress: true
+
+jobs:
+  deploy-canister:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install & Build Frontend
+        run: |
+          pnpm install --no-frozen-lockfile
+          cd src/frontend
+          pnpm run build:skip-bindings
+
+      - name: Prepare dist for deployment
+        run: |
+          cd src/frontend/dist
+
+          # Copy organism web workers for edge deployment
+          if [ -d "../../../organism/web" ]; then
+            mkdir -p organism/web
+            cp ../../../organism/web/*.js organism/web/ 2>/dev/null || true
+            cp ../../../organism/web/*.html organism/web/ 2>/dev/null || true
+          fi
+
+      - name: Install ICP CLI
+        run: |
+          curl -fsSL https://sdk.dfinity.org/install.sh | sh
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Deploy Frontend Canister to ICP
+        env:
+          DFX_NETWORK: ic
+          ICP_IDENTITY_PEM: ${{ secrets.ICP_IDENTITY_PEM }}
+        run: |
+          # Configure identity from secret
+          mkdir -p ~/.config/dfx/identity/deploy
+          echo "$ICP_IDENTITY_PEM" > ~/.config/dfx/identity/deploy/identity.pem
+          chmod 600 ~/.config/dfx/identity/deploy/identity.pem
+
+          # Deploy frontend canister
+          icp deploy --environment ic frontend

@@ -1,0 +1,188 @@
+name: 🛡️ Organism Sentinel Bot — Security Audit
+# organism-sentinel-bot: Audits extension permissions, checks CSP, scans for secrets, checks for eval()
+# Part of the Organism Bot Fleet — the immune system
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  security-audit:
+    name: 🛡️ Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🛡️ Audit Extension Permissions
+        run: |
+          echo "## 🛡️ Organism Sentinel Bot — Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Extension Permission Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          for manifest in extension/*/manifest.json; do
+            [ -f "$manifest" ] || continue
+            EXT_NAME=$(basename $(dirname "$manifest"))
+            echo "#### $EXT_NAME" >> $GITHUB_STEP_SUMMARY
+
+            # Check permissions
+            PERMS=$(grep -oP '"permissions"\s*:\s*\[\K[^\]]*' "$manifest" | tr ',' '\n' | tr -d '"' | tr -d ' ')
+            if [ -n "$PERMS" ]; then
+              echo "Permissions:" >> $GITHUB_STEP_SUMMARY
+              echo "$PERMS" | while read p; do
+                [ -z "$p" ] && continue
+                # Flag dangerous permissions
+                case "$p" in
+                  "*://*/*"|"<all_urls>"|"webRequest"|"webRequestBlocking"|"debugger")
+                    echo "  - ⚠️ **$p** (high-risk)" >> $GITHUB_STEP_SUMMARY
+                    ;;
+                  *)
+                    echo "  - ✅ $p" >> $GITHUB_STEP_SUMMARY
+                    ;;
+                esac
+              done
+            fi
+
+            # Check host permissions
+            HOST_PERMS=$(grep -oP '"host_permissions"\s*:\s*\[\K[^\]]*' "$manifest" | tr ',' '\n' | tr -d '"' | tr -d ' ')
+            if [ -n "$HOST_PERMS" ]; then
+              echo "Host Permissions:" >> $GITHUB_STEP_SUMMARY
+              echo "$HOST_PERMS" | while read hp; do
+                [ -z "$hp" ] && continue
+                echo "  - $hp" >> $GITHUB_STEP_SUMMARY
+              done
+            fi
+
+            # Check CSP
+            CSP=$(grep -oP '"content_security_policy"\s*:\s*\{[^}]*\}' "$manifest" || echo "")
+            if [ -n "$CSP" ]; then
+              echo "CSP: ✅ Defined" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "CSP: ⚠️ Not explicitly defined" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: 🛡️ Scan for eval() Usage
+        run: |
+          echo "### eval() Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          EVAL_FILES=()
+          for pattern in "organism/web/*.js" "organism/cloudflare/*.js" "extension/*/*.js"; do
+            for f in $pattern; do
+              [ -f "$f" ] || continue
+              if grep -n "eval(" "$f" | grep -v "//.*eval\|/\*.*eval" > /dev/null 2>&1; then
+                EVAL_FILES+=("$f")
+                echo "- ⚠️ **$(basename $f)**: eval() found" >> $GITHUB_STEP_SUMMARY
+                grep -n "eval(" "$f" | grep -v "//.*eval\|/\*.*eval" | head -3 | while read line; do
+                  echo "  - Line: $line" >> $GITHUB_STEP_SUMMARY
+                done
+              fi
+            done
+          done
+
+          if [ ${#EVAL_FILES[@]} -eq 0 ]; then
+            echo "✅ No eval() usage detected in organism code" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🛡️ Scan for Hardcoded Secrets
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Secret Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          FOUND=0
+          # Common secret patterns (not matching variable names)
+          PATTERNS=(
+            'AKIA[0-9A-Z]{16}'                    # AWS Access Key
+            'sk-[a-zA-Z0-9]{48}'                   # OpenAI Key
+            'ghp_[a-zA-Z0-9]{36}'                  # GitHub PAT
+            'AIza[0-9A-Za-z\-_]{35}'               # Google API Key
+            'xox[bpors]-[0-9a-zA-Z]{10,}'          # Slack Token
+          )
+
+          for pattern in "${PATTERNS[@]}"; do
+            MATCHES=$(grep -rn "$pattern" --include="*.js" --include="*.ts" --include="*.json" --include="*.yaml" --include="*.yml" \
+              organism/ extension/ src/ 2>/dev/null | grep -v node_modules | grep -v ".git/" | head -5)
+            if [ -n "$MATCHES" ]; then
+              FOUND=$((FOUND + 1))
+              echo "⚠️ Potential secret pattern found:" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$MATCHES" | head -3 >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          if [ $FOUND -eq 0 ]; then
+            echo "✅ No hardcoded secrets detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🛡️ Check for Unsafe Dependencies
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Dependency Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "package.json" ]; then
+            DEP_COUNT=$(node -e "const p=require('./package.json'); console.log(Object.keys(p.dependencies||{}).length + Object.keys(p.devDependencies||{}).length)")
+            echo "- **Total dependencies**: $DEP_COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for known vulnerable patterns
+          UNSAFE=0
+          if grep -rn "http://" organism/ extension/ --include="*.js" 2>/dev/null | grep -v "localhost\|127.0.0.1\|//.*http://" | head -3 > /tmp/unsafe_http; then
+            if [ -s /tmp/unsafe_http ]; then
+              echo "- ⚠️ Non-HTTPS URLs found in code" >> $GITHUB_STEP_SUMMARY
+              UNSAFE=$((UNSAFE + 1))
+            fi
+          fi
+
+          if [ $UNSAFE -eq 0 ]; then
+            echo "- ✅ No unsafe dependency patterns detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🛡️ Generate Security Audit Report
+        run: |
+          REPORT="docs/security-audit.md"
+          mkdir -p docs
+
+          echo "# 🛡️ Security Audit Report" > "$REPORT"
+          echo "" >> "$REPORT"
+          echo "Generated by organism-sentinel-bot on $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "## Audit Scope" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "| Area | Files Scanned |" >> "$REPORT"
+          echo "|------|--------------|" >> "$REPORT"
+          echo "| Web Workers | $(ls organism/web/*.js 2>/dev/null | wc -l) |" >> "$REPORT"
+          echo "| Cloudflare Workers | $(ls organism/cloudflare/*.js 2>/dev/null | wc -l) |" >> "$REPORT"
+          echo "| Extensions | $(find extension/ -name '*.js' 2>/dev/null | wc -l) |" >> "$REPORT"
+          echo "| Frontend | $(find src/frontend/ -name '*.ts' -o -name '*.tsx' 2>/dev/null | wc -l) |" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "## Security Layers" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "- **L1**: Cloudflare Edge (VIGILIA AIS-006 + UMBRA AIS-022)" >> "$REPORT"
+          echo "- **L2**: Browser Hook (useEdgeSecurity.ts)" >> "$REPORT"
+          echo "- **L3**: ICP Canister (inspect_message)" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "## Status" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "- **Last Audit**: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$REPORT"
+          echo "- **Commit**: \`${GITHUB_SHA:0:8}\`" >> "$REPORT"
+
+      - name: 🛡️ Commit Audit Report
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "organism-sentinel-bot"
+          git config user.email "organism-sentinel-bot[bot]@users.noreply.github.com"
+          git add docs/security-audit.md
+          git diff --staged --quiet || git commit -m "🛡️ organism-sentinel-bot: update security audit report"
+          git push || true

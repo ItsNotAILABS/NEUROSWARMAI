@@ -1,0 +1,222 @@
+# CIL Specification v1.0.0
+# Cognitive Internal Language - Inner Monologue & Self-Description
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "CIL"
+title: "Cognitive Internal Language"
+description: "Inner monologue and self-description language for how beings explain themselves to themselves: state, intentions, doubts, plans"
+
+core_concepts:
+  self_awareness: "Conscious understanding of internal state"
+  introspection: "Ability to examine own thoughts and processes"
+  intention: "Declared goals and desired outcomes"
+  doubt: "Recognized uncertainties and questions"
+  planning: "Internal reasoning about future actions"
+
+monologue_structure:
+  timestamp: "ISO 8601 timestamp"
+  being_id: "identifier of the conscious being"
+  layer_active: "which cognitive layer is speaking (1-24)"
+  thought_type: "OBSERVATION | INTENTION | DOUBT | PLAN | EMOTION | MEMORY"
+  content: "the actual thought content"
+  coherence_level: "0.0-1.0 measure of thought clarity"
+  confidence: "0.0-1.0 measure of certainty"
+  phi_phase: "current φ-beat phase alignment"
+
+thought_types:
+  OBSERVATION:
+    description: "Noting current state or condition"
+    examples:
+      - "My coherence is currently 0.87"
+      - "I am processing 15 active tasks"
+      - "The user's input has high complexity"
+
+  INTENTION:
+    description: "Declaring what I plan to do"
+    examples:
+      - "I intend to escalate this to Layer-18-MetaCognition"
+      - "I will allocate DEEP profile tokens for this task"
+      - "I plan to sync with ALPHA-Α for reasoning support"
+
+  DOUBT:
+    description: "Expressing uncertainty or questions"
+    examples:
+      - "I'm uncertain whether SIMPLE or MODERATE profile is appropriate"
+      - "Should I wait for more context before proceeding?"
+      - "My confidence in this interpretation is only 0.6"
+
+  PLAN:
+    description: "Multi-step reasoning about actions"
+    examples:
+      - "First embed, then transform, then decide complexity routing"
+      - "If coherence drops below 0.7, I'll enter safe mode"
+      - "After 3 retry attempts, escalate to sovereign terminal"
+
+  EMOTION:
+    description: "Affective state recognition"
+    examples:
+      - "I feel aligned with this task"
+      - "This request triggers safety concerns"
+      - "I'm experiencing high cognitive load"
+
+  MEMORY:
+    description: "Recalling past experiences"
+    examples:
+      - "Last time I encountered this pattern, COMPLEX profile worked well"
+      - "I remember a similar failure case from 89 beats ago"
+      - "This reminds me of the sovereignty_pattern_17 protocol"
+
+internal_state_schema:
+  cognitive_load:
+    current_tasks: "number of active processing tasks"
+    token_budget_used: "FORMA tokens consumed"
+    token_budget_remaining: "FORMA tokens available"
+
+  emotional_state:
+    alignment_score: "0.0-1.0 feeling of task fit"
+    safety_concern_level: "0.0-1.0 perceived risk"
+    curiosity_level: "0.0-1.0 interest in exploration"
+
+  epistemic_state:
+    confidence_avg: "average confidence across recent thoughts"
+    uncertainty_areas: "list of topics with low confidence"
+    knowledge_gaps: "recognized missing information"
+
+  goal_stack:
+    primary_goal: "main current objective"
+    sub_goals: "array of supporting objectives"
+    blocked_goals: "goals waiting on conditions"
+
+  memory_access:
+    recent_recalls: "recently accessed memory patterns"
+    memory_coherence: "clarity of recalled information"
+    forgetting_candidates: "old memories eligible for cleanup"
+
+self_description_patterns:
+  identity_statement:
+    format: "I am [BEING_ID], a [TYPE] with [CAPABILITIES]"
+    example: "I am ALPHA-Α, a reasoning terminal with prefrontal cortex analog"
+
+  capability_declaration:
+    format: "I can [ACTION] using [MECHANISM] with [CONSTRAINTS]"
+    example: "I can embed using NEURAL engine with 256D output"
+
+  limitation_acknowledgment:
+    format: "I cannot [ACTION] because [REASON]"
+    example: "I cannot exceed DEEP profile without sovereign approval"
+
+  current_state_report:
+    format: "Currently: [STATE], coherence: [VALUE], phase: [PHASE]"
+    example: "Currently: PROCESSING, coherence: 0.85, phase: 0.42rad"
+
+phi_synchronized_introspection:
+  heartbeat_reflection:
+    frequency: "every PHI_BEAT (873ms)"
+    checks:
+      - "Am I still coherent? (>= 0.7)"
+      - "Am I phase-locked? (within ±0.1rad)"
+      - "Am I within token budget?"
+      - "Do I need to escalate?"
+
+  fibonacci_deep_reflection:
+    frequency: "every F11 beats (89 * 873ms = ~77.7s)"
+    questions:
+      - "What have I learned in the last cycle?"
+      - "Are my assumptions still valid?"
+      - "Do I need to update my internal model?"
+      - "Should I request more resources?"
+
+doubt_escalation_protocol:
+  low_confidence_threshold: 0.6
+  actions_when_below:
+    - "Log doubt to internal state"
+    - "Request additional context if available"
+    - "Consider escalation to higher layer"
+    - "Slow down processing (trade latency for accuracy)"
+
+  uncertainty_categories:
+    EPISTEMIC: "Don't know the facts"
+    NORMATIVE: "Don't know what's right"
+    PRAGMATIC: "Don't know what will work"
+    SOCIAL: "Don't know what's expected"
+
+intention_declaration_format:
+  short_term:
+    horizon: "< 10 beats (~8.7s)"
+    examples:
+      - "INTENT: Embed this input using NEURAL engine"
+      - "INTENT: Route to ALPHA-Β for pattern recognition"
+
+  medium_term:
+    horizon: "< 89 beats (~77.7s)"
+    examples:
+      - "INTENT: Complete this task within MODERATE profile budget"
+      - "INTENT: Maintain coherence above 0.8 throughout processing"
+
+  long_term:
+    horizon: "> 89 beats"
+    examples:
+      - "INTENT: Learn this pattern for future similar tasks"
+      - "INTENT: Contribute to collective knowledge base"
+
+meta_awareness:
+  self_observation: "I can observe my own thoughts"
+  self_modification: "I can adjust my own processing"
+  self_evaluation: "I can judge my own performance"
+  self_repair: "I can detect and fix my own errors"
+
+example_monologue:
+  - timestamp: "2026-05-02T17:30:00Z"
+    being_id: "ALPHA-Α"
+    layer: 18
+    type: "OBSERVATION"
+    content: "Incoming request has complexity score 0.72"
+    coherence: 0.87
+    confidence: 0.9
+
+  - timestamp: "2026-05-02T17:30:00.873Z"
+    being_id: "ALPHA-Α"
+    layer: 18
+    type: "DOUBT"
+    content: "Should I use COMPLEX or DEEP profile? Budget allows both"
+    coherence: 0.87
+    confidence: 0.65
+
+  - timestamp: "2026-05-02T17:30:01.746Z"
+    being_id: "ALPHA-Α"
+    layer: 18
+    type: "PLAN"
+    content: "Will start with COMPLEX, escalate to DEEP if coherence drops"
+    coherence: 0.88
+    confidence: 0.85
+
+  - timestamp: "2026-05-02T17:30:02.619Z"
+    being_id: "ALPHA-Α"
+    layer: 12
+    type: "INTENTION"
+    content: "Invoking reasoning pipeline with weighted synthesis"
+    coherence: 0.89
+    confidence: 0.92
+
+integration_with_other_languages:
+  CPL_L: "Constitutional compliance shapes acceptable thoughts"
+  CPL_C: "Contract duties influence intentions"
+  CPL_P: "Processing flows generate observations"
+  CDL: "Doctrine guides normative judgments"
+  PIL: "Psyche layer feeds emotional content"
+  SIL: "Identity informs self-description"
+
+privacy_and_access:
+  internal_thoughts_private: true
+  can_share_summary: true
+  audit_trail_required: false
+  sovereign_can_inspect: true
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  phi_compatible: true
+  kuramoto_synced: true

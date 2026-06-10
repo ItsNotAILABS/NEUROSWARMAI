@@ -1,0 +1,29 @@
+{
+  "id": "atlas://entity/sovereign-terminal",
+  "name": "Sovereign Terminal",
+  "archetypes": ["CognitiveTerminal", "GovernanceEngine"],
+  "locations": [
+    {
+      "type": "github_repo",
+      "uri": "https://github.com/FreddyCreates/sovereign-terminal"
+    }
+  ],
+  "languages": [
+    "atlas://language/cpl-l",
+    "atlas://language/cpl-c",
+    "atlas://language/ocl",
+    "atlas://language/cpl-p",
+    "atlas://language/cil",
+    "atlas://language/tpl",
+    "atlas://language/ril",
+    "atlas://language/err",
+    "atlas://language/chl",
+    "atlas://language/lml",
+    "atlas://language/uel"
+  ],
+  "state": {
+    "lifecycle": "active",
+    "immutable": true,
+    "health": "operational"
+  }
+}

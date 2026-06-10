@@ -1,0 +1,179 @@
+name: "📈 BOT-013 PROGRESSUS — Sprint Progress Report"
+
+on:
+  schedule:
+    - cron: "0 9 * * 5"   # Every Friday 09:00 UTC (end-of-sprint snapshot)
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  progressus-report:
+    name: "PROGRESSUS Progress Report → GitHub Issues"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Progress Report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const PHI_INV = 0.6180339887498949;
+            const now     = new Date();
+            const week    = now.toISOString().slice(0, 10);
+            const since   = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+            // ── 1. Issues opened/closed this week ──────────────────────────
+            const openedResp = await github.rest.issues.listForRepo({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              state:    'open',
+              sort:     'created',
+              direction: 'desc',
+              per_page: 100,
+            });
+
+            const recentOpened = openedResp.data.filter(i =>
+              !i.pull_request && new Date(i.created_at) >= new Date(since)
+            );
+
+            const closedResp = await github.rest.issues.listForRepo({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              state:    'closed',
+              sort:     'updated',
+              direction: 'desc',
+              per_page: 100,
+            });
+
+            const recentClosed = closedResp.data.filter(i =>
+              !i.pull_request && new Date(i.closed_at) >= new Date(since)
+            );
+
+            // ── 2. PRs merged this week ─────────────────────────────────────
+            const prsResp = await github.rest.pulls.list({
+              owner:     context.repo.owner,
+              repo:      context.repo.repo,
+              state:     'closed',
+              sort:      'updated',
+              direction: 'desc',
+              per_page:  50,
+            });
+
+            const mergedPRs = prsResp.data.filter(pr =>
+              pr.merged_at && new Date(pr.merged_at) >= new Date(since)
+            );
+
+            // ── 3. Open milestones ──────────────────────────────────────────
+            const milestonesResp = await github.rest.issues.listMilestones({
+              owner:     context.repo.owner,
+              repo:      context.repo.repo,
+              state:     'open',
+              sort:      'due_on',
+              direction: 'asc',
+              per_page:  10,
+            });
+
+            // ── 4. Recent commits ───────────────────────────────────────────
+            const commitsResp = await github.rest.repos.listCommits({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              since,
+              per_page: 30,
+            });
+
+            const commitCount   = commitsResp.data.length;
+            const velocity      = recentClosed.length;
+            const openTotal     = openedResp.data.filter(i => !i.pull_request).length;
+            const completion    = openTotal > 0
+              ? (recentClosed.length / (recentClosed.length + openTotal))
+              : 1;
+            const emoji         = completion >= PHI_INV ? '🟢' : completion >= 0.4 ? '🟡' : '🔴';
+
+            // ── 5. Label distribution for open issues ──────────────────────
+            const labelCounts = {};
+            openedResp.data
+              .filter(i => !i.pull_request)
+              .forEach(i => i.labels.forEach(l => {
+                labelCounts[l.name] = (labelCounts[l.name] ?? 0) + 1;
+              }));
+            const topLabels = Object.entries(labelCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5);
+
+            // ── 6. Format report ────────────────────────────────────────────
+            const lines = [
+              `## ${emoji} Sprint Progress Report — ${week}`,
+              `> **PROGRESSUS (BOT-013)** · MAQUE/FLOS pathway: \`REPORT\` · φ-sync 873ms`,
+              ``,
+              `### 📊 This Week's Metrics`,
+              `| Metric | Count |`,
+              `|--------|-------|`,
+              `| Issues opened this week | ${recentOpened.length} |`,
+              `| Issues closed this week | ${recentClosed.length} |`,
+              `| PRs merged this week | ${mergedPRs.length} |`,
+              `| Commits this week | ${commitCount} |`,
+              `| Total open issues | ${openTotal} |`,
+              `| **Velocity score** | **${(completion * 100).toFixed(1)}%** (φ⁻¹ threshold = 61.8%) |`,
+              ``,
+            ];
+
+            if (mergedPRs.length > 0) {
+              lines.push(`### ✅ PRs Merged This Week (${mergedPRs.length})`);
+              mergedPRs.slice(0, 8).forEach(pr =>
+                lines.push(`- [#${pr.number}](${pr.html_url}) ${pr.title}`)
+              );
+              lines.push(``);
+            }
+
+            if (recentClosed.length > 0) {
+              lines.push(`### ✅ Issues Closed This Week (${recentClosed.length})`);
+              recentClosed.slice(0, 8).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            if (recentOpened.length > 0) {
+              lines.push(`### 🆕 Issues Opened This Week (${recentOpened.length})`);
+              recentOpened.slice(0, 8).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            if (milestonesResp.data.length > 0) {
+              lines.push(`### 🏁 Active Milestones`);
+              milestonesResp.data.forEach(m => {
+                const pct = m.open_issues + m.closed_issues > 0
+                  ? Math.round(m.closed_issues / (m.open_issues + m.closed_issues) * 100)
+                  : 0;
+                const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+                lines.push(`- **${m.title}** [${bar}] ${pct}% — ${m.open_issues} open, ${m.closed_issues} closed${m.due_on ? ` · Due ${m.due_on.slice(0,10)}` : ''}`);
+              });
+              lines.push(``);
+            }
+
+            if (topLabels.length > 0) {
+              lines.push(`### 🏷️ Top Issue Labels`);
+              topLabels.forEach(([l, n]) => lines.push(`- \`${l}\`: ${n} issues`));
+              lines.push(``);
+            }
+
+            lines.push(`---`);
+            lines.push(`*APEX: \`APEX-PROG-F21-${Date.now()}\` · VIVI thread: REPORT pathway · φ⁻¹=${PHI_INV}*`);
+
+            const body = lines.join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `${emoji} [PROGRESSUS] Sprint Report — ${week}`,
+              body,
+              labels: ['organism-bot', 'progress-report'],
+            });
+
+            console.log(`Created issue #${issue.data.number}: ${issue.data.html_url}`);

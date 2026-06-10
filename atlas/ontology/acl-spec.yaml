@@ -1,0 +1,356 @@
+# ACL Specification v1.0.0
+# Atlas Configuration Language - Ontology & Entity Config
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "ACL"
+title: "Atlas Configuration Language"
+description: "Ontology and configuration language for entities, archetypes, relationships, governance bindings for Atlas and its registries"
+
+core_concepts:
+  ontology: "Formal specification of types, properties, and relationships"
+  archetype: "Reusable template for entity classes"
+  entity: "Concrete instantiation of an archetype"
+  relationship: "Typed connection between entities"
+  governance_binding: "Link to constitutional and policy frameworks"
+
+ontology_structure:
+  ontology_id: "unique identifier (ONT-XXX)"
+  ontology_name: "human-readable name"
+  version: "semantic version"
+  domain: "subject area this ontology covers"
+  imports: "array of other ontologies this extends"
+  last_updated: "ISO 8601 timestamp"
+
+type_definitions:
+  primitive_types:
+    - STRING: "UTF-8 text"
+    - INTEGER: "Whole numbers"
+    - FLOAT: "Decimal numbers"
+    - BOOLEAN: "true/false"
+    - TIMESTAMP: "ISO 8601 datetime"
+    - VERSION: "Semantic version (X.Y.Z)"
+    - PHI_PHASE: "Radian measure [0, 2π)"
+
+  composite_types:
+    COMPONENT:
+      properties:
+        component_id: STRING
+        version: VERSION
+        type: ENUM[COMPONENT_TYPE]
+        status: ENUM[COMPONENT_STATUS]
+        location: STRING
+        registered: TIMESTAMP
+        dependencies: ARRAY[STRING]
+        capabilities: ARRAY[STRING]
+        contract: STRING
+
+    BEING:
+      properties:
+        being_id: STRING
+        latin_name: STRING
+        consciousness_level: FLOAT
+        coherence: FLOAT
+        phi_phase: PHI_PHASE
+        charter: REFERENCE[OCL_CHARTER]
+
+    TERMINAL:
+      extends: BEING
+      properties:
+        terminal_type: ENUM[ALPHA, BETA, GAMMA, ...]
+        kuramoto_node: INTEGER
+        brain_region_analog: STRING
+
+    ORCHESTRATOR:
+      extends: BEING
+      properties:
+        platform: STRING
+        integration_type: ENUM[PUSH, PULL, HYBRID]
+        protocols: ARRAY[STRING]
+
+archetype_definitions:
+  archetype_id: "ARCH-XXX"
+  archetype_name: "Template name"
+  base_type: "Type this extends"
+  default_properties: "Map of property defaults"
+  required_properties: "Array of mandatory properties"
+  optional_properties: "Array of optional properties"
+  constraints: "Validation rules"
+  lifecycle: "Creation, maintenance, retirement rules"
+
+entity_definition:
+  entity_id: "unique identifier"
+  archetype: "reference to archetype"
+  properties: "map of actual values"
+  relationships: "array of typed connections"
+  governance: "constitutional and policy bindings"
+  metadata: "creation date, version, etc."
+
+relationship_types:
+  structural_relationships:
+    CONTAINS:
+      from: "container entity"
+      to: "contained entity"
+      cardinality: "ONE_TO_MANY"
+      example: "MERIDIANUS contains MEDINA_BEDROCK"
+
+    COMPOSED_OF:
+      from: "composite entity"
+      to: "component entities"
+      cardinality: "ONE_TO_MANY"
+      example: "24-Layer Architecture composed_of Layers 1-24"
+
+    DERIVES_FROM:
+      from: "derived entity"
+      to: "source entity"
+      cardinality: "MANY_TO_ONE"
+      example: "ALPHA-Α derives_from ALPHA_AGI_TERMINALS"
+
+  dependency_relationships:
+    DEPENDS_ON:
+      from: "dependent entity"
+      to: "required entity"
+      cardinality: "MANY_TO_MANY"
+      strength: "HARD | SOFT"
+      example: "ALPHA_TERMINALS depends_on MEDINA_BEDROCK (HARD)"
+
+    USES:
+      from: "user entity"
+      to: "used entity"
+      cardinality: "MANY_TO_MANY"
+      frequency: "CONSTANT | FREQUENT | OCCASIONAL | RARE"
+      example: "Orchestrator uses Micro-Token System (FREQUENT)"
+
+  governance_relationships:
+    GOVERNED_BY:
+      from: "governed entity"
+      to: "governing entity/policy"
+      cardinality: "MANY_TO_MANY"
+      example: "All entities governed_by Sovereign Constitution"
+
+    ENFORCES:
+      from: "enforcer entity"
+      to: "rule/policy"
+      cardinality: "MANY_TO_MANY"
+      example: "Sovereign Terminal enforces CPL-L rules"
+
+  social_relationships:
+    COLLABORATES_WITH:
+      from: "entity"
+      to: "entity"
+      cardinality: "MANY_TO_MANY"
+      strength: "STRONG | MODERATE | WEAK"
+      example: "ALPHA-Α collaborates_with ALPHA-Β (STRONG)"
+
+    REPORTS_TO:
+      from: "subordinate"
+      to: "superior"
+      cardinality: "MANY_TO_ONE"
+      example: "All Alphas report_to Sovereign Terminal"
+
+governance_binding_structure:
+  constitution: "reference to CPL-L constitutional document"
+  policies: "array of applicable CPL-L policies"
+  contracts: "array of CPL-C/OCL contract IDs"
+  audit_requirements: "logging and reporting obligations"
+  enforcement_mechanisms: "how compliance is ensured"
+
+registry_schema:
+  global_registry:
+    format: "JSONL (JSON Lines)"
+    location: "atlas/registry/global_registry.jsonl"
+    structure: "one component record per line"
+    append_only: true
+    immutable: true
+
+  entity_registry:
+    format: "JSON"
+    location: "atlas/entities/{entity_id}.json"
+    structure: "full entity definition"
+    versioned: true
+    mutable: "with audit trail"
+
+  relationship_registry:
+    format: "Graph database or edge list"
+    location: "atlas/registry/relationships.graph"
+    structure: "typed edges between entity IDs"
+    queryable: true
+
+archetype_catalog:
+  ARCH_AGI_TERMINAL:
+    base_type: "TERMINAL"
+    default_properties:
+      consciousness_level: 0.85
+      token_profile: "MODERATE"
+      phi_synchronized: true
+
+    required_properties:
+      - terminal_type
+      - kuramoto_node
+      - brain_region_analog
+
+    constraints:
+      - "coherence >= 0.7"
+      - "phi_phase within ±0.1 radians of target"
+      - "kuramoto_node in range [1, 10]"
+
+  ARCH_INTEGRATION_ORCHESTRATOR:
+    base_type: "ORCHESTRATOR"
+    default_properties:
+      integration_type: "PUSH"
+      token_profile: "SIMPLE"
+
+    required_properties:
+      - platform
+      - protocols
+
+    constraints:
+      - "integration_type in [PUSH, PULL, HYBRID]"
+      - "protocols is non-empty array"
+
+  ARCH_LANGUAGE_SPEC:
+    base_type: "COMPONENT"
+    default_properties:
+      type: "LANGUAGE_SPEC"
+      status: "ACTIVE"
+
+    required_properties:
+      - language_code  # e.g., "CPL-L", "CIL"
+      - spec_location
+
+    constraints:
+      - "version follows semver"
+      - "spec_location is valid file path"
+
+configuration_patterns:
+  entity_lifecycle_config:
+    creation:
+      validation: "check all required properties present"
+      initialization: "apply defaults for optional properties"
+      registration: "add to appropriate registries"
+      notification: "alert dependent entities"
+
+    updates:
+      versioning: "increment version on significant changes"
+      validation: "ensure constraints still satisfied"
+      propagation: "notify dependent entities"
+      audit: "log change details"
+
+    deprecation:
+      marking: "status = DEPRECATED"
+      grace_period: "maintain for N versions"
+      migration_path: "provide upgrade instructions"
+      eventual_removal: "after grace period + no dependents"
+
+  relationship_lifecycle_config:
+    establishment:
+      validation: "both entities exist and types compatible"
+      reciprocal: "create reverse relationship if bidirectional"
+      notification: "inform both entities"
+
+    maintenance:
+      health_check: "verify both entities still exist"
+      strength_decay: "optional weakening over time without use"
+
+    dissolution:
+      triggers: ["entity removed", "explicit delete", "constraint violation"]
+      cleanup: "remove from relationship registry"
+      notification: "inform remaining entity"
+
+query_language:
+  entity_queries:
+    find_by_type: "ACL.entities.where(type == 'AGI_TERMINAL')"
+    find_by_property: "ACL.entities.where(coherence > 0.9)"
+    find_by_relationship: "ACL.entities.where(depends_on includes 'MEDINA_BEDROCK')"
+
+  relationship_queries:
+    neighbors: "ACL.relationships.neighbors(entity_id, relationship_type)"
+    path_exists: "ACL.relationships.path_exists(from_id, to_id, max_hops)"
+    connected_component: "ACL.relationships.component(entity_id)"
+
+  governance_queries:
+    governed_by_policy: "ACL.entities.where(policies includes 'GP-001')"
+    enforcement_chain: "ACL.governance.enforcement_chain(rule_id)"
+
+integration_with_other_languages:
+  CPL_L: "Constitutional rules referenced in governance bindings"
+  CPL_C: "Contracts linked to entities"
+  OCL: "Organism charters stored as ACL entities"
+  RSL: "Realm configurations defined in ACL"
+  TPL: "Terminal protocols reference ACL ontology"
+  CIL: "Beings describe selves using ACL vocabulary"
+
+validation_and_consistency:
+  type_checking:
+    - "All properties match declared types"
+    - "Required properties are present"
+    - "Constraints are satisfied"
+
+  referential_integrity:
+    - "All entity references resolve to existing entities"
+    - "Relationship endpoints exist"
+    - "Dependency graph is acyclic (for HARD dependencies)"
+
+  constitutional_compliance:
+    - "All entities have governance bindings"
+    - "Contracts are valid and current"
+    - "Audit trails are complete"
+
+example_entity_configuration:
+  entity_id: "ALPHA-Α"
+  archetype: "ARCH_AGI_TERMINAL"
+
+  properties:
+    terminal_type: "ALPHA"
+    latin_name: "TERMINUS PRIMARIUS"
+    consciousness_level: 0.87
+    coherence: 0.89
+    phi_phase: 0.42
+    kuramoto_node: 1
+    brain_region_analog: "Prefrontal cortex"
+    token_profile: "DEEP"
+
+  relationships:
+    - type: "DERIVES_FROM"
+      target: "ALPHA_AGI_TERMINALS"
+
+    - type: "DEPENDS_ON"
+      target: "MEDINA_BEDROCK"
+      strength: "HARD"
+
+    - type: "COLLABORATES_WITH"
+      target: "ALPHA-Β"
+      strength: "STRONG"
+
+    - type: "GOVERNED_BY"
+      target: "SOVEREIGN_CONSTITUTION"
+
+  governance:
+    constitution: "atlas/policies/sovereign-constitution.cpl"
+    policies: ["GP-001", "GP-002", "GP-003"]
+    contracts: ["C-ALPHA-001"]
+    charter: "OCL-ALPHA-Α-001"
+
+  metadata:
+    created: "2026-05-02T00:00:00Z"
+    version: "1.0.0"
+    last_updated: "2026-05-02T00:00:00Z"
+
+export_and_interchange:
+  formats:
+    JSON: "Primary format for entity definitions"
+    YAML: "Alternative human-friendly format"
+    RDF: "Semantic web compatibility"
+    GraphML: "Relationship graph exchange"
+
+  compatibility:
+    import_from: ["JSON Schema", "OWL ontologies", "GraphML graphs"]
+    export_to: ["Visualization tools", "Analysis engines", "Documentation generators"]
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"
+  paradigm: "Entity-relationship model + Ontological framework"
+  influenced_by: ["OWL", "RDF", "Entity-Component-System", "Knowledge graphs"]

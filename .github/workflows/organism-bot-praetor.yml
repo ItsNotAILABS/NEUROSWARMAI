@@ -1,0 +1,329 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-008 · PRAETOR — Praetor et Gubernator
+# Sovereign Organism Master Orchestrator Bot
+#
+# Daily master bot that coordinates the full fleet via workflow_call,
+# aggregates all results, and posts a pinned Organism Health Report as a
+# GitHub Issue. Maintains a running daily health log.
+#
+# Fleet: BOT-001 through BOT-011 (11 sovereign bots)
+#
+# Schedule: Daily at 05:00 UTC
+# Triggers: schedule · workflow_dispatch
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-008 · PRAETOR — Orchestrator"
+
+on:
+  schedule:
+    - cron: "0 5 * * *"   # Daily at 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  # ── Invoke all bots via workflow_call ────────────────────────────────────
+  call-aedificator:
+    name: "Invoke BOT-001 · AEDIFICATOR"
+    uses: ./.github/workflows/organism-bot-aedificator.yml
+    permissions:
+      contents: read
+      issues: write
+
+  call-sartor:
+    name: "Invoke BOT-002 · SARTOR"
+    uses: ./.github/workflows/organism-bot-sartor.yml
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+  call-medicus:
+    name: "Invoke BOT-003 · MEDICUS"
+    uses: ./.github/workflows/organism-bot-medicus.yml
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: write
+
+  call-custos:
+    name: "Invoke BOT-004 · CUSTOS"
+    uses: ./.github/workflows/organism-bot-custos.yml
+    permissions:
+      contents: read
+      issues: write
+
+  call-inventor:
+    name: "Invoke BOT-005 · INVENTOR"
+    uses: ./.github/workflows/organism-bot-inventor.yml
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+  call-scriptor:
+    name: "Invoke BOT-006 · SCRIPTOR"
+    uses: ./.github/workflows/organism-bot-scriptor.yml
+    permissions:
+      contents: write
+      pull-requests: write
+
+  call-explorator:
+    name: "Invoke BOT-007 · EXPLORATOR"
+    uses: ./.github/workflows/organism-bot-explorator.yml
+    permissions:
+      contents: read
+      issues: write
+
+  call-curator:
+    name: "Invoke BOT-009 · CURATOR"
+    uses: ./.github/workflows/organism-bot-curator.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+
+  call-legatus:
+    name: "Invoke BOT-010 · LEGATUS"
+    uses: ./.github/workflows/organism-bot-legatus.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+  call-auctor:
+    name: "Invoke BOT-011 · AUCTOR"
+    uses: ./.github/workflows/organism-bot-auctor.yml
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+  # ── Aggregate and report ─────────────────────────────────────────────────
+  health-report:
+    name: "PRAETOR — Organism Health Report"
+    runs-on: ubuntu-latest
+    needs:
+      - call-aedificator
+      - call-sartor
+      - call-medicus
+      - call-custos
+      - call-inventor
+      - call-scriptor
+      - call-explorator
+      - call-curator
+      - call-legatus
+      - call-auctor
+    if: always()   # Run even if some bots fail
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[PRAETOR] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node ───────────────────────────────────────────────────────────────
+      - name: "[PRAETOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── Gather bot results ─────────────────────────────────────────────────
+      - name: "[PRAETOR] Gather fleet status"
+        id: fleet
+        run: |
+          # Map job results to emoji status
+          result_emoji() {
+            case "$1" in
+              success)  echo "✅" ;;
+              skipped)  echo "⏭️" ;;
+              failure)  echo "❌" ;;
+              *)        echo "⚠️" ;;
+            esac
+          }
+
+          AED="${{ needs.call-aedificator.result }}"
+          SAR="${{ needs.call-sartor.result }}"
+          MED="${{ needs.call-medicus.result }}"
+          CUS="${{ needs.call-custos.result }}"
+          INV="${{ needs.call-inventor.result }}"
+          SCR="${{ needs.call-scriptor.result }}"
+          EXP="${{ needs.call-explorator.result }}"
+          CUR="${{ needs.call-curator.result }}"
+          LEG="${{ needs.call-legatus.result }}"
+          AUC="${{ needs.call-auctor.result }}"
+
+          AED_E=$(result_emoji "$AED"); SAR_E=$(result_emoji "$SAR")
+          MED_E=$(result_emoji "$MED"); CUS_E=$(result_emoji "$CUS")
+          INV_E=$(result_emoji "$INV"); SCR_E=$(result_emoji "$SCR")
+          EXP_E=$(result_emoji "$EXP"); CUR_E=$(result_emoji "$CUR")
+          LEG_E=$(result_emoji "$LEG"); AUC_E=$(result_emoji "$AUC")
+
+          FAILURES=0
+          [ "$AED" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$SAR" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$MED" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$CUS" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$INV" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$SCR" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$EXP" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$CUR" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$LEG" = "failure" ] && FAILURES=$((FAILURES+1))
+          [ "$AUC" = "failure" ] && FAILURES=$((FAILURES+1))
+          TOTAL_BOTS=11   # 11 total bots; PRAETOR calls 10 (not itself)
+
+          # Live counts from repo
+          WEB_COUNT=$(ls organism/web/*-worker.js 2>/dev/null | wc -l | tr -d ' ')
+          CF_COUNT=$(ls organism/cloudflare/*.js 2>/dev/null | grep -v 'index.js' | wc -l | tr -d ' ')
+          EXT_VER=$(node -e "console.log(JSON.parse(require('fs').readFileSync('extension/jarvis/manifest.json','utf8')).version)" 2>/dev/null || echo "?")
+          PAPERS=$(ls docs/research/*.md 2>/dev/null | grep -v INDEX | grep -v JOURNAL | wc -l | tr -d ' ')
+
+          echo "failures=${FAILURES}" >> $GITHUB_OUTPUT
+          echo "total_bots=${TOTAL_BOTS}" >> $GITHUB_OUTPUT
+          echo "web_count=${WEB_COUNT}" >> $GITHUB_OUTPUT
+          echo "cf_count=${CF_COUNT}" >> $GITHUB_OUTPUT
+          echo "ext_ver=${EXT_VER}" >> $GITHUB_OUTPUT
+          echo "papers=${PAPERS}" >> $GITHUB_OUTPUT
+
+          echo "aed_result=${AED}" >> $GITHUB_OUTPUT; echo "aed_emoji=${AED_E}" >> $GITHUB_OUTPUT
+          echo "sar_result=${SAR}" >> $GITHUB_OUTPUT; echo "sar_emoji=${SAR_E}" >> $GITHUB_OUTPUT
+          echo "med_result=${MED}" >> $GITHUB_OUTPUT; echo "med_emoji=${MED_E}" >> $GITHUB_OUTPUT
+          echo "cus_result=${CUS}" >> $GITHUB_OUTPUT; echo "cus_emoji=${CUS_E}" >> $GITHUB_OUTPUT
+          echo "inv_result=${INV}" >> $GITHUB_OUTPUT; echo "inv_emoji=${INV_E}" >> $GITHUB_OUTPUT
+          echo "scr_result=${SCR}" >> $GITHUB_OUTPUT; echo "scr_emoji=${SCR_E}" >> $GITHUB_OUTPUT
+          echo "exp_result=${EXP}" >> $GITHUB_OUTPUT; echo "exp_emoji=${EXP_E}" >> $GITHUB_OUTPUT
+          echo "cur_result=${CUR}" >> $GITHUB_OUTPUT; echo "cur_emoji=${CUR_E}" >> $GITHUB_OUTPUT
+          echo "leg_result=${LEG}" >> $GITHUB_OUTPUT; echo "leg_emoji=${LEG_E}" >> $GITHUB_OUTPUT
+          echo "auc_result=${AUC}" >> $GITHUB_OUTPUT; echo "auc_emoji=${AUC_E}" >> $GITHUB_OUTPUT
+
+          if [ "$FAILURES" -eq 0 ]; then
+            echo "overall=🟢 HEALTHY" >> $GITHUB_OUTPUT
+          elif [ "$FAILURES" -lt 3 ]; then
+            echo "overall=🟡 DEGRADED" >> $GITHUB_OUTPUT
+          else
+            echo "overall=🔴 CRITICAL" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Post Health Report as GitHub Issue ────────────────────────────────
+      - name: "[PRAETOR] Post Organism Health Report"
+        uses: actions/github-script@v7
+        env:
+          OVERALL:     ${{ steps.fleet.outputs.overall }}
+          FAILURES:    ${{ steps.fleet.outputs.failures }}
+          TOTAL_BOTS:  ${{ steps.fleet.outputs.total_bots }}
+          WEB_COUNT:   ${{ steps.fleet.outputs.web_count }}
+          CF_COUNT:    ${{ steps.fleet.outputs.cf_count }}
+          EXT_VER:     ${{ steps.fleet.outputs.ext_ver }}
+          PAPERS:      ${{ steps.fleet.outputs.papers }}
+          AED_E: ${{ steps.fleet.outputs.aed_emoji }}
+          AED_R: ${{ steps.fleet.outputs.aed_result }}
+          SAR_E: ${{ steps.fleet.outputs.sar_emoji }}
+          SAR_R: ${{ steps.fleet.outputs.sar_result }}
+          MED_E: ${{ steps.fleet.outputs.med_emoji }}
+          MED_R: ${{ steps.fleet.outputs.med_result }}
+          CUS_E: ${{ steps.fleet.outputs.cus_emoji }}
+          CUS_R: ${{ steps.fleet.outputs.cus_result }}
+          INV_E: ${{ steps.fleet.outputs.inv_emoji }}
+          INV_R: ${{ steps.fleet.outputs.inv_result }}
+          SCR_E: ${{ steps.fleet.outputs.scr_emoji }}
+          SCR_R: ${{ steps.fleet.outputs.scr_result }}
+          EXP_E: ${{ steps.fleet.outputs.exp_emoji }}
+          EXP_R: ${{ steps.fleet.outputs.exp_result }}
+          CUR_E: ${{ steps.fleet.outputs.cur_emoji }}
+          CUR_R: ${{ steps.fleet.outputs.cur_result }}
+          LEG_E: ${{ steps.fleet.outputs.leg_emoji }}
+          LEG_R: ${{ steps.fleet.outputs.leg_result }}
+          AUC_E: ${{ steps.fleet.outputs.auc_emoji }}
+          AUC_R: ${{ steps.fleet.outputs.auc_result }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const now   = new Date().toISOString();
+
+            // Close any previous health report
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,health-report',
+              per_page: 20
+            });
+            for (const issue of existing.data) {
+              if (issue.title.startsWith('[PRAETOR] Organism Health Report')) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: 'closed'
+                });
+                console.log(`Closed old report #${issue.number}`);
+              }
+            }
+
+            const body = [
+              `## ${process.env.OVERALL} — MERIDIANUS Organism Health Report`,
+              '',
+              `**Date:** ${today}  ·  **Time:** ${now}`,
+              `**Run:** [#${process.env.RUN_NUMBER}](${process.env.SERVER_URL}/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID})`,
+              `**Bot failures:** ${process.env.FAILURES} / ${process.env.TOTAL_BOTS}`,
+              '',
+              '### 🤖 Organism Bill Bot Fleet Status',
+              '',
+              '| Bot | Name | Latin Title | Role | Status |',
+              '|-----|------|-------------|------|--------|',
+              `| BOT-001 | AEDIFICATOR | *Aedificator et Constructor* | Builder | ${process.env.AED_E} ${process.env.AED_R} |`,
+              `| BOT-002 | SARTOR | *Sartor et Empactor* | Packager | ${process.env.SAR_E} ${process.env.SAR_R} |`,
+              `| BOT-003 | MEDICUS | *Medicus et Reparator* | Auto-Fixer | ${process.env.MED_E} ${process.env.MED_R} |`,
+              `| BOT-004 | CUSTOS | *Custos et Protector* | Guardian | ${process.env.CUS_E} ${process.env.CUS_R} |`,
+              `| BOT-005 | INVENTOR | *Inventor et Renovator* | Dependency Bot | ${process.env.INV_E} ${process.env.INV_R} |`,
+              `| BOT-006 | SCRIPTOR | *Scriptor et Documentator* | Documenter | ${process.env.SCR_E} ${process.env.SCR_R} |`,
+              `| BOT-007 | EXPLORATOR | *Explorator et Inspector* | Issue Scanner | ${process.env.EXP_E} ${process.env.EXP_R} |`,
+              `| BOT-009 | CURATOR | *Curator et Administrator* | Project Manager | ${process.env.CUR_E} ${process.env.CUR_R} |`,
+              `| BOT-010 | LEGATUS | *Legatus et Arbiter* | Code Quality | ${process.env.LEG_E} ${process.env.LEG_R} |`,
+              `| BOT-011 | AUCTOR | *Auctor et Scholasticus* | Research Journal | ${process.env.AUC_E} ${process.env.AUC_R} |`,
+              '',
+              '### 📊 Live Organism Metrics',
+              '',
+              '| Layer | Component | Count |',
+              '|-------|-----------|-------|',
+              `| Browser | Web Workers | **${process.env.WEB_COUNT}** |`,
+              `| Edge | AIS Cloudflare Brains | **${process.env.CF_COUNT}** |`,
+              `| Extension | MERIDIANUS version | **v${process.env.EXT_VER}** |`,
+              `| Research | Science Journal Papers | **${process.env.PAPERS}** |`,
+              '',
+              '### 🏛️ Architecture',
+              '',
+              '```',
+              'Layer 1 — Browser Web Workers  (organism/web/)        session-bound',
+              'Layer 2 — AIS Cloudflare Fleet  (organism/cloudflare/) always-on edge',
+              'Layer 3 — ICP Canister          (src/backend/)         blockchain-sovereign',
+              '          https://command-platform.caffeine.ai',
+              '```',
+              '',
+              '### ⚙️ Organism Constants',
+              '',
+              '- **φ** = 1.618033988749895 (Golden Ratio)',
+              '- **PHI_BEAT** = 873ms',
+              `- **Bot fleet** = ${process.env.TOTAL_BOTS} sovereign bots (BOT-001–011) · 10 called by PRAETOR`,
+              '',
+              '---',
+              '*Auto-generated by BOT-008 · PRAETOR — Praetor et Gubernator*',
+              '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: `[PRAETOR] Organism Health Report — ${today}`,
+              body,
+              labels: ['organism-bot', 'health-report']
+            });
+            console.log('Health report created.');
+
+      # ── Fail the job if any bot failed ───────────────────────────────────
+      - name: "[PRAETOR] Final status gate"
+        run: |
+          echo "Overall: ${{ steps.fleet.outputs.overall }}"
+          echo "Bot failures: ${{ steps.fleet.outputs.failures }} / ${{ steps.fleet.outputs.total_bots }}"
+          [ "${{ steps.fleet.outputs.failures }}" = "0" ]

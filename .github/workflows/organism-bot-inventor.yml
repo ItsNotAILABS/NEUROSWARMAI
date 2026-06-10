@@ -1,0 +1,229 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-005 · INVENTOR — Inventor et Renovator
+# Sovereign Organism Dependency Bot
+#
+# Runs weekly to audit all dependencies for vulnerabilities, check for
+# drift, and open a PR with any safe patch-level updates. Never touches
+# major or minor version bumps — those require human review.
+#
+# Schedule: Every Sunday at 03:21 UTC  (Fibonacci-aligned)
+# Triggers: schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-005 · INVENTOR — Dependency Bot"
+
+on:
+  schedule:
+    - cron: "21 3 * * 0"   # Every Sunday at 03:21 UTC
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Dependency status: clean | updated | vulnerabilities"
+        value: ${{ jobs.deps.outputs.status }}
+      summary:
+        description: "Human-readable dependency summary"
+        value: ${{ jobs.deps.outputs.summary }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  deps:
+    name: "INVENTOR — Dependency Audit & Update"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[INVENTOR] Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Node + pnpm ────────────────────────────────────────────────────────
+      - name: "[INVENTOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[INVENTOR] Setup pnpm 10"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: "[INVENTOR] Install current dependencies"
+        run: pnpm install --no-frozen-lockfile
+
+      # ── Security audit ────────────────────────────────────────────────────
+      - name: "[INVENTOR] Run security audit (pnpm audit)"
+        id: audit
+        run: |
+          pnpm audit --json 2>/dev/null > /tmp/audit.json || true
+          # Count advisories
+          CRITICAL=$(node -e "try{const d=JSON.parse(require('fs').readFileSync('/tmp/audit.json'));console.log(d.metadata?.vulnerabilities?.critical||0)}catch(e){console.log(0)}")
+          HIGH=$(node -e     "try{const d=JSON.parse(require('fs').readFileSync('/tmp/audit.json'));console.log(d.metadata?.vulnerabilities?.high||0)}catch(e){console.log(0)}")
+          MODERATE=$(node -e "try{const d=JSON.parse(require('fs').readFileSync('/tmp/audit.json'));console.log(d.metadata?.vulnerabilities?.moderate||0)}catch(e){console.log(0)}")
+          TOTAL=$(node -e    "try{const d=JSON.parse(require('fs').readFileSync('/tmp/audit.json'));const v=d.metadata?.vulnerabilities||{};console.log((v.critical||0)+(v.high||0)+(v.moderate||0)+(v.low||0)+(v.info||0))}catch(e){console.log(0)}")
+
+          echo "critical=${CRITICAL}" >> $GITHUB_OUTPUT
+          echo "high=${HIGH}" >> $GITHUB_OUTPUT
+          echo "moderate=${MODERATE}" >> $GITHUB_OUTPUT
+          echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+
+          # Generate human-readable report
+          pnpm audit 2>&1 | tail -30 > /tmp/audit_report.txt || true
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          cat /tmp/audit_report.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "has_vulns=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_vulns=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Check for outdated dependencies ───────────────────────────────────
+      - name: "[INVENTOR] Check for outdated dependencies"
+        id: outdated
+        run: |
+          pnpm outdated 2>/dev/null > /tmp/outdated.txt || true
+          if [ -s /tmp/outdated.txt ]; then
+            echo "has_outdated=true" >> $GITHUB_OUTPUT
+            echo "report<<EOF" >> $GITHUB_OUTPUT
+            head -50 /tmp/outdated.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_outdated=false" >> $GITHUB_OUTPUT
+            echo "report=All dependencies up to date." >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Apply non-breaking updates (pnpm update --latest patch only) ───────
+      - name: "[INVENTOR] Apply patch-level updates"
+        id: update
+        run: |
+          # pnpm update applies patch/minor within declared ranges
+          pnpm update 2>&1 | tee /tmp/update.log || true
+          if git diff --quiet pnpm-lock.yaml package.json 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            CHANGES=$(git diff --stat | head -20)
+            echo "changes<<EOF" >> $GITHUB_OUTPUT
+            echo "${CHANGES}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Open security issue if critical/high vulns found ──────────────────
+      - name: "[INVENTOR] Open security issue for critical/high vulnerabilities"
+        if: steps.audit.outputs.has_vulns == 'true' && github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const title = `[INVENTOR] Security vulnerabilities found — ${today}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,security'
+            });
+            if (existing.data.some(i => i.title === title)) {
+              console.log('Duplicate security issue skipped.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title,
+              body: [
+                '## ⚠️ [INVENTOR] Dependency Security Alert',
+                '',
+                `**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+                '',
+                '### Vulnerability Summary',
+                '| Severity | Count |',
+                '|----------|-------|',
+                `| 🔴 Critical | ${{ steps.audit.outputs.critical }} |`,
+                `| 🟠 High     | ${{ steps.audit.outputs.high }} |`,
+                `| 🟡 Moderate | ${{ steps.audit.outputs.moderate }} |`,
+                `| Total | ${{ steps.audit.outputs.total }} |`,
+                '',
+                '### Audit Report',
+                '```',
+                '${{ steps.audit.outputs.report }}',
+                '```',
+                '',
+                'Run `pnpm audit --fix` to apply automatic fixes where possible.',
+                '',
+                '---',
+                '*Auto-generated by BOT-005 · INVENTOR — Inventor et Renovator*',
+              ].join('\n'),
+              labels: ['organism-bot', 'security', 'dependencies']
+            });
+
+      # ── Open PR if updates available ──────────────────────────────────────
+      - name: "[INVENTOR] Create dependency update PR"
+        if: steps.update.outputs.changed == 'true' && github.event_name != 'workflow_call'
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[INVENTOR] Dependency update: patch-level packages refreshed"
+          branch: organism-bot/inventor-dependency-update
+          delete-branch: true
+          title: "[INVENTOR] Dependency update — patch-level refresh"
+          body: |
+            ## 📦 [INVENTOR] Dependency Update Report
+
+            **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            Patch-level dependency updates applied within declared semver ranges.
+
+            ### Security Audit
+            | Severity | Count |
+            |----------|-------|
+            | 🔴 Critical | ${{ steps.audit.outputs.critical }} |
+            | 🟠 High     | ${{ steps.audit.outputs.high }} |
+            | 🟡 Moderate | ${{ steps.audit.outputs.moderate }} |
+            | Total | ${{ steps.audit.outputs.total }} |
+
+            ### Outdated Packages
+            ```
+            ${{ steps.outdated.outputs.report }}
+            ```
+
+            ### Update Diff
+            ```
+            ${{ steps.update.outputs.changes }}
+            ```
+
+            ---
+            *Auto-generated by BOT-005 · INVENTOR — Inventor et Renovator*
+          labels: |
+            organism-bot
+            dependencies
+          draft: false
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[INVENTOR] Compute dependency status"
+        id: set-output
+        run: |
+          if [ "${{ steps.audit.outputs.has_vulns }}" = "true" ]; then
+            echo "status=vulnerabilities" >> $GITHUB_OUTPUT
+            echo "summary=⚠️ INVENTOR: ${{ steps.audit.outputs.critical }} critical, ${{ steps.audit.outputs.high }} high, ${{ steps.audit.outputs.total }} total vulnerabilities found" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.update.outputs.changed }}" = "true" ]; then
+            echo "status=updated" >> $GITHUB_OUTPUT
+            echo "summary=✅ INVENTOR: patch-level updates applied — PR opened" >> $GITHUB_OUTPUT
+          else
+            echo "status=clean" >> $GITHUB_OUTPUT
+            echo "summary=✅ INVENTOR: all dependencies healthy, no updates needed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[INVENTOR] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

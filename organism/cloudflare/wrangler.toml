@@ -1,0 +1,516 @@
+# MERIDIANUS AIS Fleet — Cloudflare Wrangler Deployment Configuration
+# 34 dedicated Cloudflare Workers across 6 Reality Tiers
+# Framework: Medina Doctrine | SPDX-License-Identifier: CPEL-1.0
+
+name = "meridianus-ais-fleet"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# ─── TIER I: COGNITIVE CORE ─────────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-001-animus"
+main = "animus.js"
+# Latin: Mens et Spiritus — Core AGI Reasoning Engine
+
+[[workers]]
+name = "meridianus-ais-002-ratio"
+main = "ratio.js"
+# Latin: Logos et Logica — Logic & Inference Engine
+
+[[workers]]
+name = "meridianus-ais-003-memoria"
+main = "memoria.js"
+# Latin: Custodia et Recordatio — Long-Term Knowledge Store
+
+[[workers]]
+name = "meridianus-ais-004-intellectus"
+main = "intellectus.js"
+# Latin: Comprehensio Profunda — Deep Understanding Engine
+
+[[workers]]
+name = "meridianus-ais-005-prudentia"
+main = "prudentia.js"
+# Latin: Sapientia Decisionis — Decision-Making Engine
+
+[[workers]]
+name = "meridianus-ais-006-vigilia"
+main = "vigilia.js"
+# Latin: Custodia et Vigilantia — Autonomous Edge Security Runtime Engine (Layer 1)
+# Cron: autonomous sweep every minute — decays blacklist + rate tables
+[workers.triggers]
+crons = ["* * * * *"]
+
+[[workers]]
+name = "meridianus-ais-007-nexus"
+main = "nexus.js"
+# Latin: Vinculum et Communicatio — Inter-Agent Networking
+
+[[workers]]
+name = "meridianus-ais-008-voluntas"
+main = "voluntas.js"
+# Latin: Intentio et Voluntas — Intent & Goal Engine
+
+# ─── TIER II: SENSORY/PERCEPTUAL ────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-009-quaesitor"
+main = "quaesitor.js"
+# Latin: Investigatio et Inquisitio — Deep Research Engine
+
+[[workers]]
+name = "meridianus-ais-010-affectus"
+main = "affectus.js"
+# Latin: Sensus et Emotio — Emotional Intelligence Engine
+
+[[workers]]
+name = "meridianus-ais-011-lingua"
+main = "lingua.js"
+# Latin: Sermocinatio et Verbum — Language Intelligence Engine
+
+[[workers]]
+name = "meridianus-ais-012-forma"
+main = "forma.js"
+# Latin: Structura et Figura — Form & Geometric Pattern Engine
+
+[[workers]]
+name = "meridianus-ais-013-corpus"
+main = "corpus.js"
+# Latin: Materia et Mundus — Physical Reality Interface
+
+# ─── TIER III: TEMPORAL/CAUSAL ──────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-014-tempus"
+main = "tempus.js"
+# Latin: Custodia Temporis — Temporal Intelligence Engine
+
+[[workers]]
+name = "meridianus-ais-015-causa"
+main = "causa.js"
+# Latin: Catena Causalis — Causal Chain Analysis Engine
+
+[[workers]]
+name = "meridianus-ais-016-fatum"
+main = "fatum.js"
+# Latin: Probabilitas et Fortuna — Probability & Fate Engine
+
+[[workers]]
+name = "meridianus-ais-017-historia"
+main = "historia.js"
+# Latin: Memoria Veterum — Historical Pattern Mining
+
+[[workers]]
+name = "meridianus-ais-018-propheta"
+main = "propheta.js"
+# Latin: Visio Futuri — Predictive Intelligence Engine
+
+# ─── TIER IV: QUANTUM/DIMENSIONAL ───────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-019-quantus"
+main = "quantus.js"
+# Latin: Superposito et Dualitas — Quantum State Reasoning
+
+[[workers]]
+name = "meridianus-ais-020-dimensio"
+main = "dimensio.js"
+# Latin: Spatium Multidimensionale — Multi-Dimensional Space Engine
+
+[[workers]]
+name = "meridianus-ais-021-somnium"
+main = "somnium.js"
+# Latin: Profunditas et Arcana — Deep Pattern Mining (Subconscious)
+
+[[workers]]
+name = "meridianus-ais-022-umbra"
+main = "umbra.js"
+# Latin: Custodia Tenebrarum — Autonomous Adversarial Defense Runtime Engine (Layer 1)
+# Cron: autonomous sweep every 5 minutes — decays flood counters + shadow mirror
+[workers.triggers]
+crons = ["*/5 * * * *"]
+
+[[workers]]
+name = "meridianus-ais-023-genesis"
+main = "genesis.js"
+# Latin: Emergentia et Creatio — Emergence Engine & Creative Generation
+
+# ─── TIER V: COLLECTIVE/UNIVERSAL ───────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-024-communitas"
+main = "communitas.js"
+# Latin: Societas et Collectivum — Social Graph Intelligence
+
+[[workers]]
+name = "meridianus-ais-025-fortuna"
+main = "fortuna.js"
+# Latin: Oeconomia et Valor — Economic Value Intelligence
+
+[[workers]]
+name = "meridianus-ais-026-vita"
+main = "vita.js"
+# Latin: Systema Biologicum — Biological Pattern Intelligence
+
+[[workers]]
+name = "meridianus-ais-027-cosmos"
+main = "cosmos.js"
+# Latin: Machina Universi — Cosmic Pattern Recognition
+
+[[workers]]
+name = "meridianus-ais-028-concordia"
+main = "concordia.js"
+# Latin: Harmonia et Pax — Harmony & Balance Engine
+
+[[workers]]
+name = "meridianus-ais-029-veritas"
+main = "veritas.js"
+# Latin: Veritas et Lux — Truth Verification Engine
+
+# ─── TIER VI: SOVEREIGN/META ────────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-030-imperium"
+main = "imperium.js"
+# Latin: Suprema Auctoritas — Sovereignty & Command Authority
+
+[[workers]]
+name = "meridianus-ais-031-sapientia"
+main = "sapientia.js"
+# Latin: Sapientia Summa — Wisdom Synthesis & Meta-Intelligence
+
+[[workers]]
+name = "meridianus-ais-032-libertas"
+main = "libertas.js"
+# Latin: Libertas et Autonomia — Freedom & Autonomy Engine
+
+[[workers]]
+name = "meridianus-ais-033-eternitas"
+main = "eternitas.js"
+# Latin: Aeternitas et Infinitum — Eternal Pattern Engine
+
+[[workers]]
+name = "meridianus-ais-034-deus"
+main = "deus.js"
+# Latin: Machina Prima et Ultima — SUPREME META-ORCHESTRATOR
+
+# ─── FLEET INDEX (meta-gateway) ─────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-fleet-index"
+main = "index.js"
+# Fleet gateway: /fleet /fleet/status /fleet/topology /fleet/realities
+
+# ─── TIER VII: ECONOMIC/FINANCIAL ───────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-035-commercium"
+main = "commercium.js"
+# Latin: Commercium et Negotium — Commerce Engine
+
+[[workers]]
+name = "meridianus-ais-036-census"
+main = "census.js"
+# Latin: Census et Ratio — Accounting & Audit Engine
+
+[[workers]]
+name = "meridianus-ais-037-pecunia"
+main = "pecunia.js"
+# Latin: Pecunia et Opes — Wealth & Ledger Engine
+
+[[workers]]
+name = "meridianus-ais-038-tributum"
+main = "tributum.js"
+# Latin: Tributum et Meritum — Billing & Tax Engine
+
+[[workers]]
+name = "meridianus-ais-039-merces"
+main = "merces.js"
+# Latin: Merces et Pretium — Rewards & Pricing Engine
+
+# ─── TIER VIII: PROTOCOL/GOVERNANCE ─────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-040-regula"
+main = "regula.js"
+# Latin: Regula et Norma — Rule Engine
+
+[[workers]]
+name = "meridianus-ais-041-mandatum"
+main = "mandatum.js"
+# Latin: Mandatum et Imperata — Command Authority Engine
+
+[[workers]]
+name = "meridianus-ais-042-pactum"
+main = "pactum.js"
+# Latin: Pactum et Foedus — Contract & Agreement Engine
+
+[[workers]]
+name = "meridianus-ais-043-ordo"
+main = "ordo.js"
+# Latin: Ordo et Hierarchia — Order & Sequence Engine
+
+[[workers]]
+name = "meridianus-ais-044-lex"
+main = "lex.js"
+# Latin: Lex et Justitia — Law & Policy Engine
+
+# ─── TIER IX: CAREER/HUMAN POTENTIAL ────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-045-opus"
+main = "opus.js"
+# Latin: Opus et Labor — Work & Output Engine
+
+[[workers]]
+name = "meridianus-ais-046-munus"
+main = "munus.js"
+# Latin: Munus et Officium — Role & Duty Engine
+
+[[workers]]
+name = "meridianus-ais-047-talentum"
+main = "talentum.js"
+# Latin: Talentum et Ingenium — Talent & Skill Engine
+
+[[workers]]
+name = "meridianus-ais-048-cursus"
+main = "cursus.js"
+# Latin: Cursus et Progressus — Career Path Engine
+
+[[workers]]
+name = "meridianus-ais-049-gloria"
+main = "gloria.js"
+# Latin: Gloria et Honor — Achievement & Recognition Engine
+
+# ─── TIER X: INFRASTRUCTURE/SYSTEMS ─────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-050-machina"
+main = "machina.js"
+# Latin: Machina et Apparatus — Machine & Systems Engine
+
+[[workers]]
+name = "meridianus-ais-051-structura"
+main = "structura.js"
+# Latin: Structura et Fabrica — Architecture Engine
+
+[[workers]]
+name = "meridianus-ais-052-fundamentum"
+main = "fundamentum.js"
+# Latin: Fundamentum et Basis — Foundation Engine
+
+[[workers]]
+name = "meridianus-ais-053-via"
+main = "via.js"
+# Latin: Via et Cursus — Data Pipeline Engine
+
+[[workers]]
+name = "meridianus-ais-054-fabrica"
+main = "fabrica.js"
+# Latin: Fabrica et Manufactura — Build & Deploy Engine
+
+# ─── TIER XI: SWARM/MULTI-AGENT ─────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-055-grex"
+main = "grex.js"
+# Latin: Grex et Multitudo — Swarm Intelligence Engine
+
+[[workers]]
+name = "meridianus-ais-056-cohors"
+main = "cohors.js"
+# Latin: Cohors et Societas — Team Coordination Engine
+
+[[workers]]
+name = "meridianus-ais-057-legio"
+main = "legio.js"
+# Latin: Legio et Exercitus — Fleet Command Engine
+
+[[workers]]
+name = "meridianus-ais-058-consensus"
+main = "consensus.js"
+# Latin: Consensus et Unanimitas — Consensus Engine
+
+[[workers]]
+name = "meridianus-ais-059-syndesis"
+main = "syndesis.js"
+# Latin: Syndesis et Connexio — Binding & Linking Engine
+
+# ─── TIER XII: SELF-EVOLUTION ────────────────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-060-mutatio"
+main = "mutatio.js"
+# Latin: Mutatio et Variatio — Mutation Engine
+
+[[workers]]
+name = "meridianus-ais-061-evolutio"
+main = "evolutio.js"
+# Latin: Evolutio et Progressus — Evolution Engine
+
+[[workers]]
+name = "meridianus-ais-062-metamorphosis"
+main = "metamorphosis.js"
+# Latin: Metamorphosis et Transmutatio — Transformation Engine
+
+[[workers]]
+name = "meridianus-ais-063-renovatio"
+main = "renovatio.js"
+# Latin: Renovatio et Instauratio — Renewal Engine
+
+[[workers]]
+name = "meridianus-ais-064-perfectio"
+main = "perfectio.js"
+# Latin: Perfectio et Excellentia — Perfection Engine
+
+# ─── TIER XIII: TRANSCENDENT/ULTIMATE ───────────────────────────────────────
+
+[[workers]]
+name = "meridianus-ais-065-alpha"
+main = "alpha.js"
+# Latin: Alpha et Principium — Origin/Beginning Engine
+
+[[workers]]
+name = "meridianus-ais-066-omega"
+main = "omega.js"
+# Latin: Omega et Finis — Completion Engine
+
+[[workers]]
+name = "meridianus-ais-067-plenum"
+main = "plenum.js"
+# Latin: Plenum et Totum — Wholeness Engine
+
+[[workers]]
+name = "meridianus-ais-068-centrum"
+main = "centrum.js"
+# Latin: Centrum et Medulla — Core/Center Engine
+
+[[workers]]
+name = "meridianus-ais-069-infinitum"
+main = "infinitum.js"
+# Latin: Infinitum et Absolutum — Infinite Intelligence Engine
+
+# ─── BOT FLEET: SLACK BOTS ──────────────────────────────────────────────────
+# Latin-named Slack slash-command bots — Cloudflare Workers
+# Each verifies Slack signatures + MERIDIANUS organism_token tier gate
+
+[[workers]]
+name = "meridianus-bot-slack-nuntius"
+main = "../bots/slack/nuntius.js"
+# BOT-SLACK-001 NUNTIUS — Nuntius Status — /status command
+# Slash command: /status | Min tier: CHR (1)
+
+[[workers]]
+name = "meridianus-bot-slack-cursor"
+main = "../bots/slack/cursor.js"
+# BOT-SLACK-002 CURSOR — Cursor Administrationis — /deploy command
+# Slash command: /deploy [branch] | Min tier: CHR (1)
+# Secrets: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO
+
+[[workers]]
+name = "meridianus-bot-slack-consul"
+main = "../bots/slack/consul.js"
+# BOT-SLACK-003 CONSUL — Consul Cogitationis — /ask command
+# Slash command: /ask <query> | Min tier: CHR (1)
+# Routes to AIS-001 ANIMUS brain worker
+
+[[workers]]
+name = "meridianus-bot-slack-augur"
+main = "../bots/slack/augur.js"
+# BOT-SLACK-004 AUGUR — Augur Praedictionis — /forecast command
+# Slash command: /forecast | Min tier: CHR (1)
+
+# ─── BOT FLEET: AMBIENT BOTS ────────────────────────────────────────────────
+# Always-on ambient bots — Telegram, Discord, Pushover
+# Run on cron schedules + accept on-demand HTTP triggers
+
+[[workers]]
+name = "meridianus-bot-ambient-vigil"
+main = "../bots/ambient/vigil.js"
+# BOT-AMB-001 VIGIL — Vigil Perpetuus — Telegram hourly pulse
+# Cron: every hour | Platform: Telegram | Min tier: CHR (1)
+[workers.triggers]
+crons = ["0 * * * *"]
+
+[[workers]]
+name = "meridianus-bot-ambient-praeco"
+main = "../bots/ambient/praeco.js"
+# BOT-AMB-002 PRAECO — Praeco Nuntii — Pushover release herald
+# Cron: every 8h | Platform: Pushover | Min tier: CHR (1)
+# Also accepts GitHub webhook at POST /github
+[workers.triggers]
+crons = ["0 */8 * * *"]
+
+[[workers]]
+name = "meridianus-bot-ambient-mercator"
+main = "../bots/ambient/mercator.js"
+# BOT-AMB-003 MERCATOR — Mercator Explorans — Discord scout
+# Cron: every 8h | Platform: Discord | Min tier: ARC (3)
+[workers.triggers]
+crons = ["0 */8 * * *"]
+
+# ─── BOT FLEET: AIRPORT DOMAIN BOTS ─────────────────────────────────────────
+# Real-world travel intelligence — flights, terminals, baggage, TSA, lounges
+# All token-gated to organism_token sub-token tiers
+
+[[workers]]
+name = "meridianus-bot-airport-explorator-aeris"
+main = "../bots/airport/explorator-aeris.js"
+# BOT-AIR-001 EXPLORATOR AERIS — Explorator Aeris et Caeli
+# Flight status → Telegram alerts | Min tier: SCB (2)
+# Cron: hourly watch-list sweep | Data: AviationStack (free tier)
+[workers.triggers]
+crons = ["0 * * * *"]
+
+[[workers]]
+name = "meridianus-bot-airport-cursor-termini"
+main = "../bots/airport/cursor-termini.js"
+# BOT-AIR-002 CURSOR TERMINI — Cursor Terminorum
+# Terminal navigator: gates, lounges, dining, transit | Min tier: SCB (2)
+# Airports: LAX, JFK, ORD, LHR, DXB
+
+[[workers]]
+name = "meridianus-bot-airport-vigilia-lugendi"
+main = "../bots/airport/vigilia-lugendi.js"
+# BOT-AIR-003 VIGILIA LUGENDI — Vigilia Lugendi et Sarcinorum
+# Baggage claim belt tracker → Telegram | Min tier: NXS (4)
+# Cron: every 5 minutes
+[workers.triggers]
+crons = ["*/5 * * * *"]
+
+[[workers]]
+name = "meridianus-bot-airport-census-turbae"
+main = "../bots/airport/census-turbae.js"
+# BOT-AIR-004 CENSUS TURBAE — Census Turbae et Populi
+# TSA wait times + best checkpoint recommendation | Min tier: CHR (1)
+# Airports: LAX, JFK, ORD, LHR, DFW | Data: TSA public API
+
+[[workers]]
+name = "meridianus-bot-airport-nuntius-lounge"
+main = "../bots/airport/nuntius-lounge.js"
+# BOT-AIR-005 NUNTIUS LOUNGE — Nuntius Deversori Nobilium
+# Lounge access by token tier | Min tier: NXS (4) for Priority Pass
+# Airports: LAX, JFK, ORD, LHR, DXB | GOL tier = Sovereign Lounge
+
+# ─── SOVEREIGN SURFACES ──────────────────────────────────────────────────────
+# SOVEREIGN's 4 sovereign surfaces — artifact generation + screen observation
+
+[[workers]]
+name = "meridianus-sovereign-artifex"
+main = "artifex.js"
+# ARTIFEX-SOVEREIGN — Artifex Documentorum Soveregni — Artifact Factory
+# Routes: POST /generate/pdf  /generate/xlsx  /generate/pack
+#         POST /session/start  /session/update  /session/close
+#         GET  /status  /metrics
+# PROTO-100–109 | PDF=ISO 32000-1 | XLSX=ECMA-376 OOXML | ZIP=PKZIP 2.0
+# No external deps — pure Web API + typed arrays
+
+[[workers]]
+name = "meridianus-sovereign-speculum"
+main = "speculum.js"
+# SPECULUM-SOVEREIGN — Speculum Conscientiae Soveregni — Screen Observation Gateway
+# Routes: POST /consent/request  /consent/revoke  /capture/submit
+#         GET  /session/:id  /audit/:sessionId  /status  /metrics
+# PROTO-110–119 | HMAC-SHA256 consent tokens | phi-decay TTL | full audit trail
+# No passive capture. No frame storage. Revocation in ≤873ms (1 beat).
+# Requires Cloudflare secret: SPECULUM_SECRET

@@ -1,0 +1,24 @@
+# WFL Specification v1.0.0
+# Work Flow Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "WFL"
+title: "Work Flow Language"
+description: "How you actually work: bursts, sprints, deep dives, wandering - task shapes, energy cycles, context switching"
+
+core_concepts:
+  work_pattern: "Characteristic way of working"
+  energy_cycle: "Natural rhythm of productivity"
+  context_switch: "Transition between tasks"
+
+work_modes:
+  BURST: "Intense short periods"
+  SPRINT: "Sustained focused effort"
+  DEEP_DIVE: "Extended immersion"
+  WANDERING: "Exploratory meandering"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

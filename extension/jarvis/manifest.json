@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "MERIDIANUS — Sovereign AGI",
+  "version": "3.0.0",
+  "description": "MERIDIANUS v3 — sovereign AGI with career protocols, voice I/O, sovereign canister forge (Gold/Silver/Bronze/Copper/Elemental/Spinner/Phantom/Blockchain), 8 Phantom AI agents, proactive intelligence, build monitoring, research lab management. Per aspera ad astra.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "sidePanel",
+    "storage",
+    "scripting",
+    "downloads",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Open MERIDIANUS",
+    "default_icon": {
+      "16": "icons/jarvis-16.png",
+      "32": "icons/jarvis-32.png",
+      "48": "icons/jarvis-48.png",
+      "128": "icons/jarvis-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icons/jarvis-16.png",
+    "32": "icons/jarvis-32.png",
+    "48": "icons/jarvis-48.png",
+    "128": "icons/jarvis-128.png"
+  }
+}

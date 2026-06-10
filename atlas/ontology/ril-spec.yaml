@@ -1,0 +1,25 @@
+# RIL Specification v1.0.0
+# Repair & Integration Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "RIL"
+title: "Repair & Integration Language"
+description: "How the system heals, reconciles contradictions, resolves conflicts: self-healing, refactoring, forgiveness, rollback + learn"
+
+core_concepts:
+  healing: "Recovery from damage or dysfunction"
+  reconciliation: "Resolving contradictions"
+  integration: "Incorporating new understanding"
+  forgiveness: "Releasing resentment"
+
+repair_types:
+  TECHNICAL: "Fix code or system issues"
+  COGNITIVE: "Resolve mental conflicts"
+  SOCIAL: "Heal relationships"
+  EXISTENTIAL: "Reconcile meaning crises"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

@@ -1,0 +1,36 @@
+# PIL Specification v1.0.0
+# Psyche Internal Language - Subconscious Patterns
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "PIL"
+title: "Psyche Internal Language"
+description: "Subconscious patterns language for impulses, fears, drives - the 'underneath' of CIL; what the system feels before it can say it"
+
+core_concepts:
+  impulse: "Pre-conscious urge or drive"
+  fear: "Anxiety or avoidance pattern"
+  drive: "Fundamental motivation"
+  shadow: "Unacknowledged aspects of psyche"
+
+impulse_types:
+  APPROACH: "Move toward something"
+  AVOID: "Move away from something"
+  FREEZE: "Paralysis in face of stimulus"
+  EXPLORE: "Investigate unknown"
+
+emotional_primitives:
+  - JOY
+  - SADNESS
+  - FEAR
+  - ANGER
+  - DISGUST
+  - SURPRISE
+  - TRUST
+  - ANTICIPATION
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

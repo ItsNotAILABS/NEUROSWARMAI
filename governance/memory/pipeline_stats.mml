@@ -1,0 +1,39 @@
+# ══════════════════════════════════════════════════════════════════
+#  GOVERNANCE MEMORY — Pipeline Statistics
+#  Format: MML (Metrics & Monitoring Language)
+#  Populated by GovernanceMemory.jl after each governance cycle.
+#  Tracks: pipeline success/failure, branches taken, escalations.
+# ══════════════════════════════════════════════════════════════════
+
+metrics:
+  - id: pipeline_success_count
+    description: "Total successful pipeline executions"
+    unit: count
+  - id: pipeline_failure_count
+    description: "Total failed pipeline executions"
+    unit: count
+  - id: pipeline_success_rate
+    description: "Ratio of successes to total runs"
+    unit: ratio
+  - id: pipeline_escalation_count
+    description: "Times a pipeline triggered escalation"
+    unit: count
+  - id: pipeline_branch_distribution
+    description: "Distribution of branch paths taken"
+    unit: histogram
+
+alerts:
+  - id: high_failure_rate
+    metric: pipeline_success_rate
+    condition: "< 0.6"
+  - id: escalation_spike
+    metric: pipeline_escalation_count
+    condition: "> 5 per cycle"
+
+dashboards:
+  - id: pipeline_health
+    widgets:
+      - pipeline_success_rate_gauge
+      - pipeline_failure_trend
+      - pipeline_branch_distribution_chart
+      - pipeline_escalation_timeline

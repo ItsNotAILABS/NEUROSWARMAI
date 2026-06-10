@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHIMERIA Defense Systems — Sovereign AI Platform</title>
+  <meta name="description" content="Enterprise-grade healthcare defense, cybersecurity, and intelligent automation powered by sovereign AI.">
+  <link rel="stylesheet" href="assets/css/platform.css">
+  <style>
+    :root {
+      --primary: #00ff88;
+      --secondary: #00ccff;
+      --dark: #0a0a0f;
+      --darker: #050508;
+      --card: #12121a;
+      --border: #1a1a2e;
+      --text: #e0e0e0;
+      --text-dim: #888;
+      --gradient: linear-gradient(135deg, #00ff88, #00ccff);
+      --glow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      background: var(--darker);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      background: radial-gradient(ellipse at center, #0a1a0f 0%, var(--darker) 70%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.02) 2px, rgba(0,255,136,0.02) 4px);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border: 1px solid var(--primary);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--primary);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin-bottom: 40px;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 60px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat { text-align: center; }
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--gradient);
+      color: var(--dark);
+    }
+    .btn-primary:hover { box-shadow: var(--glow); transform: translateY(-2px); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .btn-secondary:hover { background: rgba(0,255,136,0.1); }
+    .btn-group { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+    /* Sections */
+    section { padding: 100px 0; }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .section-subtitle {
+      color: var(--text-dim);
+      margin-bottom: 60px;
+      font-size: 1rem;
+    }
+
+    /* Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .card:hover { border-color: var(--primary); box-shadow: var(--glow); transform: translateY(-4px); }
+    .card-icon { font-size: 2rem; margin-bottom: 16px; }
+    .card h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
+    .card p { font-size: 0.85rem; color: var(--text-dim); }
+    .card-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(0,255,136,0.1);
+      color: var(--primary);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      margin-top: 12px;
+      text-transform: uppercase;
+    }
+
+    /* Agents */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .agent-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.3s;
+    }
+    .agent-card:hover { border-color: var(--secondary); }
+    .agent-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      flex-shrink: 0;
+    }
+    .agent-name { font-weight: 600; font-size: 0.9rem; }
+    .agent-role { font-size: 0.75rem; color: var(--text-dim); }
+
+    /* Terminal Demo */
+    .terminal-demo {
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .terminal-header {
+      background: var(--card);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red { background: #ff5f56; }
+    .terminal-dot.yellow { background: #ffbd2e; }
+    .terminal-dot.green { background: #27c93f; }
+    .terminal-title { margin-left: 12px; font-size: 0.8rem; color: var(--text-dim); }
+    .terminal-body { padding: 24px; font-size: 0.85rem; line-height: 1.8; }
+    .terminal-line { margin-bottom: 4px; }
+    .terminal-prompt { color: var(--primary); }
+    .terminal-output { color: var(--text-dim); }
+    .terminal-success { color: var(--primary); }
+    .terminal-info { color: var(--secondary); }
+
+    /* Pricing */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+    }
+    .price-card.featured { border-color: var(--primary); box-shadow: var(--glow); }
+    .price-card h3 { margin-bottom: 8px; }
+    .price-amount { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin: 16px 0; }
+    .price-amount span { font-size: 0.9rem; color: var(--text-dim); }
+    .price-features { list-style: none; text-align: left; margin: 24px 0; }
+    .price-features li { padding: 8px 0; font-size: 0.85rem; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+    .price-features li::before { content: '✓ '; color: var(--primary); }
+
+    /* Footer */
+    footer {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-stats { gap: 24px; }
+      .btn-group { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">CHIMERIA DEFENSE</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="status.html">Status</a></li>
+      <li><a href="documentation.html">Docs</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="account.html">Account</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <span class="hero-badge">● FULL OPERATIONAL STATUS</span>
+    <h1>CHIMERIA Defense Systems</h1>
+    <p>Sovereign AI platform for healthcare defense, enterprise cybersecurity, and intelligent automation. 10 defense agents. 481 compliance controls. Zero trust.</p>
+    <div class="btn-group">
+      <a href="#pricing" class="btn btn-primary">Request Access</a>
+      <a href="#agents" class="btn btn-secondary">View Agents</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-number">10</div>
+        <div class="stat-label">Defense Agents</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">481</div>
+        <div class="stat-label">Compliance Controls</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">12</div>
+        <div class="stat-label">Sandbox Domains</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">99.99%</div>
+        <div class="stat-label">Uptime SLA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <h2 class="section-title">Defense Verticals</h2>
+    <p class="section-subtitle">Enterprise-grade protection across healthcare, cybersecurity, and AI operations</p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">🏥</div>
+        <h3>Healthcare Defense</h3>
+        <p>PHI/ePHI encryption, medical device security, HIPAA continuous audit, clinical workflow protection, and predictive threat intelligence for healthcare organizations.</p>
+        <span class="card-tag">HIPAA + SOC2 + FedRAMP</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>Cybersecurity Operations</h3>
+        <p>Zero-trust network defense, AI-driven threat hunting, automated penetration testing, identity governance, and supply chain risk management.</p>
+        <span class="card-tag">Real-time threat intel</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h3>AI Operations Security</h3>
+        <p>Model integrity verification, adversarial attack detection, prompt injection defense, differential privacy pipelines, and AI governance enforcement.</p>
+        <span class="card-tag">Sovereign AI</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">⛓️</div>
+        <h3>Blockchain Intelligence</h3>
+        <p>Smart contract security, DeFi protocol analysis, token economics monitoring, and sovereign on-chain deployment via ICP canisters.</p>
+        <span class="card-tag">ICP + Multi-chain</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>Financial Intelligence</h3>
+        <p>Quantitative risk modeling, portfolio optimization, fraud detection, regulatory compliance automation, and real-time market surveillance.</p>
+        <span class="card-tag">SEC + FINRA compliant</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔬</div>
+        <h3>Research Intelligence</h3>
+        <p>Literature mining, hypothesis generation, experiment design automation, peer review assistance, and cross-domain knowledge synthesis.</p>
+        <span class="card-tag">Multi-modal AI</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section id="agents" style="background: var(--dark);">
+  <div class="container">
+    <h2 class="section-title">10 Defense Agents — Always Active</h2>
+    <p class="section-subtitle">Each agent is an autonomous AI system monitoring, detecting, and defending in real-time</p>
+    <div class="agents-grid">
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">SENTINEL</div>
+          <div class="agent-role">Patient Data Protection — PHI/ePHI shield</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">AEGIS-HC</div>
+          <div class="agent-role">Network Perimeter — Zero-trust micro-segmentation</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">VITALS</div>
+          <div class="agent-role">Medical Device Security — IoMT hardening</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">CORTEX</div>
+          <div class="agent-role">AI Threat Intelligence — Behavioral anomaly detection</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">MERIDIAN-HC</div>
+          <div class="agent-role">Compliance Orchestration — HIPAA/SOC2/FedRAMP</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">PHOENIX</div>
+          <div class="agent-role">Incident Response — Clinical continuity & recovery</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">GUARDIAN</div>
+          <div class="agent-role">Identity & Access — Privilege escalation defense</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">HELIX</div>
+          <div class="agent-role">Supply Chain Risk — Vendor scoring & BAA enforcement</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">NEXUS</div>
+          <div class="agent-role">Cross-Domain Coordination — Kuramoto defense pulse</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-status"></div>
+        <div>
+          <div class="agent-name">ORACLE</div>
+          <div class="agent-role">Predictive Defense — Generational threat forecasting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL DEMO -->
+<section id="terminal">
+  <div class="container">
+    <h2 class="section-title">Command Terminal</h2>
+    <p class="section-subtitle">Direct access to all defense systems through a sovereign command interface</p>
+    <div class="terminal-demo">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <span class="terminal-title">CHIMERIA Defense Terminal — Enterprise</span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line"><span class="terminal-prompt">chimeria&gt;</span> status --all</div>
+        <div class="terminal-line"><span class="terminal-success">✓ 10/10 defense agents ACTIVE</span></div>
+        <div class="terminal-line"><span class="terminal-success">✓ 481/481 compliance controls PASSING</span></div>
+        <div class="terminal-line"><span class="terminal-success">✓ 0 active threats detected</span></div>
+        <div class="terminal-line"><span class="terminal-info">  Uptime: 99.99% | Last scan: 2.3s ago</span></div>
+        <div class="terminal-line">&nbsp;</div>
+        <div class="terminal-line"><span class="terminal-prompt">chimeria&gt;</span> scan --target healthcare --depth full</div>
+        <div class="terminal-line"><span class="terminal-info">  [SENTINEL] Scanning PHI endpoints...</span></div>
+        <div class="terminal-line"><span class="terminal-info">  [AEGIS-HC] Network perimeter check...</span></div>
+        <div class="terminal-line"><span class="terminal-info">  [VITALS]   IoMT device audit...</span></div>
+        <div class="terminal-line"><span class="terminal-success">✓ Full healthcare scan complete — 0 vulnerabilities</span></div>
+        <div class="terminal-line">&nbsp;</div>
+        <div class="terminal-line"><span class="terminal-prompt">chimeria&gt;</span> report --type compliance --format pdf</div>
+        <div class="terminal-line"><span class="terminal-success">✓ Report generated: compliance-2026-05-28.pdf (42 pages)</span></div>
+        <div class="terminal-line"><span class="terminal-output">  HIPAA: 54/54 ✓ | SOC2: 64/64 ✓ | FedRAMP: 325/325 ✓</span></div>
+        <div class="terminal-line">&nbsp;</div>
+        <div class="terminal-line"><span class="terminal-prompt">chimeria&gt;</span> <span style="opacity: 0.5; animation: blink 1s infinite;">_</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="background: var(--dark);">
+  <div class="container">
+    <h2 class="section-title">Pricing</h2>
+    <p class="section-subtitle">Sovereign defense at every scale — from startups to government agencies</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Starter</h3>
+        <div class="price-amount">$499<span>/month</span></div>
+        <ul class="price-features">
+          <li>3 AI Defense Agents</li>
+          <li>3 Sandbox Environments</li>
+          <li>HIPAA Compliance</li>
+          <li>50K requests/month</li>
+          <li>Email Support (48h)</li>
+          <li>99.9% Uptime SLA</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width:100%;">Get Started</a>
+      </div>
+      <div class="price-card">
+        <h3>Professional</h3>
+        <div class="price-amount">$2,499<span>/month</span></div>
+        <ul class="price-features">
+          <li>6 AI Defense Agents</li>
+          <li>8 Sandbox Environments</li>
+          <li>HIPAA + SOC2</li>
+          <li>500K requests/month</li>
+          <li>Priority Support (4h)</li>
+          <li>99.95% Uptime SLA</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width:100%;">Get Started</a>
+      </div>
+      <div class="price-card featured">
+        <h3>Enterprise</h3>
+        <div class="price-amount">$9,999<span>/month</span></div>
+        <ul class="price-features">
+          <li>10 AI Defense Agents</li>
+          <li>24 Sandbox Environments</li>
+          <li>HIPAA + SOC2 + FedRAMP + ITAR</li>
+          <li>5M requests/month</li>
+          <li>24/7 Dedicated (15min)</li>
+          <li>99.99% Uptime SLA</li>
+        </ul>
+        <a href="#" class="btn btn-primary" style="width:100%;">Request Access</a>
+      </div>
+      <div class="price-card">
+        <h3>Government</h3>
+        <div class="price-amount">Custom</div>
+        <ul class="price-features">
+          <li>10+ Custom Agents</li>
+          <li>Unlimited Sandboxes</li>
+          <li>Full + Custom Compliance</li>
+          <li>Unlimited requests</li>
+          <li>On-site + Dedicated</li>
+          <li>99.999% Uptime SLA</li>
+        </ul>
+        <a href="#" class="btn btn-secondary" style="width:100%;">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="container">
+    <h2 class="section-title">Technology</h2>
+    <p class="section-subtitle">Built on sovereign infrastructure — no third-party data exposure</p>
+    <div class="grid-3">
+      <div class="card">
+        <h3>ICP Canisters</h3>
+        <p>206 Motoko genesis modules running on the Internet Computer. Sovereign, tamper-proof, zero-trust computation.</p>
+      </div>
+      <div class="card">
+        <h3>Kuramoto Synchronization</h3>
+        <p>All defense agents maintain coherence through phase-coupled oscillation (R ≥ 0.85). Emergent intelligence from coordination.</p>
+      </div>
+      <div class="card">
+        <h3>φ-Geometry Foundations</h3>
+        <p>Golden ratio governance weighting ensures fair resource distribution and priority scaling across all defense systems.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p>CHIMERIA Defense Systems — Sovereign AI Platform</p>
+    <p style="margin-top: 8px;">Copyright © 2024-2026 <a href="#">Alfredo Medina Hernandez</a>. All Rights Reserved.</p>
+    <p style="margin-top: 8px;">Dallas, Texas, United States of America | Framework: Medina Doctrine</p>
+  </div>
+</footer>
+
+<style>
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+</style>
+<script src="assets/js/platform.js"></script>
+</body>
+</html>

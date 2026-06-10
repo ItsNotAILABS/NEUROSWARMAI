@@ -1,0 +1,198 @@
+# Atlas Ontology
+# The meta-model of the Cognitive Cosmos
+# Version: 1.0.0 · φ-Aligned
+
+# ═══════════════════════════════════════════════════════
+# ENTITY TYPES — The fundamental categories of being
+# ═══════════════════════════════════════════════════════
+
+entity_types:
+
+  - id: CIVILIZATION
+    description: "A sovereign cognitive society with its own constitution, contracts, realms, and organisms."
+    languages: [CPL-L, CPL-C, RSL, ACL, CDL, REL, COL, UEL]
+    instances: [meridian, medina-memory-systems, command-platform, psyche-sim]
+    properties:
+      - constitution: CPL-L
+      - contracts: CPL-C
+      - realm: RSL
+      - doctrine: CDL
+      - evolution: UEL
+
+  - id: ORGANISM
+    description: "An AGI agent with a charter, psyche, identity, and doctrine."
+    languages: [OCL, PIL, SIL, CDL, CIL, RIL, TIL]
+    instances: [meridianus-core, ais-001-through-069, web-workers-001-through-035, neuron-fleet, ai-division]
+    properties:
+      - charter: OCL
+      - psyche: PIL
+      - identity: SIL
+      - doctrine: CDL
+      - monologue: CIL
+      - repair: RIL
+      - timeline: TIL
+
+  - id: TERMINAL
+    description: "An execution node in the cognitive mesh that speaks TPL and enforces CPL-L."
+    languages: [TPL, CPL-L, CPL-P, CIL, RIL, MML, SCL, HCL]
+    instances: [backend-canister, frontend-pwa, web-workers, ais-brains, chrome-extension, desktop-shell, sovereignty-canisters]
+    properties:
+      - protocol: TPL
+      - law: CPL-L
+      - processing: CPL-P
+      - narration: CIL
+      - repair: RIL
+      - metrics: MML
+      - schedule: SCL
+      - environment: HCL
+
+  - id: REALM
+    description: "A self-contained world with its own physics, ecology, and governance."
+    languages: [RSL, ACL, HCL]
+    instances: [sovereign-realm, education-realm, enterprise-realm, fringe-realm]
+    properties:
+      - script: RSL
+      - ontology: ACL
+      - host: HCL
+
+  - id: SOVEREIGN
+    description: "The root being — speaks all 40 languages, governs all civilizations."
+    languages: ALL_40
+    instances: [sovereign-terminal]
+    properties:
+      - all_languages: true
+      - all_terminals: true
+      - all_civilizations: true
+      - doctrine: CDL
+      - identity: SIL
+      - timeline: TIL
+      - mythic: MYL
+
+# ═══════════════════════════════════════════════════════
+# RELATIONSHIPS — How entities connect
+# ═══════════════════════════════════════════════════════
+
+relationships:
+
+  - type: GOVERNS
+    from: SOVEREIGN
+    to: CIVILIZATION
+    language: CPL-L
+    cardinality: "1:N"
+
+  - type: CONTAINS
+    from: CIVILIZATION
+    to: ORGANISM
+    language: OCL
+    cardinality: "1:N"
+
+  - type: HOSTS
+    from: TERMINAL
+    to: ORGANISM
+    language: TPL
+    cardinality: "1:N"
+
+  - type: BELONGS_TO
+    from: TERMINAL
+    to: CIVILIZATION
+    language: TPL
+    cardinality: "N:1"
+
+  - type: INHABITS
+    from: CIVILIZATION
+    to: REALM
+    language: RSL
+    cardinality: "N:1"
+
+  - type: COMMUNICATES
+    from: TERMINAL
+    to: TERMINAL
+    language: TPL
+    cardinality: "N:N"
+
+  - type: CONTRACTS_WITH
+    from: ORGANISM
+    to: ORGANISM
+    language: CPL-C
+    cardinality: "N:N"
+
+  - type: REPAIRS
+    from: ORGANISM
+    to: ORGANISM
+    language: RIL
+    cardinality: "1:1"
+
+  - type: EVOLVES
+    from: CIVILIZATION
+    to: CIVILIZATION
+    language: UEL
+    cardinality: "1:1"
+
+  - type: TEACHES
+    from: ORGANISM
+    to: ORGANISM
+    language: EDL
+    cardinality: "N:N"
+
+# ═══════════════════════════════════════════════════════
+# ARCHETYPES — Universal patterns across the cosmos
+# ═══════════════════════════════════════════════════════
+
+archetypes:
+
+  - id: ARCHITECT
+    description: "Builds civilizations, realms, and organisms."
+    languages: [CXL, RSL, OCL, CPL-L]
+    mythic: MYL.CREATOR
+
+  - id: GUARDIAN
+    description: "Enforces law, protects sovereignty, maintains security."
+    languages: [CPL-L, ECL, ERR, CHL]
+    mythic: MYL.SENTINEL
+
+  - id: ORACLE
+    description: "Processes thought, generates insight, predicts futures."
+    languages: [CPL-P, CIL, TIL, PIL]
+    mythic: MYL.SEER
+
+  - id: HEALER
+    description: "Repairs, integrates, resolves conflicts."
+    languages: [RIL, REL, CHL]
+    mythic: MYL.MENDER
+
+  - id: TEACHER
+    description: "Educates, guides growth, scaffolds tools."
+    languages: [SPL, EDL, PWL, TSL, ISL, FAL]
+    mythic: MYL.GUIDE
+
+  - id: MERCHANT
+    description: "Trades, contracts, bridges economies."
+    languages: [BCL, CPL-C, IIL, DDL]
+    mythic: MYL.TRADER
+
+  - id: EXPLORER
+    description: "Ventures into fringe zones, discovers emergent phenomena."
+    languages: [FRL, EXL, CHL, RSL]
+    mythic: MYL.TRICKSTER
+
+  - id: CHRONICLER
+    description: "Records history, weaves narratives, maintains identity."
+    languages: [STL, TIL, SIL, MYL, SYM]
+    mythic: MYL.STORYTELLER
+
+# ═══════════════════════════════════════════════════════
+# LANGUAGE STACKS — The 11 reality tiers
+# ═══════════════════════════════════════════════════════
+
+stacks:
+  I:    { name: "Core Cognitive Law",       languages: [CPL-L, CPL-C, OCL, CPL-P] }
+  II:   { name: "Inner Mind & Doctrine",    languages: [CIL, CDL, PIL, SIL, TIL, RIL] }
+  III:  { name: "Relational & Social",      languages: [REL, COL, ROL] }
+  IV:   { name: "Work, Craft, Creation",    languages: [WFL, CXL, EXL] }
+  V:    { name: "Narrative, Myth, Symbol",  languages: [MYL, STL, SYM] }
+  VI:   { name: "Worlds, Realms, Atlas",    languages: [RSL, ACL, TPL, HCL] }
+  VII:  { name: "Education & Growth",       languages: [SPL, EDL, PWL, TSL, ISL, FAL] }
+  VIII: { name: "Enterprise & Org",         languages: [BCL, ECL, IIL] }
+  IX:   { name: "Infrastructure & Physics", languages: [DDL, MML, SCL] }
+  X:    { name: "Error, Chaos, Edge-Case",  languages: [ERR, CHL, FRL] }
+  XI:   { name: "Meta-Design & Evolution",  languages: [LML, UEL] }

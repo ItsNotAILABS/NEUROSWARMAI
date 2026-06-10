@@ -1,0 +1,147 @@
+# Fleet State Event Specification
+# Emitted by: organism-alpha-bot (Fleet Commander)
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+event_type: "fleet_state"
+version: "1.0.0"
+source_organism: "organism-alpha-bot"
+entity_id: "atlas://bot/organism-alpha-bot"
+
+description: "Fleet census and health report from Alpha Bot, the fleet commander organism"
+
+schema:
+  entity_id:
+    type: STRING
+    required: true
+    pattern: "^atlas://bot/organism-alpha-bot$"
+    description: "Unique identifier for the Alpha Bot organism"
+
+  op:
+    type: STRING
+    required: true
+    enum: ["fleet_census_completed"]
+    description: "Operation that triggered this event"
+
+  timestamp:
+    type: TIMESTAMP
+    required: true
+    format: "ISO 8601"
+    description: "When the fleet census was completed"
+
+  context:
+    type: OBJECT
+    required: true
+    properties:
+      bots_total:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Total number of organism bots discovered"
+
+      bots_healthy:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of bots passing health checks"
+
+      missing_workflows:
+        type: ARRAY[STRING]
+        required: true
+        description: "List of bot IDs that are missing or failed"
+
+      policy_compliance:
+        type: FLOAT
+        required: true
+        minimum: 0.0
+        maximum: 1.0
+        description: "Fraction of bots meeting governance policies"
+
+      divisions:
+        type: OBJECT
+        required: true
+        description: "Breakdown by bot division/role"
+        properties:
+          infrastructure:
+            type: INTEGER
+            description: "Bots in infrastructure division"
+          analytics:
+            type: INTEGER
+            description: "Bots in analytics division"
+          integration:
+            type: INTEGER
+            description: "Bots in integration division"
+
+cpl_l_conditions:
+  NO_MISSING_WORKFLOWS:
+    expression: "context.missing_workflows.length > 0"
+    severity: "CRITICAL"
+    description: "Triggers when any bot in the fleet is missing or failed"
+    action: "Block releases, alert GUARDIAN"
+
+  FLEET_HEALTH_DEGRADED:
+    expression: "context.bots_healthy / context.bots_total < 0.8"
+    severity: "HIGH"
+    description: "Triggers when fleet health drops below 80%"
+    action: "Alert GUARDIAN, initiate recovery"
+
+  POLICY_COMPLIANCE_LOW:
+    expression: "context.policy_compliance < 0.9"
+    severity: "MEDIUM"
+    description: "Triggers when policy compliance drops below 90%"
+    action: "Alert ORACLE, review policies"
+
+meta_engine_metrics:
+  - metric_id: "bot_fleet.health_ratio"
+    expression: "context.bots_healthy / context.bots_total"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["fleet", "health"]
+
+  - metric_id: "bot_fleet.total_count"
+    expression: "context.bots_total"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["fleet", "census"]
+
+  - metric_id: "bot_fleet.policy_compliance"
+    expression: "context.policy_compliance"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["fleet", "governance"]
+
+  - metric_id: "bot_fleet.missing_count"
+    expression: "context.missing_workflows.length"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["fleet", "health"]
+
+example_payload:
+  entity_id: "atlas://bot/organism-alpha-bot"
+  op: "fleet_census_completed"
+  timestamp: "2026-05-03T12:00:00Z"
+  context:
+    bots_total: 9
+    bots_healthy: 9
+    missing_workflows: []
+    policy_compliance: 1.0
+    divisions:
+      infrastructure: 3
+      analytics: 4
+      integration: 2
+
+validation_rules:
+  - rule: "bots_healthy <= bots_total"
+    message: "Healthy bots cannot exceed total bots"
+
+  - rule: "missing_workflows.length + bots_healthy <= bots_total"
+    message: "Missing + healthy should not exceed total"
+
+  - rule: "policy_compliance >= 0 and policy_compliance <= 1"
+    message: "Policy compliance must be a ratio between 0 and 1"
+
+governance_integration:
+  ingestion_path: "dist/governance/events/fleet_state.json"
+  processing_frequency: "on_write"
+  retention_policy: "keep_last_100"
+  phi_synchronized: true
+  phi_beat_alignment: "F13"  # Every 233 beats (~3.4min)

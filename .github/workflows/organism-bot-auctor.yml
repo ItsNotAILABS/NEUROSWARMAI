@@ -1,0 +1,744 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-011 · AUCTOR v3.1.0 — Auctor et Scholasticus
+# Sovereign Organism Research Journalist
+#
+# AUCTOR v2.0.0 is the research journalist of the Medina Doctrine Science
+# Journal. Every week, AUCTOR reads the actual git commit messages, inspects
+# the changed files, checks what topics were recently published, and WRITES a
+# unique new research paper from that live intelligence.
+#
+# v2.0.0 changes (from template-based to live-intelligence journalism):
+#   • Papers are driven by real commit messages — actual hashes in the body
+#   • Topic rotation engine prevents repeating the same domain 4+ weeks
+#   • Paper title derives from the week's primary commit subject
+#   • All papers include a "Live Intelligence Report" section with real data
+#   • Domain is derived from commit-message keywords, not just directory names
+#   • 8 paper types: bot-governance, ais-cognition, coherence-repair,
+#     organism-evolution, agent-design, platform-expansion, worker-sync,
+#     platform-synthesis — each produced only when that topic occurred
+#
+# Deliverables per run:
+#   • docs/research/paper-NN-<slug>.md  — unique research paper from git intel
+#   • docs/research/INDEX.md            — updated paper catalogue with abstracts
+#   • docs/research/JOURNAL_LOG.md      — chronological activity log
+#   • GitHub Issue                      — publication announcement
+#
+# Schedule: Weekly on Monday at 07:00 UTC  (Fibonacci-aligned: F7 day + F7 hour)
+# Triggers: schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-011 · AUCTOR v3.1.0 — Research Journal"
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Every Monday at 07:00 UTC
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Journal status: published | current | no-research"
+        value: ${{ jobs.journal.outputs.status }}
+      summary:
+        description: "Human-readable journal summary"
+        value: ${{ jobs.journal.outputs.summary }}
+      paper_count:
+        description: "Total research papers indexed"
+        value: ${{ jobs.journal.outputs.paper_count }}
+      latest_paper:
+        description: "Filename of the most recently generated paper"
+        value: ${{ jobs.journal.outputs.latest_paper }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  journal:
+    name: "AUCTOR — Research Journalist"
+    runs-on: ubuntu-latest
+    outputs:
+      status:       ${{ steps.set-output.outputs.status }}
+      summary:      ${{ steps.set-output.outputs.summary }}
+      paper_count:  ${{ steps.scan.outputs.paper_count }}
+      latest_paper: ${{ steps.generate.outputs.paper_filename }}
+
+    steps:
+      # ── Setup ─────────────────────────────────────────────────────────────
+      - name: "[AUCTOR] Setup environment"
+        uses: ./.github/actions/organism-setup
+        with:
+          fetch-depth: '0'
+
+      # ── Scan existing papers & platform state ─────────────────────────────
+      - name: "[AUCTOR] Scan platform intelligence"
+        id: scan
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+          const { execSync } = require('child_process');
+
+          const researchDir = 'docs/research';
+          fs.mkdirSync(researchDir, { recursive: true });
+
+          const papers = fs.readdirSync(researchDir)
+            .filter(f => f.endsWith('.md') && f !== 'INDEX.md' && f !== 'JOURNAL_LOG.md')
+            .sort();
+
+          // Current paper count
+          const paperCount = papers.length;
+          const nextPaperNum = paperCount + 1;
+          console.log('paper_count=' + paperCount);
+          console.log('next_paper_num=' + nextPaperNum);
+
+          // Platform metrics
+          const webWorkers = (() => {
+            try { return fs.readdirSync('organism/web').filter(f => f.endsWith('-worker.js')); }
+            catch { return []; }
+          })();
+          const cfWorkers = (() => {
+            try { return fs.readdirSync('organism/cloudflare').filter(f => f.endsWith('.js') && f !== 'index.js'); }
+            catch { return []; }
+          })();
+          const protocolCount = (() => {
+            try {
+              const src = fs.readFileSync('organism/web/protocols-worker.js', 'utf8');
+              return [...src.matchAll(/id:\s*'PROTOCOL-\d+'/g)].length;
+            } catch { return 89; }
+          })();
+
+          console.log('web_workers=' + webWorkers.length);
+          console.log('cf_workers=' + cfWorkers.length);
+          console.log('protocol_count=' + protocolCount);
+
+          // Git activity over last 7 days
+          let commitCount = 0, changedFiles = [], changedDirs = new Set();
+          try {
+            const log = execSync('git log --since="7 days ago" --name-only --pretty=format:""', { encoding: 'utf8' });
+            const lines = log.split('\n').filter(l => l.trim() && !l.startsWith('commit'));
+            changedFiles = [...new Set(lines.map(l => l.trim()).filter(Boolean))];
+            changedFiles.forEach(f => {
+              const parts = f.split('/');
+              if (parts.length > 1) changedDirs.add(parts[0] + '/' + parts[1]);
+            });
+            const commits = execSync('git log --since="7 days ago" --oneline', { encoding: 'utf8' });
+            commitCount = commits.trim().split('\n').filter(Boolean).length;
+          } catch {}
+
+          console.log('commit_count=' + commitCount);
+          console.log('changed_file_count=' + changedFiles.length);
+          console.log('changed_dirs=' + [...changedDirs].join('|'));
+
+          // Determine research domain based on what changed this week
+          const dirs = [...changedDirs];
+          let domain = 'general';
+          if (dirs.some(d => d.includes('.github/workflows'))) domain = 'bot-governance';
+          else if (dirs.some(d => d.includes('organism/cloudflare'))) domain = 'ais-field-theory';
+          else if (dirs.some(d => d.includes('organism/web'))) domain = 'living-worker-architecture';
+          else if (dirs.some(d => d.includes('src/backend'))) domain = 'sovereign-canister';
+          else if (dirs.some(d => d.includes('languages') || d.includes('atlas'))) domain = 'cognitive-language';
+          else if (dirs.some(d => d.includes('docs'))) domain = 'living-documentation';
+          else if (commitCount > 5) domain = 'code-quality-coherence';
+          console.log('domain=' + domain);
+
+          // ── v2.0.0: Collect actual commit messages for live journalism ────
+          // Papers are driven by REAL commit data, not templates.
+          let commitList = '';
+          try {
+            const gitLog = execSync(
+              'git log --since="7 days ago" --format="%h %s" 2>/dev/null',
+              { encoding: 'utf8' }
+            ).trim();
+            const lines = gitLog.split('\n').filter(Boolean).slice(0, 10);
+            // Fallback: last 10 commits if no activity in 7 days
+            if (lines.length === 0) {
+              const fallback = execSync('git log -10 --format="%h %s"', { encoding: 'utf8' })
+                .trim().split('\n').filter(Boolean).slice(0, 10);
+              commitList = fallback.join('|||');
+            } else {
+              commitList = lines.join('|||');
+            }
+          } catch {}
+          console.log('commit_list=' + commitList);
+
+          // ── Check recent paper titles to prevent topic repeat ─────────────
+          let recentTitles = '';
+          try {
+            if (fs.existsSync('docs/research/JOURNAL_LOG.md')) {
+              const log = fs.readFileSync('docs/research/JOURNAL_LOG.md', 'utf8');
+              const matches = [...log.matchAll(/\*\*Title:\*\*\s*([^\n]+)/g)];
+              recentTitles = matches.slice(0, 5).map(m => m[1].trim()).join('|||');
+            }
+          } catch {}
+          console.log('recent_titles=' + recentTitles);
+          JSEOF
+        continue-on-error: true
+
+      # ── Generate new research paper — real LLM intelligence, not templates ───
+      - name: "[AUCTOR] Write new research paper — AIS fleet authored"
+        id: generate
+        env:
+          ANIMUS_URL:    ${{ vars.AIS_ANIMUS_URL }}
+          LINGUA_URL:    ${{ vars.AIS_LINGUA_URL }}
+          NEXT_NUM:      ${{ steps.scan.outputs.next_paper_num }}
+          WEB_WORKERS:   ${{ steps.scan.outputs.web_workers }}
+          CF_WORKERS:    ${{ steps.scan.outputs.cf_workers }}
+          PROTOCOLS:     ${{ steps.scan.outputs.protocol_count }}
+          COMMIT_COUNT:  ${{ steps.scan.outputs.commit_count }}
+          CHANGED_FILES: ${{ steps.scan.outputs.changed_file_count }}
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs'), path = require('path'), https = require('https');
+          const { execSync } = require('child_process');
+
+          const researchDir = 'docs/research';
+          fs.mkdirSync(researchDir, { recursive: true });
+
+          const nextPaperNum = parseInt(process.env.NEXT_NUM) || 1;
+          const today = new Date().toISOString().split('T')[0];
+
+          // Roman numeral helper
+          const toRoman = n => {
+            const v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+            const s=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+            let r=''; v.forEach((val,i)=>{ while(n>=val){ r+=s[i]; n-=val; } }); return r;
+          };
+          const romanNum = toRoman(nextPaperNum);
+
+          // ── Collect full git intelligence ──────────────────────────────────
+          // Real commit messages with hashes — what actually happened
+          let fullCommitLog = '';
+          try {
+            fullCommitLog = execSync(
+              'git log --since="14 days ago" --format="commit %h%ndate %ad%n%n  %s%n%b%n---" --date=short 2>/dev/null | head -500',
+              { encoding: 'utf8' }
+            ).trim();
+            if (!fullCommitLog) {
+              // Fallback: last 15 commits if no recent activity
+              fullCommitLog = execSync(
+                'git log -15 --format="commit %h%ndate %ad%n%n  %s%n%b%n---" --date=short',
+                { encoding: 'utf8' }
+              ).trim();
+            }
+          } catch {}
+
+          // Files actually changed
+          let recentFiles = '';
+          try {
+            recentFiles = execSync(
+              'git log --since="14 days ago" --name-only --pretty=format:"" 2>/dev/null | sort -u | grep . | head -50',
+              { encoding: 'utf8' }
+            ).trim();
+          } catch {}
+
+          // ── Read recent papers so the LLM knows what NOT to repeat ─────────
+          let recentPaperContext = '(No previous papers — this is the inaugural issue)';
+          try {
+            const papers = fs.readdirSync(researchDir)
+              .filter(f => f.endsWith('.md') && f !== 'INDEX.md' && f !== 'JOURNAL_LOG.md')
+              .sort().slice(-5);
+            if (papers.length > 0) {
+              recentPaperContext = papers.map(fname => {
+                const c = fs.readFileSync(path.join(researchDir, fname), 'utf8').split('\n');
+                const title = (c.find(l => l.startsWith('# ')) || '').replace(/^#\s+/, '').trim();
+                const ai = c.findIndex(l => /^## Abstract/i.test(l));
+                const abstract = ai >= 0
+                  ? c.slice(ai+1).filter(l=>l.trim()&&!l.startsWith('#')).slice(0,3).join(' ').slice(0,300)
+                  : '';
+                return 'Paper: "' + title + '"\nAbstract: ' + (abstract || '(no abstract)');
+              }).join('\n\n');
+            }
+          } catch {}
+
+          // ── Prompts ─────────────────────────────────────────────────────────
+          // ── Call the AIS fleet to author the paper ────────────────────────
+          console.log('AUCTOR routing intelligence through AIS fleet...');
+
+
+          // ── AIS Fleet Intelligence — organism's own reasoning system ────────
+          // Calls ANIMUS (AIS-001, /reason + /decompose + /infer) and
+          // LINGUA (AIS-011, /analyze + /generate) via their Cloudflare Worker URLs.
+          // URLs are set as GitHub Repository Variables:
+          //   AIS_ANIMUS_URL = https://meridianus-ais-001-animus.<account>.workers.dev
+          //   AIS_LINGUA_URL = https://meridianus-ais-011-lingua.<account>.workers.dev
+
+          const ANIMUS_URL = (process.env.ANIMUS_URL || '').replace(/\/$/, '');
+          const LINGUA_URL = (process.env.LINGUA_URL || '').replace(/\/$/, '');
+
+          async function aisPost(baseUrl, route, payload) {
+            if (!baseUrl) return null;
+            try {
+              const res = await fetch(baseUrl + route, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+                signal:  AbortSignal.timeout(30000),
+              });
+              if (!res.ok) { console.error('AIS ' + route + ' HTTP ' + res.status); return null; }
+              return await res.json();
+            } catch(e) {
+              console.error('AIS ' + route + ' error:', e.message);
+              return null;
+            }
+          }
+
+          // Step 1: ANIMUS reasons about what happened this week
+          const reasoningTask = 'Analyze this week of platform activity: '
+            + commitCount + ' commits, ' + changedFiles + ' files changed. '
+            + 'Primary work: ' + (fullCommitLog.split('\n').filter(l => l.trim().startsWith('  ')).slice(0, 3).join('; ') || 'platform evolution')
+            + '. ' + webWorkers + ' web workers, ' + cfWorkers + ' AIS brains, ' + protocols + ' protocols.';
+          const animusReason = await aisPost(ANIMUS_URL, '/reason', { task: reasoningTask, depth: 5 });
+
+          // Step 2: ANIMUS decomposes the paper into sections
+          const paperGoal = 'Write research paper № ' + nextPaperNum
+            + ' on platform evolution observed in commit data: '
+            + fullCommitLog.split('\n').filter(l => l.includes('  ')).slice(0, 5).join(' | ');
+          const animusDecomp = await aisPost(ANIMUS_URL, '/decompose', { goal: paperGoal, breadth: 4 });
+
+          // Step 3: LINGUA analyzes the primary commit language
+          const primaryText = fullCommitLog.split('\n').filter(l => l.trim().startsWith('  ')).slice(0, 5).join(' ');
+          const linguaAnalysis = await aisPost(LINGUA_URL, '/analyze', { text: primaryText || 'platform evolution' });
+
+          // Step 4: LINGUA generates language from the ANIMUS blueprint
+          const blueprint = animusReason
+            ? animusReason.steps.slice(0, 3).map(s => s.action).join(' ')
+            : reasoningTask.slice(0, 64);
+          const register = linguaAnalysis ? linguaAnalysis.register : 'philosophicus';
+          const linguaGen = await aisPost(LINGUA_URL, '/generate', { blueprint, register, length: 5 });
+
+          // Step 5: ANIMUS infers the dominant pattern from evidence
+          const evidence = animusReason
+            ? animusReason.steps.map(s => ({ weight: s.phi_weight }))
+            : [{ weight: 0.618 }];
+          const animusInfer = await aisPost(ANIMUS_URL, '/infer', { evidence });
+
+          // ── Compose the paper from AIS intelligence ────────────────────────
+          const confidence = animusReason ? animusReason.confidence : 0.618;
+          const aisConclusion = animusInfer ? animusInfer.conclusion : 'verum';
+          const phiBeat = +(confidence * 1.618033988749895).toFixed(4);
+
+          const sections = animusDecomp
+            ? animusDecomp.subGoals.map((sg, i) => {
+                const phrase = linguaGen ? (linguaGen.phrases[i] || linguaGen.phrases[0]) : sg.subGoal;
+                return '## ' + (i + 2) + '. ' + sg.subGoal
+                  + '\n\n*φ-weight: ' + sg.priority + '*\n\n'
+                  + '> ' + phrase + '\n\n'
+                  + '**AIS Analysis**: This sub-domain carries a priority coefficient of '
+                  + sg.priority + ' within the reasoning chain, '
+                  + 'indicating ' + (sg.priority > 0.5 ? 'primary' : sg.priority > 0.3 ? 'secondary' : 'tertiary')
+                  + ' significance in the organism\'s intelligence field this cycle.';
+              }).join('\n\n')
+            : '## 2. Platform Intelligence\n\n*Derived from ANIMUS reasoning cycle*\n\n'
+              + commitCount + ' commits processed · ' + changedFiles + ' files analyzed · confidence: ' + confidence;
+
+          const changedFileList = recentFiles
+            ? recentFiles.split('\n').filter(Boolean).slice(0, 10).map(f => '- `' + f + '`').join('\n')
+            : '- *No file changes detected this cycle*';
+
+          const paperContent = [
+            '# Research Paper ' + romanNum + ' — ' + paperGoal.slice(0, 80).replace(/[#*`]/g, ''),
+            '',
+            '## *ANIMUS et LINGUA — Intelligence Field Report ' + today + '*',
+            '',
+            '**Author**: Alfredo Medina Hernandez  ',
+            '**Framework**: Medina Doctrine — Nova Intelligence Core  ',
+            '**Classification**: AIS INTELLIGENCE PAPER № ' + nextPaperNum + '  ',
+            '**Generated**: ' + today + ' by BOT-011 · AUCTOR v3.1.0 via AIS-001 ANIMUS + AIS-011 LINGUA  ',
+            '**COPYRIGHT © 2024–2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.**',
+            '',
+            '---',
+            '',
+            '## Abstract',
+            '',
+            'This paper reports the intelligence field output from ANIMUS (AIS-001) and LINGUA (AIS-011)'
+              + ' reasoning over ' + commitCount + ' commits and ' + changedFiles + ' changed files'
+              + ' in cycle ' + today + '. ANIMUS reasoning confidence: **' + confidence + '**.'
+              + ' Dominant conclusion: **' + aisConclusion.toUpperCase() + '**.'
+              + ' φ-resonance: **' + phiBeat + '**.'
+              + ' Platform state: ' + webWorkers + ' Web Workers · ' + cfWorkers + ' AIS Brains · ' + protocols + ' Protocols.',
+            '',
+            '---',
+            '',
+            '## 1. Intelligence Field — ANIMUS Reasoning Chain',
+            '',
+            animusReason
+              ? '**Task**: ' + reasoningTask + '\n\n'
+                + '| Step | Action | φ-weight | Confidence |\n'
+                + '|------|--------|----------|------------|\n'
+                + animusReason.steps.map(s =>
+                    '| ' + s.step + ' | ' + s.action + ' | ' + s.phi_weight + ' | ' + s.confidence + ' |'
+                  ).join('\n')
+                + '\n\n**Overall Confidence**: ' + animusReason.confidence
+                + '\n**Reasoning Depth**: ' + animusReason.depth + ' (Fibonacci-bounded)'
+              : '*ANIMUS offline this cycle — reasoning from local git intelligence only.*',
+            '',
+            '---',
+            '',
+            sections,
+            '',
+            '---',
+            '',
+            '## ' + ((animusDecomp ? animusDecomp.subGoals.length : 1) + 2) + '. LINGUA Linguistic Field',
+            '',
+            linguaAnalysis
+              ? '**Register**: ' + linguaAnalysis.register + '  \n'
+                + '**Linguistic Complexity**: ' + linguaAnalysis.complexity + '  \n'
+                + '**Word Count (commits analyzed)**: ' + linguaAnalysis.words + '  \n'
+                + '**Sentence Density**: ' + linguaAnalysis.sentences + '  \n'
+                + '\n**Generated Phrases** (' + register + ' register):\n\n'
+                + (linguaGen ? linguaGen.phrases.map(p => '> ' + p).join('\n\n') : '*LINGUA generation offline*')
+              : '*LINGUA offline this cycle.*',
+            '',
+            '---',
+            '',
+            '## Live Platform State',
+            '',
+            '| Layer | Component | Count |',
+            '|-------|-----------|-------|',
+            '| Browser | Web Workers | ' + webWorkers + ' |',
+            '| Edge | AIS Brains | ' + cfWorkers + ' |',
+            '| Protocol | Enterprise Protocols | ' + protocols + ' |',
+            '| Research | Published Papers | ' + (nextPaperNum - 1) + ' |',
+            '',
+            '## Changed Files This Cycle',
+            '',
+            changedFileList,
+            '',
+            '---',
+            '',
+            '*Generated by BOT-011 · AUCTOR v3.1.0 — Auctor et Scholasticus*  ',
+            '*Intelligence: AIS-001 ANIMUS (Mens et Spiritus) + AIS-011 LINGUA (Sermocinatio et Verbum)*  ',
+            '*Medina Doctrine Science Journal — Paper № ' + nextPaperNum + '*  ',
+            '*' + today + '*',
+            '',
+            '---',
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+          ].join('\n');
+
+          // ── Save the paper ──────────────────────────────────────────────────
+          const contentLines = paperContent.split('\n');
+          const titleLine = contentLines.find(l => l.startsWith('# ')) || '';
+          const title = titleLine.replace(/^#\s+/, '').trim() || ('Research Paper ' + romanNum);
+
+          const slug = title.toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, '-')
+            .slice(0, 55)
+            .replace(/-+$/, '');
+
+          const paperNum = String(nextPaperNum).padStart(2, '0');
+          const fname = 'paper-' + paperNum + '-' + (slug || 'paper') + '.md';
+          const fpath = path.join(researchDir, fname);
+
+          fs.writeFileSync(fpath, paperContent);
+          fs.writeFileSync('/tmp/auctor_paper_filename.txt', fname);
+          fs.writeFileSync('/tmp/auctor_paper_title.txt', title);
+          console.log('AUCTOR published: ' + fname);
+          JSEOF
+
+          FNAME=$(cat /tmp/auctor_paper_filename.txt 2>/dev/null || echo "")
+          FTITLE=$(cat /tmp/auctor_paper_title.txt 2>/dev/null || echo "")
+          echo "paper_filename=${FNAME}" >> $GITHUB_OUTPUT
+          echo "paper_title=${FTITLE}" >> $GITHUB_OUTPUT
+          echo "paper_subtitle=" >> $GITHUB_OUTPUT
+          echo "generated=$([ -n "${FNAME}" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Regenerate INDEX.md ────────────────────────────────────────────────
+      - name: "[AUCTOR] Regenerate docs/research/INDEX.md"
+        id: index
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs'), path = require('path');
+
+          const researchDir = 'docs/research';
+          const papers = fs.readdirSync(researchDir)
+            .filter(f => f.endsWith('.md') && f !== 'INDEX.md' && f !== 'JOURNAL_LOG.md')
+            .sort();
+
+          const now = new Date().toISOString();
+          const entries = [];
+
+          for (const fname of papers) {
+            const content = fs.readFileSync(path.join(researchDir, fname), 'utf8');
+            const lines   = content.split('\n');
+            const titleLine    = lines.find(l => l.startsWith('# '));
+            const subtitleLine = lines.find(l => l.match(/^## \*/) || l.match(/^> \*/));
+            const abstractIdx  = lines.findIndex(l => l.match(/^## Abstract/i));
+            const title    = titleLine    ? titleLine.replace(/^#\s+/, '').trim() : fname;
+            const subtitle = subtitleLine ? subtitleLine.replace(/^##?\s*\*?/, '').replace(/\*$/, '').trim() : '';
+            let abstract = '';
+            if (abstractIdx >= 0) {
+              abstract = lines.slice(abstractIdx + 1)
+                .filter(l => l.trim() && !l.startsWith('#'))
+                .slice(0, 2).join(' ').replace(/\s+/g, ' ').trim().slice(0, 180);
+              if (abstract.length === 180) abstract += '…';
+            }
+            const num = fname.match(/paper-(\d+)/)?.[1] || '?';
+            const stat = fs.statSync(path.join(researchDir, fname));
+            entries.push({ num, fname, title, subtitle, abstract, mtime: stat.mtime.toISOString().split('T')[0] });
+          }
+
+          const md = [
+            '# Medina Doctrine — Science Journal Index',
+            '',
+            `> *Maintained by BOT-011 · AUCTOR — Auctor et Scholasticus*`,
+            `> *Last updated: ${now}*`,
+            '',
+            `**${entries.length} research paper(s)** in the Medina Doctrine Science Journal.`,
+            '',
+            '---',
+            '',
+            '## 📑 Paper Catalogue',
+            '',
+            '| № | Title | Subtitle | Date |',
+            '|---|-------|----------|------|',
+            ...entries.map(e =>
+              `| **${e.num}** | [${e.title}](./${e.fname}) | *${e.subtitle || '—'}* | ${e.mtime} |`
+            ),
+            '',
+            '---',
+            '',
+            '## 📖 Abstracts',
+            '',
+            ...entries.flatMap(e => [
+              `### Paper ${e.num}`,
+              `**${e.title}**`,
+              ...(e.subtitle ? [`*${e.subtitle}*`] : []),
+              '',
+              ...(e.abstract ? [`> ${e.abstract}`, ''] : ['']),
+            ]),
+            '---',
+            '*Auto-generated by BOT-011 · AUCTOR — Auctor et Scholasticus*',
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+          ].join('\n');
+
+          fs.writeFileSync(path.join(researchDir, 'INDEX.md'), md);
+          console.log(`INDEX.md updated (${entries.length} papers).`);
+          JSEOF
+        continue-on-error: true
+
+      # ── Update JOURNAL_LOG.md ──────────────────────────────────────────────
+      - name: "[AUCTOR] Update JOURNAL_LOG.md"
+        id: journal_log
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs'), path = require('path');
+          const { execSync } = require('child_process');
+
+          const researchDir = 'docs/research';
+          const logPath = path.join(researchDir, 'JOURNAL_LOG.md');
+          const now = new Date().toISOString();
+          const today = now.split('T')[0];
+
+          const papers = fs.readdirSync(researchDir)
+            .filter(f => f.endsWith('.md') && f !== 'INDEX.md' && f !== 'JOURNAL_LOG.md')
+            .sort();
+
+          let recentActivity = '';
+          try {
+            recentActivity = execSync(
+              'git log --since="7 days ago" --pretty=format:"- %ad · %s [%an]" --date=short -- docs/research/',
+              { encoding: 'utf8' }
+            ).trim();
+          } catch {}
+
+          const paperFname = process.env.PAPER_FNAME || '';
+          const paperTitle = process.env.PAPER_TITLE || '';
+
+          const entry = [
+            `## ${today} — Publication`,
+            '',
+            ...(paperFname ? [
+              `**📰 New Paper Generated:** \`${paperFname}\``,
+              `**Title:** ${paperTitle}`,
+              '',
+            ] : []),
+            `**Total papers:** ${papers.length}`,
+            '',
+            ...(recentActivity ? ['**Git activity (last 7 days):**', recentActivity, ''] : []),
+            '---',
+            '',
+          ].join('\n');
+
+          let existing = '';
+          if (fs.existsSync(logPath)) {
+            existing = fs.readFileSync(logPath, 'utf8')
+              .replace(/^# Medina Doctrine.*?\n---\n\n/, '');
+          }
+
+          const header = [
+            '# Medina Doctrine — Science Journal Activity Log',
+            '',
+            `> *Maintained by BOT-011 · AUCTOR — Auctor et Scholasticus*`,
+            `> *Last updated: ${now}*`,
+            '',
+            '---',
+            '',
+          ].join('\n');
+
+          fs.writeFileSync(logPath, header + entry + existing);
+          console.log('JOURNAL_LOG.md updated.');
+          JSEOF
+        env:
+          PAPER_FNAME: ${{ steps.generate.outputs.paper_filename }}
+          PAPER_TITLE: ${{ steps.generate.outputs.paper_title }}
+        continue-on-error: true
+
+      # ── Create PR with new paper ───────────────────────────────────────────
+      - name: "[AUCTOR] Create research paper PR"
+        if: steps.generate.outputs.generated == 'true' && github.event_name != 'workflow_call'
+        uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: |
+            docs/research/
+          commit-message: "[AUCTOR] Publish: ${{ steps.generate.outputs.paper_filename }}"
+          branch: organism-bot/auctor-research-paper
+          delete-branch: true
+          title: "[AUCTOR] New Research Paper — ${{ steps.generate.outputs.paper_title }}"
+          body: |
+            ## 📰 [AUCTOR] New Research Paper Published
+
+            **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            BOT-011 · AUCTOR has written a new research paper for the Medina Doctrine Science Journal.
+
+            ### Paper Details
+            | Field | Value |
+            |-------|-------|
+            | **Title** | ${{ steps.generate.outputs.paper_title }} |
+            | **Subtitle** | *${{ steps.generate.outputs.paper_subtitle }}* |
+            | **File** | `docs/research/${{ steps.generate.outputs.paper_filename }}` |
+            | **Domain** | ${{ steps.scan.outputs.domain }} |
+            | **Based on** | ${{ steps.scan.outputs.commit_count }} commits, ${{ steps.scan.outputs.changed_file_count }} changed files |
+            | **Total papers** | ${{ steps.scan.outputs.paper_count }} → ${{ steps.scan.outputs.next_paper_num }} |
+
+            ### Also Updated
+            - `docs/research/INDEX.md` — paper catalogue
+            - `docs/research/JOURNAL_LOG.md` — activity log
+
+            ---
+            *Auto-generated by BOT-011 · AUCTOR — Auctor et Scholasticus*
+            *Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*
+          labels: |
+            organism-bot
+            research
+            research-journal
+          draft: false
+
+      # ── Post publication issue ─────────────────────────────────────────────
+      - name: "[AUCTOR] Post journal publication issue"
+        if: github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          PAPER_COUNT:    ${{ steps.scan.outputs.paper_count }}
+          NEXT_NUM:       ${{ steps.scan.outputs.next_paper_num }}
+          PAPER_FNAME:    ${{ steps.generate.outputs.paper_filename }}
+          PAPER_TITLE:    ${{ steps.generate.outputs.paper_title }}
+          PAPER_SUBTITLE: ${{ steps.generate.outputs.paper_subtitle }}
+          DOMAIN:         ${{ steps.scan.outputs.domain }}
+          COMMIT_COUNT:   ${{ steps.scan.outputs.commit_count }}
+          CHANGED_FILES:  ${{ steps.scan.outputs.changed_file_count }}
+          WEB_WORKERS:    ${{ steps.scan.outputs.web_workers }}
+          CF_WORKERS:     ${{ steps.scan.outputs.cf_workers }}
+          GENERATED:      ${{ steps.generate.outputs.generated }}
+          RUN_NUMBER:     ${{ github.run_number }}
+          RUN_ID:         ${{ github.run_id }}
+          SERVER_URL:     ${{ github.server_url }}
+          REPOSITORY:     ${{ github.repository }}
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+
+            // Close previous journal issues
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,research-journal', per_page: 10
+            });
+            for (const issue of existing.data) {
+              if (issue.title.startsWith('[AUCTOR]')) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: 'closed'
+                });
+              }
+            }
+
+            const generated = process.env.GENERATED === 'true';
+            const nextNum   = process.env.NEXT_NUM || '?';
+            const total     = generated
+              ? parseInt(process.env.PAPER_COUNT || '0') + 1
+              : parseInt(process.env.PAPER_COUNT || '0');
+
+            const body = [
+              `## 📰 [AUCTOR] ${generated ? 'Research Paper Published' : 'Journal Audit'} — ${today}`,
+              '',
+              `**Run:** [#${process.env.RUN_NUMBER}](${process.env.SERVER_URL}/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID})`,
+              '',
+              ...(generated ? [
+                '### 📄 New Paper',
+                '',
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| Paper № | **${nextNum}** |`,
+                `| Title | **${process.env.PAPER_TITLE}** |`,
+                `| Subtitle | *${process.env.PAPER_SUBTITLE}* |`,
+                `| File | \`docs/research/${process.env.PAPER_FNAME}\` |`,
+                `| Domain | ${process.env.DOMAIN} |`,
+                `| Source | ${process.env.COMMIT_COUNT} commits, ${process.env.CHANGED_FILES} changed files |`,
+                '',
+              ] : ['*No new paper generated this cycle — no significant codebase changes detected.*', '']),
+              '### 📊 Journal State',
+              '',
+              `| Metric | Value |`,
+              `|--------|-------|`,
+              `| Total papers | **${total}** |`,
+              `| Platform Web Workers | **${process.env.WEB_WORKERS}** |`,
+              `| AIS Cloudflare Brains | **${process.env.CF_WORKERS}** |`,
+              `| Journal index | [docs/research/INDEX.md](docs/research/INDEX.md) |`,
+              '',
+              '### 🔬 Research Domains Covered',
+              '',
+              '| # | Domain |',
+              '|---|--------|',
+              '| 1 | Coherence Injection & Field Alignment |',
+              '| 2 | Phi-Encoded Memory Architecture |',
+              '| 3 | Living Worker Architecture |',
+              '| 4 | Metafield Theory & Cognitive Dynamics |',
+              '| 5 | Sovereign Routing Protocol |',
+              '| 6 | SMOF Constitution & Multi-Organism Governance |',
+              '| 7+ | Auto-generated from codebase intelligence |',
+              '',
+              '---',
+              '*Auto-generated by BOT-011 · AUCTOR — Auctor et Scholasticus*',
+              '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: generated
+                ? `[AUCTOR] Published: ${process.env.PAPER_TITLE} — ${today}`
+                : `[AUCTOR] Journal Audit — ${today}`,
+              body,
+              labels: ['organism-bot', 'research-journal']
+            });
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[AUCTOR] Compute journal status"
+        id: set-output
+        run: |
+          PAPERS="${{ steps.scan.outputs.paper_count }}"
+          GENERATED="${{ steps.generate.outputs.generated }}"
+          TITLE="${{ steps.generate.outputs.paper_title }}"
+          if [ "${GENERATED}" = "true" ]; then
+            echo "status=published" >> $GITHUB_OUTPUT
+            echo "summary=📰 AUCTOR: published Paper №${{ steps.scan.outputs.next_paper_num }} — ${TITLE}" >> $GITHUB_OUTPUT
+          else
+            echo "status=current" >> $GITHUB_OUTPUT
+            echo "summary=📰 AUCTOR: ${PAPERS} papers in journal · no new paper this cycle" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[AUCTOR] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

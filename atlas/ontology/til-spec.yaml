@@ -1,0 +1,31 @@
+# TIL Specification v1.0.0
+# Temporal Integration Language - Past/Present/Future Braiding
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "TIL"
+title: "Temporal Integration Language"
+description: "How past, present, and future are braided: memory, anticipation, regret, long-arc planning"
+
+core_concepts:
+  memory: "Preserved experience from past"
+  present_moment: "Current experiential state"
+  anticipation: "Projected future states"
+  temporal_coherence: "Integration across time"
+
+time_perspectives:
+  PAST_FOCUSED: "Emphasis on history and memory"
+  PRESENT_FOCUSED: "Emphasis on immediate experience"
+  FUTURE_FOCUSED: "Emphasis on planning and goals"
+
+temporal_patterns:
+  REGRET: "Negative valence on past"
+  NOSTALGIA: "Positive valence on past"
+  ANTICIPATION: "Positive valence on future"
+  DREAD: "Negative valence on future"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

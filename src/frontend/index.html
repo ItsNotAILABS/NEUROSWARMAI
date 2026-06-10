@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="theme-color" content="#22d3ee" />
+    <meta name="background-color" content="#0a0a0b" />
+    <meta name="description" content="MERIDIANUS — Sovereign AGI Command Center by Alfredo Medina Hernandez" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MERIDIANUS" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#0a0a0b" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./assets/pwa-icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/pwa-icon-192.png" />
+    <title>MERIDIANUS — Sovereign AGI</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register PWA Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then((reg) => {
+              console.log('[MERIDIANUS] Service Worker registered, scope:', reg.scope);
+              // Listen for φ-heartbeat signals from SW
+              navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data?.type === 'JARVIS_HEARTBEAT') {
+                  window.dispatchEvent(new CustomEvent('jarvis-heartbeat', { detail: event.data }));
+                }
+              });
+            })
+            .catch((err) => console.warn('[MERIDIANUS] SW registration failed:', err));
+        });
+      }
+    </script>
+  </body>
+</html>

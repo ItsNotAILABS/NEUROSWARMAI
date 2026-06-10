@@ -1,0 +1,193 @@
+# Economy State Event Specification
+# Emitted by: organism-economy-bot (Marketplace Analytics)
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+event_type: "economy_state"
+version: "1.0.0"
+source_organism: "organism-economy-bot"
+entity_id: "atlas://bot/organism-economy-bot"
+
+description: "Marketplace analytics and ecosystem health report from Economy Bot"
+
+schema:
+  entity_id:
+    type: STRING
+    required: true
+    pattern: "^atlas://bot/organism-economy-bot$"
+    description: "Unique identifier for the Economy Bot organism"
+
+  op:
+    type: STRING
+    required: true
+    enum: ["economy_scan_completed"]
+    description: "Operation that triggered this event"
+
+  timestamp:
+    type: TIMESTAMP
+    required: true
+    format: "ISO 8601"
+    description: "When the economy scan was completed"
+
+  context:
+    type: OBJECT
+    required: true
+    properties:
+      assets_total:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Total digital assets discovered in marketplace"
+
+      sdk_count:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of SDKs in the ecosystem"
+
+      extension_count:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of extensions available"
+
+      protocol_count:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of protocols defined"
+
+      csv_registers:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of CSV register entries"
+
+      complexity_score:
+        type: FLOAT
+        required: true
+        minimum: 0.0
+        maximum: 1.0
+        description: "Normalized complexity metric for ecosystem"
+
+      coverage:
+        type: OBJECT
+        required: true
+        description: "Test/documentation coverage metrics"
+        properties:
+          test_coverage:
+            type: FLOAT
+            minimum: 0.0
+            maximum: 1.0
+            description: "Fraction of code covered by tests"
+          doc_coverage:
+            type: FLOAT
+            minimum: 0.0
+            maximum: 1.0
+            description: "Fraction of components with documentation"
+
+cpl_l_conditions:
+  COVERAGE_TOO_LOW:
+    expression: "context.coverage.test_coverage < 0.7"
+    severity: "HIGH"
+    description: "Triggers when test coverage drops below 70%"
+    action: "Block feature releases until coverage improves"
+
+  DOC_COVERAGE_LOW:
+    expression: "context.coverage.doc_coverage < 0.8"
+    severity: "MEDIUM"
+    description: "Triggers when documentation coverage is below 80%"
+    action: "Alert ORACLE, prioritize documentation tasks"
+
+  COMPLEXITY_SPIKE:
+    expression: "context.complexity_score > 0.75"
+    severity: "MEDIUM"
+    description: "Triggers when ecosystem complexity exceeds threshold"
+    action: "Alert ORACLE, consider simplification initiatives"
+
+  ASSET_GROWTH_STALLED:
+    expression: "context.assets_total == previous.context.assets_total"
+    severity: "LOW"
+    description: "Triggers when no new assets added since last scan"
+    action: "Review innovation metrics"
+
+meta_engine_metrics:
+  - metric_id: "economy.assets_total"
+    expression: "context.assets_total"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["economy", "assets"]
+
+  - metric_id: "economy.coverage"
+    expression: "context.coverage.test_coverage"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["economy", "quality"]
+
+  - metric_id: "economy.doc_coverage"
+    expression: "context.coverage.doc_coverage"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["economy", "documentation"]
+
+  - metric_id: "economy.complexity_score"
+    expression: "context.complexity_score"
+    type: "GAUGE"
+    unit: "score"
+    labels: ["economy", "complexity"]
+
+  - metric_id: "economy.sdk_count"
+    expression: "context.sdk_count"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["economy", "sdks"]
+
+  - metric_id: "economy.protocol_count"
+    expression: "context.protocol_count"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["economy", "protocols"]
+
+example_payload:
+  entity_id: "atlas://bot/organism-economy-bot"
+  op: "economy_scan_completed"
+  timestamp: "2026-05-03T12:00:00Z"
+  context:
+    assets_total: 247
+    sdk_count: 12
+    extension_count: 8
+    protocol_count: 15
+    csv_registers: 89
+    complexity_score: 0.62
+    coverage:
+      test_coverage: 0.84
+      doc_coverage: 0.91
+
+validation_rules:
+  - rule: "assets_total >= sdk_count + extension_count + protocol_count"
+    message: "Total assets should be at least sum of major categories"
+
+  - rule: "complexity_score >= 0 and complexity_score <= 1"
+    message: "Complexity score must be normalized between 0 and 1"
+
+  - rule: "coverage.test_coverage >= 0 and coverage.test_coverage <= 1"
+    message: "Test coverage must be a ratio between 0 and 1"
+
+  - rule: "coverage.doc_coverage >= 0 and coverage.doc_coverage <= 1"
+    message: "Doc coverage must be a ratio between 0 and 1"
+
+governance_integration:
+  ingestion_path: "dist/governance/events/economy_state.json"
+  processing_frequency: "on_write"
+  retention_policy: "keep_last_100"
+  phi_synchronized: true
+  phi_beat_alignment: "F17"  # Every 1597 beats (~23.2min)
+
+oracle_synthesis_hints:
+  risk_indicators:
+    - "Low coverage.test_coverage suggests quality debt"
+    - "High complexity_score indicates maintainability challenges"
+    - "Asset growth rate indicates ecosystem vitality"
+
+  opportunity_indicators:
+    - "New sdk_count growth suggests ecosystem expansion"
+    - "High doc_coverage enables easier onboarding"

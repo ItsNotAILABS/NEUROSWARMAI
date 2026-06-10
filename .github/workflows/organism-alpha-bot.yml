@@ -1,0 +1,163 @@
+name: 🫀 Organism Alpha Bot — Fleet Commander
+# organism-alpha-bot: Fleet census and health report for the Organism Bot Fleet
+# Emits fleet_state governance event to dist/governance/events/fleet_state.json
+# Part of the Governance Integration — Bot-to-Brain Event System
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 03:00 UTC
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  fleet-census:
+    name: 🫀 Fleet Census & Health Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🫀 Run Fleet Census
+        id: census
+        run: |
+          echo "## 🫀 Organism Alpha Bot — Fleet Census" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Discover all organism bot workflows
+          BOTS_TOTAL=0
+          BOTS_HEALTHY=0
+          MISSING_WORKFLOWS="[]"
+          MISSING_LIST=""
+
+          EXPECTED_BOTS=(
+            "organism-alpha-bot.yml"
+            "organism-economy-bot.yml"
+            "organism-learning-bot.yml"
+            "organism-crawler-bot.yml"
+            "organism-build-bot.yml"
+            "organism-neural-bot.yml"
+            "organism-sdk-bot.yml"
+            "organism-protocol-bot.yml"
+            "organism-test-bot.yml"
+          )
+
+          BOTS_TOTAL=${#EXPECTED_BOTS[@]}
+          INFRA_COUNT=0
+          ANALYTICS_COUNT=0
+          INTEGRATION_COUNT=0
+
+          echo "### Organism Bot Fleet" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Bot | Status | Division |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          declare -A DIVISIONS
+          DIVISIONS["organism-alpha-bot.yml"]="infrastructure"
+          DIVISIONS["organism-economy-bot.yml"]="analytics"
+          DIVISIONS["organism-learning-bot.yml"]="analytics"
+          DIVISIONS["organism-crawler-bot.yml"]="infrastructure"
+          DIVISIONS["organism-build-bot.yml"]="infrastructure"
+          DIVISIONS["organism-neural-bot.yml"]="analytics"
+          DIVISIONS["organism-sdk-bot.yml"]="integration"
+          DIVISIONS["organism-protocol-bot.yml"]="integration"
+          DIVISIONS["organism-test-bot.yml"]="integration"
+
+          for bot in "${EXPECTED_BOTS[@]}"; do
+            if [ -f ".github/workflows/$bot" ]; then
+              BOTS_HEALTHY=$((BOTS_HEALTHY + 1))
+              DIV="${DIVISIONS[$bot]}"
+              echo "| $bot | ✅ Present | $DIV |" >> $GITHUB_STEP_SUMMARY
+              case "$DIV" in
+                infrastructure) INFRA_COUNT=$((INFRA_COUNT + 1)) ;;
+                analytics)      ANALYTICS_COUNT=$((ANALYTICS_COUNT + 1)) ;;
+                integration)    INTEGRATION_COUNT=$((INTEGRATION_COUNT + 1)) ;;
+              esac
+            else
+              echo "| $bot | ❌ Missing | unknown |" >> $GITHUB_STEP_SUMMARY
+              if [ -z "$MISSING_LIST" ]; then
+                MISSING_LIST="\"$bot\""
+              else
+                MISSING_LIST="$MISSING_LIST,\"$bot\""
+              fi
+            fi
+          done
+
+          if [ -n "$MISSING_LIST" ]; then
+            MISSING_WORKFLOWS="[$MISSING_LIST]"
+          fi
+
+          # Compute policy compliance (all bots must have proper permissions block)
+          COMPLIANT=0
+          for bot in "${EXPECTED_BOTS[@]}"; do
+            if [ -f ".github/workflows/$bot" ] && grep -q "permissions:" ".github/workflows/$bot"; then
+              COMPLIANT=$((COMPLIANT + 1))
+            fi
+          done
+          POLICY_COMPLIANCE=$(echo "scale=4; if ($BOTS_TOTAL > 0) $COMPLIANT / $BOTS_TOTAL else 0" | bc 2>/dev/null || echo "0")
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Fleet Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total bots**: $BOTS_TOTAL" >> $GITHUB_STEP_SUMMARY
+          echo "- **Healthy bots**: $BOTS_HEALTHY" >> $GITHUB_STEP_SUMMARY
+          echo "- **Policy compliance**: $POLICY_COMPLIANCE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Infrastructure**: $INFRA_COUNT | **Analytics**: $ANALYTICS_COUNT | **Integration**: $INTEGRATION_COUNT" >> $GITHUB_STEP_SUMMARY
+
+          echo "bots_total=$BOTS_TOTAL"           >> $GITHUB_OUTPUT
+          echo "bots_healthy=$BOTS_HEALTHY"        >> $GITHUB_OUTPUT
+          echo "missing_workflows=$MISSING_WORKFLOWS" >> $GITHUB_OUTPUT
+          echo "policy_compliance=$POLICY_COMPLIANCE" >> $GITHUB_OUTPUT
+          echo "infra_count=$INFRA_COUNT"          >> $GITHUB_OUTPUT
+          echo "analytics_count=$ANALYTICS_COUNT"  >> $GITHUB_OUTPUT
+          echo "integration_count=$INTEGRATION_COUNT" >> $GITHUB_OUTPUT
+
+      - name: 📡 Emit fleet_state Governance Event
+        run: |
+          mkdir -p dist/governance/events
+
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          BOTS_TOTAL="${{ steps.census.outputs.bots_total }}"
+          BOTS_HEALTHY="${{ steps.census.outputs.bots_healthy }}"
+          MISSING="${{ steps.census.outputs.missing_workflows }}"
+          COMPLIANCE="${{ steps.census.outputs.policy_compliance }}"
+          INFRA="${{ steps.census.outputs.infra_count }}"
+          ANALYTICS="${{ steps.census.outputs.analytics_count }}"
+          INTEGRATION="${{ steps.census.outputs.integration_count }}"
+
+          cat > dist/governance/events/fleet_state.json << EOF
+          {
+            "entity_id": "atlas://bot/organism-alpha-bot",
+            "op": "fleet_census_completed",
+            "timestamp": "$TIMESTAMP",
+            "context": {
+              "bots_total": $BOTS_TOTAL,
+              "bots_healthy": $BOTS_HEALTHY,
+              "missing_workflows": $MISSING,
+              "policy_compliance": $COMPLIANCE,
+              "divisions": {
+                "infrastructure": $INFRA,
+                "analytics": $ANALYTICS,
+                "integration": $INTEGRATION
+              }
+            }
+          }
+          EOF
+
+          echo "📡 Emitted fleet_state event to dist/governance/events/fleet_state.json"
+          cat dist/governance/events/fleet_state.json
+
+      - name: ⚖️ Run Governance Cycle
+        id: governance
+        run: |
+          node governance/governance-cycle.js
+        continue-on-error: true
+
+      - name: 💾 Commit Governance Artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "organism-alpha-bot"
+          git config user.email "organism-alpha-bot[bot]@users.noreply.github.com"
+          git add dist/governance/
+          git diff --staged --quiet || git commit -m "🫀 organism-alpha-bot: fleet census + governance event [skip ci]"
+          git push || true

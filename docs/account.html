@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account — CHIMERIA Defense Systems</title>
+  <meta name="description" content="Manage your CHIMERIA Defense Systems account, API keys, team access, and billing.">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">CHIMERIA DEFENSE</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="status.html">Status</a></li>
+      <li><a href="documentation.html">Docs</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="account.html" class="active">Account</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="page-content">
+  <div class="container">
+    <h1 class="section-title">Account</h1>
+    <p class="section-subtitle">Manage your profile, API keys, team, and subscription</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="tab-profile">Profile</div>
+      <div class="tab" data-tab="tab-apikeys">API Keys</div>
+      <div class="tab" data-tab="tab-team">Team</div>
+      <div class="tab" data-tab="tab-billing">Billing</div>
+      <div class="tab" data-tab="tab-security">Security</div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div class="tab-panel" id="tab-profile">
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom: 20px;">Profile Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Organization Name</label>
+            <input type="text" class="form-input" value="Your Organization" placeholder="Organization name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" value="admin@example.com" placeholder="admin@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Account ID</label>
+            <input type="text" class="form-input" value="chm_org_xxxxxxxxxxxxxxxx" disabled style="opacity: 0.6;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plan</label>
+            <input type="text" class="form-input" value="Enterprise" disabled style="opacity: 0.6;">
+          </div>
+          <button class="btn btn-primary">Save Changes</button>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom: 20px;">Usage This Month</h3>
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+              <span>API Requests</span>
+              <span style="color: var(--primary);">1.2M / 5M</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 24%;"></div></div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+              <span>Defense Scans</span>
+              <span style="color: var(--primary);">847 / Unlimited</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 15%;"></div></div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+              <span>Sandbox Environments</span>
+              <span style="color: var(--primary);">18 / 24</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+              <span>Report Generation</span>
+              <span style="color: var(--primary);">156 / Unlimited</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 8%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Keys Tab -->
+    <div class="tab-panel" id="tab-apikeys" style="display: none;">
+      <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h3 style="margin-bottom: 0;">API Keys</h3>
+          <button class="btn btn-sm btn-primary">+ Create New Key</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Key Prefix</th>
+              <th>Scope</th>
+              <th>Created</th>
+              <th>Last Used</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Production API</strong></td>
+              <td><code>chm_live_xxxx...xxxx</code></td>
+              <td>Full Access</td>
+              <td>2026-01-15</td>
+              <td>2 min ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>Staging API</strong></td>
+              <td><code>chm_test_xxxx...xxxx</code></td>
+              <td>Read/Write</td>
+              <td>2026-02-03</td>
+              <td>1 hour ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>CI/CD Pipeline</strong></td>
+              <td><code>chm_ci_xxxx...xxxx</code></td>
+              <td>Deploy Only</td>
+              <td>2026-03-22</td>
+              <td>3 hours ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>Webhook Receiver</strong></td>
+              <td><code>chm_wh_xxxx...xxxx</code></td>
+              <td>Webhooks Only</td>
+              <td>2026-04-10</td>
+              <td>14 min ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Team Tab -->
+    <div class="tab-panel" id="tab-team" style="display: none;">
+      <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h3 style="margin-bottom: 0;">Team Members</h3>
+          <button class="btn btn-sm btn-primary">+ Invite Member</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Access Level</th>
+              <th>Last Active</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Admin User</strong><br><span style="font-size: 0.75rem; color: var(--text-dim);">admin@example.com</span></td>
+              <td>Owner</td>
+              <td>Full Access</td>
+              <td>Online now</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>Security Lead</strong><br><span style="font-size: 0.75rem; color: var(--text-dim);">security@example.com</span></td>
+              <td>Admin</td>
+              <td>Security + Config</td>
+              <td>30 min ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>DevOps Engineer</strong><br><span style="font-size: 0.75rem; color: var(--text-dim);">devops@example.com</span></td>
+              <td>Engineer</td>
+              <td>Deploy + Monitor</td>
+              <td>2 hours ago</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>Compliance Officer</strong><br><span style="font-size: 0.75rem; color: var(--text-dim);">compliance@example.com</span></td>
+              <td>Auditor</td>
+              <td>Read Only + Reports</td>
+              <td>Yesterday</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Billing Tab -->
+    <div class="tab-panel" id="tab-billing" style="display: none;">
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom: 16px;">Current Plan</h3>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Enterprise</div>
+          <div style="font-size: 1.2rem; color: var(--text-dim); margin-bottom: 20px;">$9,999/month</div>
+          <ul style="list-style: none; font-size: 0.85rem;">
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ 10 AI Defense Agents</li>
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ 24 Sandbox Environments</li>
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ HIPAA + SOC2 + FedRAMP + ITAR</li>
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ 5M requests/month</li>
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ 24/7 Dedicated Support (15min)</li>
+            <li style="padding: 6px 0; color: var(--text-dim);">✓ 99.99% Uptime SLA</li>
+          </ul>
+          <div style="margin-top: 20px;">
+            <button class="btn btn-secondary btn-sm">Manage Plan</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 16px;">Billing History</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>May 1, 2026</td>
+                <td>$9,999.00</td>
+                <td><span class="badge badge-success">Paid</span></td>
+              </tr>
+              <tr>
+                <td>Apr 1, 2026</td>
+                <td>$9,999.00</td>
+                <td><span class="badge badge-success">Paid</span></td>
+              </tr>
+              <tr>
+                <td>Mar 1, 2026</td>
+                <td>$9,999.00</td>
+                <td><span class="badge badge-success">Paid</span></td>
+              </tr>
+              <tr>
+                <td>Feb 1, 2026</td>
+                <td>$9,999.00</td>
+                <td><span class="badge badge-success">Paid</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="tab-panel" id="tab-security" style="display: none;">
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom: 20px;">Security Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Two-Factor Authentication</label>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="badge badge-success">Enabled</span>
+              <span style="font-size: 0.8rem; color: var(--text-dim);">TOTP (Authenticator App)</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Session Timeout</label>
+            <input type="text" class="form-input" value="30 minutes" placeholder="30 minutes">
+          </div>
+          <div class="form-group">
+            <label class="form-label">IP Allowlist</label>
+            <input type="text" class="form-input" value="0.0.0.0/0 (All IPs)" placeholder="CIDR ranges">
+          </div>
+          <button class="btn btn-primary btn-sm">Update Security</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 20px;">Recent Login Activity</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-time">Today, 10:42 AM</div>
+              <div class="timeline-content">Login from 192.168.1.x — Chrome, macOS</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">Today, 8:15 AM</div>
+              <div class="timeline-content">Login from 192.168.1.x — CLI, Terminal</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">Yesterday, 6:30 PM</div>
+              <div class="timeline-content">Login from 10.0.0.x — Firefox, Linux</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">Yesterday, 2:12 PM</div>
+              <div class="timeline-content">API Key used: Production API</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="platform-footer">
+  <div class="container">
+    <p>CHIMERIA Defense Systems — Sovereign AI Platform</p>
+    <p style="margin-top: 6px;">Copyright © 2024-2026 Alfredo Medina Hernandez. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="assets/js/platform.js"></script>
+</body>
+</html>

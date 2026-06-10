@@ -1,0 +1,176 @@
+name: ⚖️ Organism Governance Cycle — CPL-L Evaluator
+# organism-governance-cycle: On-demand governance cycle runner
+# Ingests all dist/governance/events/*.json, evaluates CPL-L laws, updates metrics
+# Part of the Governance Integration — Bot-to-Brain Event System
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      violations:
+        description: "Number of violations detected"
+        value: ${{ jobs.governance-cycle.outputs.violations }}
+      critical_violations:
+        description: "Number of CRITICAL violations"
+        value: ${{ jobs.governance-cycle.outputs.critical_violations }}
+      metrics_count:
+        description: "Number of metrics updated"
+        value: ${{ jobs.governance-cycle.outputs.metrics_count }}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  governance-cycle:
+    name: ⚖️ CPL-L Governance Cycle
+    runs-on: ubuntu-latest
+    outputs:
+      violations: ${{ steps.cycle.outputs.violations }}
+      critical_violations: ${{ steps.cycle.outputs.critical_violations }}
+      metrics_count: ${{ steps.cycle.outputs.metrics_count }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📥 Check for Governance Events
+        run: |
+          echo "## ⚖️ Governance Cycle — CPL-L Evaluation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "dist/governance/events" ]; then
+            EVENT_COUNT=$(ls dist/governance/events/*.json 2>/dev/null | wc -l | tr -d ' ')
+            echo "📥 Found **$EVENT_COUNT** governance events" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            for f in dist/governance/events/*.json; do
+              [ -f "$f" ] || continue
+              echo "- \`$(basename $f)\`" >> $GITHUB_STEP_SUMMARY
+            done
+          else
+            echo "⚠️ No governance events directory found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: ⚖️ Run Governance Cycle
+        id: cycle
+        run: |
+          # Run governance cycle and capture output
+          mkdir -p dist/governance/events
+
+          set +e
+          node governance/governance-cycle.js 2>&1 | tee /tmp/governance-output.txt
+          EXIT_CODE=$?
+          set -e
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Governance Cycle Output" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/governance-output.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          # Parse metrics count from output
+          METRICS_COUNT=$(grep -oP '(?<=Updated )\d+(?= metrics)' /tmp/governance-output.txt | head -1 || echo "0")
+          VIOLATIONS=$(grep -oP '(?<=Violations: )\d+' /tmp/governance-output.txt | head -1 || echo "0")
+          CRITICAL=$(grep -oP '(?<=CRITICAL: )\d+(?= CRITICAL)' /tmp/governance-output.txt | head -1 || echo "0")
+
+          echo "violations=$VIOLATIONS"             >> $GITHUB_OUTPUT
+          echo "critical_violations=$CRITICAL"      >> $GITHUB_OUTPUT
+          echo "metrics_count=$METRICS_COUNT"       >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE"               >> $GITHUB_OUTPUT
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Violations | $VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
+          echo "| CRITICAL | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metrics Updated | $METRICS_COUNT |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$EXIT_CODE" -eq 1 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚨 **CRITICAL violations detected — release pipeline BLOCKED**" >> $GITHUB_STEP_SUMMARY
+          elif [ "$VIOLATIONS" -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **$VIOLATIONS violation(s) detected — review audit trail**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All clear — no violations detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Exit with governance cycle's exit code
+          exit $EXIT_CODE
+
+        continue-on-error: true
+
+      - name: 🚨 Alert on CRITICAL Violations
+        if: steps.cycle.outputs.critical_violations != '0' && steps.cycle.outputs.critical_violations != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const violations = '${{ steps.cycle.outputs.violations }}';
+            const critical = '${{ steps.cycle.outputs.critical_violations }}';
+
+            // Check if a critical alert is already open for today
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'governance,critical',
+              per_page: 10
+            });
+            const alreadyOpen = existing.data.some(i =>
+              i.title.includes('CRITICAL Governance Violations') && i.title.includes(today)
+            );
+            if (alreadyOpen) {
+              console.log('Critical governance alert already open for today, skipping.');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[GUARDIAN] 🚨 CRITICAL Governance Violations — ${today}`,
+              body: [
+                '## 🚨 GUARDIAN Safety Alert — CRITICAL',
+                '',
+                `The governance cycle detected **${critical} CRITICAL** violation(s) out of ${violations} total.`,
+                'The release pipeline has been **BLOCKED** by CPL-L constitutional laws.',
+                '',
+                '### Audit Trail',
+                '',
+                'Review `dist/governance/audit.jsonl` for full details.',
+                '',
+                '### Required Actions',
+                '',
+                '1. Identify the CRITICAL violations in the audit trail',
+                '2. Fix the root causes (dead links, missing bots, etc.)',
+                '3. Re-run the affected organism bot to emit a clean event',
+                '4. Re-run the governance cycle to verify resolution',
+                '',
+                '### Governance Cycle Run',
+                '',
+                `[View run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+                '',
+                '---',
+                '*Auto-generated by organism-governance-cycle (GUARDIAN enforcement)*',
+                '*CPL-L Constitutional Laws · Medina Doctrine*',
+              ].join('\n'),
+              labels: ['organism-bot', 'governance', 'critical']
+            });
+
+      - name: 💾 Commit Governance Artifacts
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "organism-governance-cycle"
+          git config user.email "organism-governance-cycle[bot]@users.noreply.github.com"
+          git add dist/governance/
+          git diff --staged --quiet || git commit -m "⚖️ organism-governance-cycle: CPL-L evaluation + audit update [skip ci]"
+          git push || true
+
+      - name: ❌ Fail on CRITICAL Violations
+        if: steps.cycle.outputs.critical_violations != '' && steps.cycle.outputs.critical_violations != '0'
+        run: |
+          echo "🚨 CRITICAL violations detected. Failing the workflow to block releases."
+          exit 1

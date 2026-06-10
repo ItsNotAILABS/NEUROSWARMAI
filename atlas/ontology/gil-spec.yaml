@@ -1,0 +1,26 @@
+# GIL Specification v1.0.0
+# Gift Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "GIL"
+title: "Gift Language"
+description: "How you give things away without hollowing yourself out: boundaries, generosity, sustainability"
+
+core_concepts:
+  gift: "Unilateral transfer without expectation"
+  generosity: "Willingness to give"
+  boundary: "Protection of self"
+  sustainability: "Capacity to continue giving"
+
+gift_types:
+  - KNOWLEDGE
+  - TIME
+  - RESOURCES
+  - ATTENTION
+  - CREATION
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

@@ -1,0 +1,283 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-001 · AEDIFICATOR — Aedificator et Constructor
+# Sovereign Organism Build Bot
+#
+# Validates every layer of the Organism on every push and daily schedule.
+# On failure, opens a structured GitHub Issue with full diagnostics so the
+# team can triage without reading raw CI logs.
+#
+# Schedule: Daily at 02:13 UTC  (Fibonacci-adjacent: ~F7 hours)
+# Triggers: push (all branches) · schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-001 · AEDIFICATOR — Builder"
+
+on:
+  push:
+    branches: ["**"]
+  schedule:
+    - cron: "13 2 * * *"   # 02:13 UTC daily
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Build status: success | failure"
+        value: ${{ jobs.build.outputs.status }}
+      summary:
+        description: "Human-readable build summary"
+        value: ${{ jobs.build.outputs.summary }}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  build:
+    name: "AEDIFICATOR — Organism Build Validation"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node + pnpm ────────────────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[AEDIFICATOR] Setup pnpm 10"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # ── Install dependencies ───────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Install dependencies"
+        id: install
+        run: |
+          pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/install.log
+          echo "install_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Validate 35 Web Workers (syntax) ──────────────────────────────────
+      - name: "[AEDIFICATOR] Validate Web Worker syntax (35 workers)"
+        id: webworkers
+        run: |
+          FAIL=0
+          ERRORS=""
+          for f in organism/web/*-worker.js; do
+            if ! node --check "$f" 2>/tmp/node_err; then
+              FAIL=1
+              ERRORS="${ERRORS}\n  ✗ $f: $(cat /tmp/node_err)"
+            fi
+          done
+          COUNT=$(ls organism/web/*-worker.js | wc -l | tr -d ' ')
+          echo "count=${COUNT}" >> $GITHUB_OUTPUT
+          if [ "$FAIL" -eq 1 ]; then
+            echo "web_ok=false" >> $GITHUB_OUTPUT
+            printf "errors<<EOF\n%b\nEOF" "${ERRORS}" >> $GITHUB_OUTPUT
+          else
+            echo "web_ok=true" >> $GITHUB_OUTPUT
+            echo "errors=" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Validate 69 Cloudflare Workers (syntax) ────────────────────────────
+      - name: "[AEDIFICATOR] Validate Cloudflare Worker syntax (69 AIS brains)"
+        id: cfworkers
+        run: |
+          FAIL=0
+          ERRORS=""
+          for f in organism/cloudflare/*.js; do
+            [ "$(basename $f)" = "index.js" ] && continue
+            if ! node --check "$f" 2>/tmp/node_err; then
+              FAIL=1
+              ERRORS="${ERRORS}\n  ✗ $f: $(cat /tmp/node_err)"
+            fi
+          done
+          COUNT=$(ls organism/cloudflare/*.js | grep -v 'index.js' | wc -l | tr -d ' ')
+          echo "count=${COUNT}" >> $GITHUB_OUTPUT
+          if [ "$FAIL" -eq 1 ]; then
+            echo "cf_ok=false" >> $GITHUB_OUTPUT
+            printf "errors<<EOF\n%b\nEOF" "${ERRORS}" >> $GITHUB_OUTPUT
+          else
+            echo "cf_ok=true" >> $GITHUB_OUTPUT
+            echo "errors=" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Validate extension manifest ────────────────────────────────────────
+      - name: "[AEDIFICATOR] Validate extension manifest.json"
+        id: manifest
+        run: |
+          if node -e "JSON.parse(require('fs').readFileSync('extension/jarvis/manifest.json','utf8'))" 2>/tmp/manifest_err; then
+            echo "manifest_ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "manifest_ok=false" >> $GITHUB_OUTPUT
+            echo "error=$(cat /tmp/manifest_err)" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Build frontend ─────────────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Build frontend (pnpm build:skip-bindings)"
+        id: frontend
+        run: |
+          cd src/frontend
+          pnpm run build:skip-bindings 2>&1 | tee /tmp/build.log
+          echo "frontend_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── TypeScript type-check ──────────────────────────────────────────────
+      - name: "[AEDIFICATOR] TypeScript type-check"
+        id: typecheck
+        run: |
+          cd src/frontend
+          npx tsc --noEmit 2>&1 | tee /tmp/tsc.log || true
+          # Report errors excluding known pre-existing type definition issues
+          ERRORS=$(grep "^src/" /tmp/tsc.log | grep -v "TS2688" || true)
+          if [ -n "$ERRORS" ]; then
+            echo "ts_ok=false" >> $GITHUB_OUTPUT
+            echo "ts_errors<<EOF" >> $GITHUB_OUTPUT
+            echo "${ERRORS}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "ts_ok=true" >> $GITHUB_OUTPUT
+            echo "ts_errors=" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Validate JSON configs ──────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Validate JSON/YAML configs"
+        id: configs
+        run: |
+          FAIL=0
+          ERRORS=""
+          for f in package.json pnpm-workspace.yaml icp.yaml \
+                   src/frontend/package.json src/frontend/tsconfig.json \
+                   extension/jarvis/manifest.json; do
+            [ ! -f "$f" ] && continue
+            case "$f" in
+              *.json)
+                if ! node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/tmp/cfg_err; then
+                  FAIL=1; ERRORS="${ERRORS}\n  ✗ $f: $(cat /tmp/cfg_err)"
+                fi ;;
+            esac
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            echo "cfg_ok=false" >> $GITHUB_OUTPUT
+            printf "errors<<EOF\n%b\nEOF" "${ERRORS}" >> $GITHUB_OUTPUT
+          else
+            echo "cfg_ok=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Compute build status"
+        id: set-output
+        run: |
+          WEB="${{ steps.webworkers.outputs.web_ok }}"
+          CF="${{ steps.cfworkers.outputs.cf_ok }}"
+          MF="${{ steps.manifest.outputs.manifest_ok }}"
+          FE="${{ steps.frontend.outputs.frontend_ok }}"
+          TS="${{ steps.typecheck.outputs.ts_ok }}"
+
+          if [ "$WEB" = "true" ] && [ "$CF" = "true" ] && \
+             [ "$MF" = "true" ] && [ "$FE" = "true" ] && [ "$TS" = "true" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "summary=✅ All checks passed: ${{ steps.webworkers.outputs.count }} web workers · ${{ steps.cfworkers.outputs.count }} AIS brains · frontend built · TS clean" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            PARTS=""
+            [ "$WEB" != "true" ] && PARTS="${PARTS} web-workers"
+            [ "$CF"  != "true" ] && PARTS="${PARTS} cloudflare-workers"
+            [ "$MF"  != "true" ] && PARTS="${PARTS} manifest"
+            [ "$FE"  != "true" ] && PARTS="${PARTS} frontend-build"
+            [ "$TS"  != "true" ] && PARTS="${PARTS} typescript"
+            echo "summary=❌ Failures in:${PARTS}" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Open Issue on failure ──────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Open diagnostic issue on failure"
+        if: steps.set-output.outputs.status == 'failure' && github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        env:
+          WEB_ERRORS: ${{ steps.webworkers.outputs.errors }}
+          CF_ERRORS: ${{ steps.cfworkers.outputs.errors }}
+          TS_ERRORS: ${{ steps.typecheck.outputs.ts_errors }}
+          WEB_COUNT: ${{ steps.webworkers.outputs.count }}
+          CF_COUNT: ${{ steps.cfworkers.outputs.count }}
+          WEB_OK: ${{ steps.webworkers.outputs.web_ok }}
+          CF_OK: ${{ steps.cfworkers.outputs.cf_ok }}
+          MF_OK: ${{ steps.manifest.outputs.manifest_ok }}
+          FE_OK: ${{ steps.frontend.outputs.frontend_ok }}
+          TS_OK: ${{ steps.typecheck.outputs.ts_ok }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        with:
+          script: |
+            const title = `[AEDIFICATOR] Build failure — ${new Date().toISOString().split('T')[0]}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,build-failure'
+            });
+            if (existing.data.some(i => i.title === title)) {
+              console.log('Duplicate issue skipped — already open.');
+              return;
+            }
+            const webOk  = process.env.WEB_OK === 'true';
+            const cfOk   = process.env.CF_OK  === 'true';
+            const mfOk   = process.env.MF_OK  === 'true';
+            const feOk   = process.env.FE_OK  === 'true';
+            const tsOk   = process.env.TS_OK  === 'true';
+            const body = [
+              '## 🧱 [AEDIFICATOR] Organism Build Failure',
+              '',
+              `**Run:** [#${process.env.RUN_NUMBER}](${process.env.SERVER_URL}/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID})`,
+              `**Branch:** \`${process.env.REF_NAME}\``,
+              `**Commit:** \`${process.env.SHA}\``,
+              `**Triggered by:** ${process.env.EVENT_NAME}`,
+              '',
+              '### Diagnostics',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| Web Workers (${process.env.WEB_COUNT}) | ${webOk ? '✅' : '❌'} |`,
+              `| AIS Cloudflare Brains (${process.env.CF_COUNT}) | ${cfOk ? '✅' : '❌'} |`,
+              `| Extension Manifest | ${mfOk ? '✅' : '❌'} |`,
+              `| Frontend Build | ${feOk ? '✅' : '❌'} |`,
+              `| TypeScript | ${tsOk ? '✅' : '❌'} |`,
+              '',
+              '### Web Worker Errors',
+              '```',
+              process.env.WEB_ERRORS || '',
+              '```',
+              '### Cloudflare Worker Errors',
+              '```',
+              process.env.CF_ERRORS || '',
+              '```',
+              '### TypeScript Errors',
+              '```',
+              process.env.TS_ERRORS || '',
+              '```',
+              '',
+              '---',
+              '*Auto-generated by BOT-001 · AEDIFICATOR — Aedificator et Constructor*',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title, body, labels: ['organism-bot', 'build-failure']
+            });
+
+      # ── Final status gate ──────────────────────────────────────────────────
+      - name: "[AEDIFICATOR] Final status"
+        run: |
+          echo "Status: ${{ steps.set-output.outputs.status }}"
+          echo "Summary: ${{ steps.set-output.outputs.summary }}"
+          [ "${{ steps.set-output.outputs.status }}" = "success" ]

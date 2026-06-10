@@ -1,0 +1,40 @@
+{"id":"atlas://language/cpl-l","name":"Cognitive Law Language","layer":"CoreLaw","version":"1.0.0","status":"stable","spec_path":"languages/cpl-l.spec"}
+{"id":"atlas://language/cpl-c","name":"Cognitive Contract Language","layer":"CoreLaw","version":"1.0.0","status":"stable","spec_path":"languages/cpl-c.spec"}
+{"id":"atlas://language/ocl","name":"Organism Contract Language","layer":"CoreLaw","version":"1.0.0","status":"stable","spec_path":"languages/ocl.spec"}
+{"id":"atlas://language/cpl-p","name":"Cognitive Processing Language","layer":"CoreLaw","version":"1.0.0","status":"stable","spec_path":"languages/cpl-p.spec"}
+{"id":"atlas://language/cil","name":"Cognitive Internal Language","layer":"InnerMind","version":"1.0.0","status":"stable","spec_path":"languages/cil.spec"}
+{"id":"atlas://language/cdl","name":"Cognitive Doctrine Language","layer":"InnerMind","version":"1.0.0","status":"stable","spec_path":"languages/cdl.spec"}
+{"id":"atlas://language/pil","name":"Psyche Internal Language","layer":"InnerMind","version":"1.0.0","status":"experimental","spec_path":"languages/pil.spec"}
+{"id":"atlas://language/sil","name":"Self-Identity Language","layer":"InnerMind","version":"1.0.0","status":"stable","spec_path":"languages/sil.spec"}
+{"id":"atlas://language/til","name":"Temporal Integration Language","layer":"InnerMind","version":"1.0.0","status":"stable","spec_path":"languages/til.spec"}
+{"id":"atlas://language/ril","name":"Repair & Integration Language","layer":"InnerMind","version":"1.0.0","status":"stable","spec_path":"languages/ril.spec"}
+{"id":"atlas://language/rel","name":"Relational Ecology Language","layer":"Relational","version":"1.0.0","status":"stable","spec_path":"languages/rel.spec"}
+{"id":"atlas://language/col","name":"Collective Orchestration Language","layer":"Relational","version":"1.0.0","status":"stable","spec_path":"languages/col.spec"}
+{"id":"atlas://language/rol","name":"Role Language","layer":"Relational","version":"1.0.0","status":"stable","spec_path":"languages/rol.spec"}
+{"id":"atlas://language/wfl","name":"Work Flow Language","layer":"Work","version":"1.0.0","status":"stable","spec_path":"languages/wfl.spec"}
+{"id":"atlas://language/cxl","name":"Creation Language","layer":"Work","version":"1.0.0","status":"stable","spec_path":"languages/cxl.spec"}
+{"id":"atlas://language/exl","name":"Experiment Language","layer":"Work","version":"1.0.0","status":"stable","spec_path":"languages/exl.spec"}
+{"id":"atlas://language/myl","name":"Mythic Language","layer":"Myth","version":"1.0.0","status":"stable","spec_path":"languages/myl.spec"}
+{"id":"atlas://language/stl","name":"Story Thread Language","layer":"Myth","version":"1.0.0","status":"stable","spec_path":"languages/stl.spec"}
+{"id":"atlas://language/sym","name":"Symbolic Language","layer":"Myth","version":"1.0.0","status":"stable","spec_path":"languages/sym.spec"}
+{"id":"atlas://language/rsl","name":"Realm Script Language","layer":"Worlds","version":"1.0.0","status":"stable","spec_path":"languages/rsl.spec"}
+{"id":"atlas://language/acl","name":"Atlas Configuration Language","layer":"Worlds","version":"1.0.0","status":"stable","spec_path":"languages/acl.spec"}
+{"id":"atlas://language/tpl","name":"Terminal Protocol Language","layer":"Worlds","version":"1.0.0","status":"stable","spec_path":"languages/tpl.spec"}
+{"id":"atlas://language/hcl","name":"Host-Cognition Language","layer":"Worlds","version":"1.0.0","status":"stable","spec_path":"languages/hcl.spec"}
+{"id":"atlas://language/spl","name":"Study Pattern Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/spl.spec"}
+{"id":"atlas://language/edl","name":"Educational Doctrine Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/edl.spec"}
+{"id":"atlas://language/pwl","name":"Pathway Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/pwl.spec"}
+{"id":"atlas://language/tsl","name":"Tool Scaffold Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/tsl.spec"}
+{"id":"atlas://language/isl","name":"Institution Structure Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/isl.spec"}
+{"id":"atlas://language/fal","name":"Family Alignment Language","layer":"Education","version":"1.0.0","status":"stable","spec_path":"languages/fal.spec"}
+{"id":"atlas://language/bcl","name":"Business Contract Language","layer":"Enterprise","version":"1.0.0","status":"stable","spec_path":"languages/bcl.spec"}
+{"id":"atlas://language/ecl","name":"Enterprise Compliance Language","layer":"Enterprise","version":"1.0.0","status":"stable","spec_path":"languages/ecl.spec"}
+{"id":"atlas://language/iil","name":"Integration Interface Language","layer":"Enterprise","version":"1.0.0","status":"stable","spec_path":"languages/iil.spec"}
+{"id":"atlas://language/ddl","name":"Data Definition Language","layer":"Infrastructure","version":"1.0.0","status":"stable","spec_path":"languages/ddl.spec"}
+{"id":"atlas://language/mml","name":"Metrics & Monitoring Language","layer":"Infrastructure","version":"1.0.0","status":"stable","spec_path":"languages/mml.spec"}
+{"id":"atlas://language/scl","name":"Scheduling & Coordination Language","layer":"Infrastructure","version":"1.0.0","status":"stable","spec_path":"languages/scl.spec"}
+{"id":"atlas://language/err","name":"Error Narrative Language","layer":"Chaos","version":"1.0.0","status":"stable","spec_path":"languages/err.spec"}
+{"id":"atlas://language/chl","name":"Chaos Handling Language","layer":"Chaos","version":"1.0.0","status":"stable","spec_path":"languages/chl.spec"}
+{"id":"atlas://language/frl","name":"Fringe Language","layer":"Chaos","version":"1.0.0","status":"experimental","spec_path":"languages/frl.spec"}
+{"id":"atlas://language/lml","name":"Language Meta Language","layer":"Meta","version":"1.0.0","status":"stable","spec_path":"languages/lml.spec"}
+{"id":"atlas://language/uel","name":"Universe Evolution Language","layer":"Meta","version":"1.0.0","status":"stable","spec_path":"languages/uel.spec"}

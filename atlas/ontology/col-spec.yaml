@@ -1,0 +1,26 @@
+# COL Specification v1.0.0
+# Collective Orchestration Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "COL"
+title: "Collective Orchestration Language"
+description: "How many beings work together: swarms, councils, committees, guilds, multi-agent rituals"
+
+core_concepts:
+  collective: "Group of coordinated beings"
+  swarm: "Decentralized emergent coordination"
+  council: "Deliberative decision-making body"
+  guild: "Skill-based professional group"
+
+coordination_patterns:
+  - HIERARCHICAL
+  - PEER_TO_PEER
+  - EMERGENT
+  - DEMOCRATIC
+  - CONSENSUS
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

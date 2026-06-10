@@ -1,0 +1,191 @@
+# Learning State Event Specification
+# Emitted by: organism-learning-bot (Continuous Learning)
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+event_type: "learning_state"
+version: "1.0.0"
+source_organism: "organism-learning-bot"
+entity_id: "atlas://bot/organism-learning-bot"
+
+description: "Continuous learning cycle completion report with Hebbian training metrics"
+
+schema:
+  entity_id:
+    type: STRING
+    required: true
+    pattern: "^atlas://bot/organism-learning-bot$"
+    description: "Unique identifier for the Learning Bot organism"
+
+  op:
+    type: STRING
+    required: true
+    enum: ["learning_cycle_completed"]
+    description: "Operation that triggered this event"
+
+  timestamp:
+    type: TIMESTAMP
+    required: true
+    format: "ISO 8601"
+    description: "When the learning cycle completed"
+
+  context:
+    type: OBJECT
+    required: true
+    properties:
+      training_signals:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of training signals processed in this cycle"
+
+      hebbian_synapses_trained:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of Hebbian synapses strengthened/weakened"
+
+      protocols_evolved:
+        type: INTEGER
+        required: true
+        minimum: 0
+        description: "Number of protocols that evolved during learning"
+
+      state_path:
+        type: STRING
+        required: true
+        pattern: "^dist/learning/.*\\.json$"
+        description: "Path to persisted learning state file"
+
+      learning_rate:
+        type: FLOAT
+        required: false
+        minimum: 0.0
+        maximum: 1.0
+        description: "Current learning rate parameter"
+
+      cycle_duration_ms:
+        type: INTEGER
+        required: false
+        minimum: 0
+        description: "Duration of this learning cycle in milliseconds"
+
+      error_rate:
+        type: FLOAT
+        required: false
+        minimum: 0.0
+        maximum: 1.0
+        description: "Current error/loss rate"
+
+cpl_l_conditions:
+  NO_LEARNING_PROGRESS:
+    expression: "context.training_signals == 0 and context.hebbian_synapses_trained == 0"
+    severity: "MEDIUM"
+    description: "Triggers when learning cycle produces no progress"
+    action: "Alert ORACLE, review training data sources"
+
+  RAPID_PROTOCOL_EVOLUTION:
+    expression: "context.protocols_evolved > 5"
+    severity: "HIGH"
+    description: "Triggers when too many protocols change at once"
+    action: "Alert GUARDIAN, review stability"
+
+  HIGH_ERROR_RATE:
+    expression: "context.error_rate > 0.3"
+    severity: "MEDIUM"
+    description: "Triggers when learning error rate exceeds 30%"
+    action: "Review training quality, adjust learning rate"
+
+  INSUFFICIENT_SIGNALS:
+    expression: "context.training_signals < 10"
+    severity: "LOW"
+    description: "Triggers when training signals are too sparse"
+    action: "Review data collection pipelines"
+
+meta_engine_metrics:
+  - metric_id: "learning.signals_per_cycle"
+    expression: "context.training_signals"
+    type: "GAUGE"
+    unit: "count"
+    labels: ["learning", "signals"]
+
+  - metric_id: "learning.synapses_trained"
+    expression: "context.hebbian_synapses_trained"
+    type: "COUNTER"
+    unit: "count"
+    labels: ["learning", "hebbian"]
+
+  - metric_id: "learning.protocols_evolved"
+    expression: "context.protocols_evolved"
+    type: "COUNTER"
+    unit: "count"
+    labels: ["learning", "evolution"]
+
+  - metric_id: "learning.error_rate"
+    expression: "context.error_rate"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["learning", "quality"]
+
+  - metric_id: "learning.cycle_duration"
+    expression: "context.cycle_duration_ms / 1000"
+    type: "HISTOGRAM"
+    unit: "seconds"
+    labels: ["learning", "performance"]
+
+  - metric_id: "learning.learning_rate"
+    expression: "context.learning_rate"
+    type: "GAUGE"
+    unit: "ratio"
+    labels: ["learning", "hyperparameter"]
+
+example_payload:
+  entity_id: "atlas://bot/organism-learning-bot"
+  op: "learning_cycle_completed"
+  timestamp: "2026-05-03T12:00:00Z"
+  context:
+    training_signals: 127
+    hebbian_synapses_trained: 43
+    protocols_evolved: 2
+    state_path: "dist/learning/state-2026-05-03.json"
+    learning_rate: 0.01
+    cycle_duration_ms: 8730
+    error_rate: 0.12
+
+validation_rules:
+  - rule: "hebbian_synapses_trained <= training_signals * 10"
+    message: "Trained synapses should scale reasonably with signals"
+
+  - rule: "protocols_evolved >= 0"
+    message: "Protocol evolution count cannot be negative"
+
+  - rule: "error_rate >= 0 and error_rate <= 1"
+    message: "Error rate must be a ratio between 0 and 1"
+
+  - rule: "state_path matches '^dist/learning/.*\\.json$'"
+    message: "State path must be in dist/learning/ directory"
+
+governance_integration:
+  ingestion_path: "dist/governance/events/learning_state.json"
+  processing_frequency: "on_write"
+  retention_policy: "keep_last_100"
+  phi_synchronized: true
+  phi_beat_alignment: "F11"  # Every 89 beats (~77.7s)
+
+spl_integration:
+  modality: "KINESTHETIC"
+  repetition_pattern: "spaced_repetition"
+  spaced_intervals:
+    - "F8 beats (21 * 873ms = ~18.3s)"
+    - "F11 beats (89 * 873ms = ~77.7s)"
+    - "F13 beats (233 * 873ms = ~3.4min)"
+
+oracle_synthesis_hints:
+  risk_indicators:
+    - "High error_rate suggests training quality issues"
+    - "Rapid protocols_evolved may indicate instability"
+    - "Low training_signals suggests data starvation"
+
+  opportunity_indicators:
+    - "Steady hebbian_synapses_trained growth shows learning"
+    - "Controlled protocols_evolved indicates adaptive capability"
+    - "Low error_rate with high signals shows mastery"

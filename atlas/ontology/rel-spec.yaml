@@ -1,0 +1,26 @@
+# REL Specification v1.0.0
+# Relational Ecology Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "REL"
+title: "Relational Ecology Language"
+description: "How you relate to people, AIs, orgs, students: trust, boundaries, reciprocity, collaboration patterns"
+
+core_concepts:
+  relationship: "Connection between entities"
+  trust: "Confidence in reliability"
+  boundary: "Limits and protected spaces"
+  reciprocity: "Mutual exchange"
+
+relationship_types:
+  - MENTOR_MENTEE
+  - PEER
+  - SUPERVISOR_SUBORDINATE
+  - COLLABORATOR
+  - COMPETITOR
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

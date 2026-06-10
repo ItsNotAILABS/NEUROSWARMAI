@@ -1,0 +1,27 @@
+# ERR Specification v1.0.0
+# Error Narrative Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "ERR"
+title: "Error Narrative Language"
+description: "How failures are told and integrated: postmortems, 'near misses,' glitch lore"
+
+core_concepts:
+  error_narrative: "Story of what went wrong"
+  postmortem: "Systematic analysis after failure"
+  near_miss: "Almost-failure with lessons"
+  learning: "Knowledge extracted from error"
+
+narrative_elements:
+  - CONTEXT: "Situation before error"
+  - TRIGGER: "What initiated failure"
+  - CASCADE: "How error propagated"
+  - IMPACT: "Consequences of error"
+  - RECOVERY: "How system restored"
+  - LESSONS: "What was learned"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

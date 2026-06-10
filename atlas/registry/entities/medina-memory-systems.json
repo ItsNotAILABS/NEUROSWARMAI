@@ -1,0 +1,26 @@
+{
+  "id": "atlas://entity/medina-memory-systems",
+  "name": "Medina Memory Systems",
+  "archetypes": ["Organism", "MemoryEngine"],
+  "locations": [
+    {
+      "type": "github_repo",
+      "uri": "https://github.com/FreddyCreates/medina-memory-systems"
+    }
+  ],
+  "languages": [
+    "atlas://language/cpl-l",
+    "atlas://language/cpl-c",
+    "atlas://language/ocl",
+    "atlas://language/til",
+    "atlas://language/sil",
+    "atlas://language/ril",
+    "atlas://language/ddl",
+    "atlas://language/tpl"
+  ],
+  "state": {
+    "lifecycle": "active",
+    "risk": "low",
+    "health": "unknown"
+  }
+}

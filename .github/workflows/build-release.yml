@@ -1,0 +1,178 @@
+name: Build & Release MERIDIANUS
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ─── Build Frontend ──────────────────────────────────────────────────────
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Install & Build Frontend
+        run: |
+          pnpm install --no-frozen-lockfile
+          cd src/frontend
+          pnpm run build:skip-bindings
+      - name: Upload Frontend Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: src/frontend/dist/
+
+  # ─── Package Extension ───────────────────────────────────────────────────
+  package-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package JARVIS Extension
+        run: |
+          mkdir -p dist
+          cd extension/jarvis
+          zip -r ../../dist/jarvis-extension-v1.0.0.zip . \
+            -x "*.DS_Store" -x "__MACOSX/*" -x "*.map" -x "node_modules/*" -x "README.md"
+      - name: Upload Extension ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-extension
+          path: dist/jarvis-extension-v1.0.0.zip
+
+  # ─── Desktop: Linux ─────────────────────────────────────────────────────
+  desktop-linux:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-dist
+          path: src/frontend/dist/
+      - name: Install & Build Desktop (Linux)
+        run: |
+          cd desktop
+          npm install
+          npx electron-forge make --platform linux --arch x64
+      - name: Upload Linux Desktop
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-desktop-linux
+          path: desktop/out/make/
+
+  # ─── Desktop: Windows ───────────────────────────────────────────────────
+  desktop-windows:
+    needs: build-frontend
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-dist
+          path: src/frontend/dist/
+      - name: Install & Build Desktop (Windows)
+        run: |
+          cd desktop
+          npm install
+          npx electron-forge make --platform win32 --arch x64
+      - name: Upload Windows Desktop
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-desktop-windows
+          path: desktop/out/make/
+
+  # ─── Desktop: macOS ─────────────────────────────────────────────────────
+  desktop-macos:
+    needs: build-frontend
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-dist
+          path: src/frontend/dist/
+      - name: Install & Build Desktop (macOS ${{ matrix.arch }})
+        run: |
+          cd desktop
+          npm install
+          npx electron-forge make --platform darwin --arch ${{ matrix.arch }}
+      - name: Upload macOS Desktop (${{ matrix.arch }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-desktop-macos-${{ matrix.arch }}
+          path: desktop/out/make/
+
+  # ─── Create Release ─────────────────────────────────────────────────────
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [package-extension, desktop-linux, desktop-windows, desktop-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          path: artifacts/
+
+      - name: List artifacts
+        run: find artifacts/ -type f | head -80
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MERIDIANUS ${{ github.ref_name }}
+          body: |
+            ## MERIDIANUS ${{ github.ref_name }} — Sovereign AGI Command Center
+
+            *Per aspera ad astra* — Model Family: MERIDIANUS-1 (Base) · MERIDIANUS-3 (Pro) · MERIDIANUS-8 (Sovereign)
+
+            ### Desktop Downloads
+
+            | Platform | File | Instructions |
+            |----------|------|-------------|
+            | **Windows** | `JARVIS-Setup.exe` | Run the installer |
+            | **macOS (Intel)** | `JARVIS.dmg` | Open DMG → drag to Applications |
+            | **macOS (Apple Silicon)** | `JARVIS-arm64.dmg` | Open DMG → drag to Applications |
+            | **Linux (deb)** | `jarvis_*_amd64.deb` | `sudo dpkg -i jarvis_*.deb` |
+            | **Linux (rpm)** | `jarvis-*.x86_64.rpm` | `sudo rpm -i jarvis-*.rpm` |
+
+            ### Browser Extension
+            | **Chrome / Edge** | `jarvis-extension-v1.0.0.zip` | Extract → `chrome://extensions` → Load unpacked |
+
+            ### 📱 Phone / Tablet (PWA)
+            Open **https://command-platform.caffeine.ai** in Edge or Chrome on your phone → tap ⋮ → **"Add to Home Screen"** or **"Install App"**
+
+            The app runs fully offline with the organism's φ-heartbeat signal (873ms) active in background.
+            Deployed natively to ICP canister — sovereign protocol, no GitHub dependency.
+            8 Micro Phantom AI agents (α–θ) running inside. Token Forge + Canister Forge ready.
+
+            ---
+            *Owner: Alfredo Medina Hernandez · MedinaSITech@outlook.com · Medina Doctrine*
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+          draft: false
+          prerelease: false

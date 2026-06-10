@@ -1,0 +1,25 @@
+# BOL Specification v1.0.0
+# Boundary Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "BOL"
+title: "Boundary Language"
+description: "What is allowed where: sacred vs profane, sandbox vs production, inner vs outer circle"
+
+core_concepts:
+  boundary: "Separation between domains"
+  permission: "What can cross boundary"
+  protection: "What boundary preserves"
+
+boundary_types:
+  - PHYSICAL
+  - LOGICAL
+  - TEMPORAL
+  - SOCIAL
+  - CONCEPTUAL
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

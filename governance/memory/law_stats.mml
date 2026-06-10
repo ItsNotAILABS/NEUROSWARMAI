@@ -1,0 +1,35 @@
+# ══════════════════════════════════════════════════════════════════
+#  GOVERNANCE MEMORY — Law Statistics
+#  Format: MML (Metrics & Monitoring Language)
+#  Populated by GovernanceMemory.jl after each governance cycle.
+#  Tracks: rule firings, conflicts, overrides, entities affected.
+# ══════════════════════════════════════════════════════════════════
+
+metrics:
+  - id: law_fire_count
+    description: "Total times each law rule has been evaluated"
+    unit: count
+  - id: law_conflict_count
+    description: "Number of inter-rule conflicts detected"
+    unit: count
+  - id: law_override_count
+    description: "Times humans overrode a law decision"
+    unit: count
+  - id: law_override_rate
+    description: "Ratio of overrides to firings per rule"
+    unit: ratio
+
+alerts:
+  - id: high_override_rate
+    metric: law_override_rate
+    condition: "> 0.3"
+  - id: frequent_conflicts
+    metric: law_conflict_count
+    condition: ">= 3"
+
+dashboards:
+  - id: law_health
+    widgets:
+      - law_fire_count_chart
+      - law_override_rate_gauge
+      - law_conflict_heatmap

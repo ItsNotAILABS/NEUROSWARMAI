@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organism Extensions — Sovereign Download</title>
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       Sovereign Download Page — self-hosted, zero dependencies
+       The page IS the protocol. No CDN. No GitHub. No npm.
+       ════════════════════════════════════════════════════════════ */
+    :root {
+      --phi: 1.618033988749895;
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-hover: #1a1a28;
+      --border: #2a2a3a;
+      --text: #e0e0f0;
+      --text-dim: #8888aa;
+      --accent: #7c6ff0;
+      --accent-glow: rgba(124, 111, 240, 0.3);
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --error: #f87171;
+      --gold: #d4a843;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .phi-badge {
+      display: inline-block;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .header p {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+
+    .status-bar .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+      margin-right: 4px;
+      transition: background 0.3s;
+    }
+
+    .status-bar .dot.alive { background: var(--success); }
+    .status-bar .dot.building { background: var(--warning); animation: pulse 0.8s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Bundle download */
+    .bundle-section {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bundle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.9rem 2rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .bundle-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .bundle-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .bundle-info {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      padding: 1px;
+    }
+
+    /* Extension card */
+    .card {
+      background: var(--surface);
+      padding: 1.25rem;
+      transition: background 0.15s;
+    }
+
+    .card:hover { background: var(--surface-hover); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card-slug {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .card-specs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .spec-tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      background: rgba(124, 111, 240, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(124, 111, 240, 0.2);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-size {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      transition: all 0.15s;
+    }
+
+    .download-link:hover { background: var(--accent-glow); }
+
+    .download-link.pending {
+      color: var(--text-dim);
+      border-color: var(--border);
+      cursor: wait;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .footer .phi-sig {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Install instructions */
+    .install-steps {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .install-steps h3 {
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .install-steps ol {
+      padding-left: 1.5rem;
+      line-height: 2;
+    }
+
+    .install-steps code {
+      background: rgba(124, 111, 240, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header h1 { font-size: 1.4rem; }
+      .grid { grid-template-columns: 1fr; }
+      .status-bar { gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="phi-badge">φ = 1.618033988749895 · SOVEREIGN PROTOCOL</div>
+    <h1>Organism Extensions</h1>
+    <p>
+      Self-hosted downloads built natively in your browser.
+      No GitHub. No CDN. No server. The organism's own protocol generates every zip.
+      Web Worker runs permanently at 873ms heartbeat.
+    </p>
+  </header>
+
+  <!-- Status bar -->
+  <div class="status-bar" id="status-bar">
+    <span><span class="dot" id="worker-dot"></span> Worker: <span id="worker-status">initializing…</span></span>
+    <span>Beat: <span id="beat-count">0</span></span>
+    <span>Extensions: <span id="ext-count">0</span> / <span id="ext-total">0</span></span>
+    <span>Protocol: <span id="protocol-mode">sovereign</span></span>
+  </div>
+
+  <!-- Bundle download -->
+  <div class="bundle-section">
+    <a class="bundle-btn" id="bundle-btn" disabled>
+      ↓ Download All Extensions
+    </a>
+    <div class="bundle-info" id="bundle-info">Building zips in Web Worker…</div>
+  </div>
+
+  <!-- Extension grid -->
+  <div class="grid" id="extension-grid">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- Install instructions -->
+  <div class="install-steps">
+    <h3>Install in Chrome / Edge / Brave</h3>
+    <ol>
+      <li>Download any <code>.zip</code> above</li>
+      <li>Unzip to a folder on your computer</li>
+      <li>Open <code>chrome://extensions</code></li>
+      <li>Enable <strong>Developer mode</strong> (top-right toggle)</li>
+      <li>Click <strong>Load unpacked</strong> → select the unzipped folder</li>
+      <li>The extension is now active</li>
+    </ol>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      Built by the organism. Served by the organism. Downloaded from the organism.
+    </p>
+    <p class="phi-sig">
+      Medina Doctrine · φ-scaled sovereign architecture
+    </p>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       EXTENSION DEFINITIONS — the source of truth
+       Each extension is fully defined inline. The Web Worker
+       receives these definitions and builds real zips from them.
+       ═══════════════════════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    /* ──────────────────────────────────────────────────────────
+       Extension catalog — 26 organism extensions
+       Each has: slug, name, description, category, color,
+       initials, manifest (JSON string), background.js, content.js
+       ────────────────────────────────────────────────────────── */
+
+    const PHI = 1.618033988749895;
+    const VERSION = '1.0.0';
+
+    function manifest(name, desc, permissions, opts) {
+      const m = {
+        manifest_version: 3,
+        name: name,
+        version: VERSION,
+        description: desc,
+        permissions: permissions || [],
+        icons: {},
+      };
+      if (opts && opts.background) {
+        m.background = { service_worker: 'background.js' };
+      }
+      if (opts && opts.content) {
+        m.content_scripts = [{
+          matches: ['<all_urls>'],
+          js: ['content.js'],
+        }];
+      }
+      if (opts && opts.action) {
+        m.action = { default_title: name };
+      }
+      return JSON.stringify(m, null, 2);
+    }
+
+    const EXTENSIONS = [
+      {
+        slug: 'oro-command',
+        name: 'ORO Command',
+        description: 'Primary command interface — routes all organism directives through ORO projection layer.',
+        category: 'Command',
+        color: '#d4a843',
+        initials: 'OR',
+        specs: ['Communication', 'Orchestration'],
+        manifest: manifest('ORO Command', 'Organism command interface', ['activeTab', 'storage'], { background: true, action: true }),
+        background: '// ORO Command — Background Service Worker\nconst PHI = 1.618033988749895;\nconsole.log("[ORO] Command layer active. φ =", PHI);\nchrome.action.onClicked.addListener((tab) => {\n  console.log("[ORO] Command received on tab:", tab.id);\n});\n',
+        content: null,
+      },
+      {
+        slug: 'nexus-orchestrator',
+        name: 'NEXUS Orchestrator',
+        description: 'Cross-domain task orchestration — decomposes requests and routes to execution nodes.',
+        category: 'Orchestration',
+        color: '#7c6ff0',
+        initials: 'NX',
+        specs: ['Orchestration', 'Strategy'],
+        manifest: manifest('NEXUS Orchestrator', 'Task orchestration engine', ['storage'], { background: true }),
+        background: '// NEXUS Orchestrator — Background Service Worker\nconst PHI = 1.618033988749895;\nlet taskQueue = [];\nconsole.log("[NEXUS] Orchestrator online. Queue initialized.");\n',
+        content: null,
+      },
+      {
+        slug: 'nova-canvas',
+        name: 'NOVA Canvas',
+        description: 'Living creative canvas — campaign architecture and brand voice generation.',
+        category: 'Creative',
+        color: '#ec4899',
+        initials: 'NV',
+        specs: ['Campaign', 'Orchestration', 'Strategy'],
+        manifest: manifest('NOVA Canvas', 'Creative canvas engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// NOVA Canvas — Background Service Worker\nconsole.log("[NOVA] Canvas engine loaded.");\n',
+        content: '// NOVA Canvas — Content Script\n(function() {\n  console.log("[NOVA] Canvas injection active on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'axiom-legal',
+        name: 'AXIOM Legal',
+        description: 'Legal analysis engine — jurisdiction mapping, statute cross-referencing, risk enumeration.',
+        category: 'Legal',
+        color: '#3b82f6',
+        initials: 'AX',
+        specs: ['Legal', 'Compliance'],
+        manifest: manifest('AXIOM Legal', 'Legal analysis engine', ['storage'], { background: true }),
+        background: '// AXIOM Legal — Background Service Worker\nconsole.log("[AXIOM] Legal analysis engine initialized.");\n',
+        content: null,
+      },
+      {
+        slug: 'forge-x',
+        name: 'FORGE-X Engineering',
+        description: 'Full-stack engineering layer — architecture, implementation, testing, deployment.',
+        category: 'Engineering',
+        color: '#22c55e',
+        initials: 'FX',
+        specs: ['SoftwareEngineering', 'DevOps'],
+        manifest: manifest('FORGE-X Engineering', 'Full-stack engineering layer', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// FORGE-X — Background Service Worker\nconst PHI = 1.618033988749895;\nconsole.log("[FORGE-X] Engineering layer online. φ =", PHI);\n',
+        content: '// FORGE-X — Content Script\n(function() {\n  console.log("[FORGE-X] Code analysis active on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'stratum-finance',
+        name: 'STRATUM Finance',
+        description: 'Financial modeling engine — balance sheets, cash flow projections, scenario analysis.',
+        category: 'Finance',
+        color: '#10b981',
+        initials: 'ST',
+        specs: ['Finance'],
+        manifest: manifest('STRATUM Finance', 'Financial modeling engine', ['storage'], { background: true }),
+        background: '// STRATUM Finance — Background Service Worker\nconsole.log("[STRATUM] Financial models initialized.");\n',
+        content: null,
+      },
+      {
+        slug: 'tori-marketing',
+        name: 'TORI Marketing',
+        description: 'GTM strategy engine — audience segmentation, competitive analysis, channel optimization.',
+        category: 'Marketing',
+        color: '#f97316',
+        initials: 'TO',
+        specs: ['Marketing', 'Brand', 'Campaign'],
+        manifest: manifest('TORI Marketing', 'GTM strategy engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// TORI Marketing — Background Service Worker\nconsole.log("[TORI] Marketing intelligence active.");\n',
+        content: '// TORI Marketing — Content Script\n(function() {\n  console.log("[TORI] Audience analysis on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'medicus-health',
+        name: 'MEDICUS Health',
+        description: 'Healthcare compliance and analysis — regulatory framework mapping.',
+        category: 'Healthcare',
+        color: '#ef4444',
+        initials: 'MD',
+        specs: ['Healthcare', 'Compliance'],
+        manifest: manifest('MEDICUS Health', 'Healthcare compliance engine', ['storage'], { background: true }),
+        background: '// MEDICUS Health — Background Service Worker\nconsole.log("[MEDICUS] Healthcare compliance engine loaded.");\n',
+        content: null,
+      },
+      {
+        slug: 'arcana-architect',
+        name: 'ARCANA Architect',
+        description: 'System architecture engine — design patterns, infrastructure topology, integration surfaces.',
+        category: 'Architecture',
+        color: '#8b5cf6',
+        initials: 'AR',
+        specs: ['Architecture'],
+        manifest: manifest('ARCANA Architect', 'System architecture engine', ['storage'], { background: true }),
+        background: '// ARCANA Architect — Background Service Worker\nconsole.log("[ARCANA] Architecture engine initialized.");\n',
+        content: null,
+      },
+      {
+        slug: 'oracle-analytics',
+        name: 'ORACLE Analytics',
+        description: 'Data analysis engine — pattern recognition, anomaly detection, predictive modeling.',
+        category: 'Analytics',
+        color: '#06b6d4',
+        initials: 'OA',
+        specs: ['DataAnalysis', 'Strategy'],
+        manifest: manifest('ORACLE Analytics', 'Data analysis engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// ORACLE Analytics — Background Service Worker\nconsole.log("[ORACLE] Analytics engine online.");\n',
+        content: '// ORACLE Analytics — Content Script\n(function() {\n  console.log("[ORACLE] Data extraction active on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'titanium-ops',
+        name: 'TITANIUM Operations',
+        description: 'Operations management — workflow optimization, resource allocation, efficiency tracking.',
+        category: 'Operations',
+        color: '#64748b',
+        initials: 'TI',
+        specs: ['Operations'],
+        manifest: manifest('TITANIUM Operations', 'Operations management engine', ['storage'], { background: true }),
+        background: '// TITANIUM Operations — Background Service Worker\nconsole.log("[TITANIUM] Operations layer active.");\n',
+        content: null,
+      },
+      {
+        slug: 'vector-x-sales',
+        name: 'VECTOR-X Sales',
+        description: 'Sales intelligence — pipeline analysis, conversion optimization, strategic outreach.',
+        category: 'Sales',
+        color: '#f59e0b',
+        initials: 'VX',
+        specs: ['Sales', 'Strategy'],
+        manifest: manifest('VECTOR-X Sales', 'Sales intelligence engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// VECTOR-X Sales — Background Service Worker\nconsole.log("[VECTOR-X] Sales intelligence loaded.");\n',
+        content: '// VECTOR-X Sales — Content Script\n(function() {\n  console.log("[VECTOR-X] Sales data extraction on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'syndicate-media',
+        name: 'SYNDICATE Media',
+        description: 'Media intelligence — content strategy, distribution network, audience engagement.',
+        category: 'Media',
+        color: '#a855f7',
+        initials: 'SY',
+        specs: ['Media', 'Campaign'],
+        manifest: manifest('SYNDICATE Media', 'Media intelligence engine', ['activeTab', 'storage'], { background: true }),
+        background: '// SYNDICATE Media — Background Service Worker\nconsole.log("[SYNDICATE] Media intelligence active.");\n',
+        content: null,
+      },
+      {
+        slug: 'cipher-security',
+        name: 'CIPHER Security',
+        description: 'Cybersecurity engine — threat detection, compliance auditing, vulnerability assessment.',
+        category: 'Security',
+        color: '#dc2626',
+        initials: 'CI',
+        specs: ['Cybersecurity', 'Compliance'],
+        manifest: manifest('CIPHER Security', 'Cybersecurity engine', ['activeTab', 'storage', 'webNavigation'], { background: true, content: true }),
+        background: '// CIPHER Security — Background Service Worker\nconst PHI = 1.618033988749895;\nconsole.log("[CIPHER] Security layer active. Monitoring.");\nchrome.webNavigation.onCompleted.addListener((details) => {\n  console.log("[CIPHER] Navigation monitored:", details.url);\n});\n',
+        content: '// CIPHER Security — Content Script\n(function() {\n  console.log("[CIPHER] Security scan on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'seraph-hr',
+        name: 'SERAPH HR',
+        description: 'Human resources intelligence — team dynamics, talent mapping, culture alignment.',
+        category: 'HR',
+        color: '#14b8a6',
+        initials: 'SE',
+        specs: ['HumanResources'],
+        manifest: manifest('SERAPH HR', 'HR intelligence engine', ['storage'], { background: true }),
+        background: '// SERAPH HR — Background Service Worker\nconsole.log("[SERAPH] HR intelligence initialized.");\n',
+        content: null,
+      },
+      {
+        slug: 'codesmith-dev',
+        name: 'CODESMITH Dev',
+        description: 'Code generation and analysis worker — builds, reviews, and optimizes code.',
+        category: 'Development',
+        color: '#84cc16',
+        initials: 'CS',
+        specs: ['SoftwareEngineering', 'DevOps'],
+        manifest: manifest('CODESMITH Dev', 'Code generation worker', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// CODESMITH Dev — Background Service Worker\nconsole.log("[CODESMITH] Code generation worker online.");\n',
+        content: '// CODESMITH Dev — Content Script\n(function() {\n  console.log("[CODESMITH] Code analysis on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'campaigner-gtm',
+        name: 'CAMPAIGNER GTM',
+        description: 'Campaign execution — creative brief structuring, KPI framework, channel strategy.',
+        category: 'Campaigns',
+        color: '#e11d48',
+        initials: 'CA',
+        specs: ['Campaign', 'Marketing'],
+        manifest: manifest('CAMPAIGNER GTM', 'Campaign execution engine', ['activeTab', 'storage'], { background: true }),
+        background: '// CAMPAIGNER GTM — Background Service Worker\nconsole.log("[CAMPAIGNER] Campaign execution engine active.");\n',
+        content: null,
+      },
+      {
+        slug: 'docwright-docs',
+        name: 'DOCWRIGHT Docs',
+        description: 'Documentation engine — technical writing, API docs, knowledge base generation.',
+        category: 'Documentation',
+        color: '#0ea5e9',
+        initials: 'DW',
+        specs: ['Documentation'],
+        manifest: manifest('DOCWRIGHT Docs', 'Documentation engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// DOCWRIGHT Docs — Background Service Worker\nconsole.log("[DOCWRIGHT] Documentation engine loaded.");\n',
+        content: '// DOCWRIGHT Docs — Content Script\n(function() {\n  console.log("[DOCWRIGHT] Documentation analysis on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'analyst-data',
+        name: 'ANALYST Data',
+        description: 'Data analysis worker — statistical modeling, trend detection, visualization prep.',
+        category: 'Analytics',
+        color: '#0284c7',
+        initials: 'AN',
+        specs: ['DataAnalysis'],
+        manifest: manifest('ANALYST Data', 'Data analysis worker', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// ANALYST Data — Background Service Worker\nconsole.log("[ANALYST] Data analysis worker initialized.");\n',
+        content: '// ANALYST Data — Content Script\n(function() {\n  console.log("[ANALYST] Data capture on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'tactician-strategy',
+        name: 'TACTICIAN Strategy',
+        description: 'Strategic planning engine — competitive analysis, scenario modeling, decision trees.',
+        category: 'Strategy',
+        color: '#7c3aed',
+        initials: 'TA',
+        specs: ['Strategy'],
+        manifest: manifest('TACTICIAN Strategy', 'Strategic planning engine', ['storage'], { background: true }),
+        background: '// TACTICIAN Strategy — Background Service Worker\nconsole.log("[TACTICIAN] Strategy engine online.");\n',
+        content: null,
+      },
+      {
+        slug: 'executor-ops',
+        name: 'EXECUTOR Ops',
+        description: 'Execution engine — task decomposition, progress tracking, delivery coordination.',
+        category: 'Operations',
+        color: '#475569',
+        initials: 'EX',
+        specs: ['Operations'],
+        manifest: manifest('EXECUTOR Ops', 'Execution engine', ['storage'], { background: true }),
+        background: '// EXECUTOR Ops — Background Service Worker\nconsole.log("[EXECUTOR] Execution engine active.");\n',
+        content: null,
+      },
+      {
+        slug: 'architect-system',
+        name: 'ARCHITECT System',
+        description: 'System design worker — infrastructure architecture, integration mapping, scalability planning.',
+        category: 'Architecture',
+        color: '#6d28d9',
+        initials: 'AC',
+        specs: ['Architecture', 'SoftwareEngineering'],
+        manifest: manifest('ARCHITECT System', 'System design worker', ['activeTab', 'storage'], { background: true }),
+        background: '// ARCHITECT System — Background Service Worker\nconsole.log("[ARCHITECT] System design worker loaded.");\n',
+        content: null,
+      },
+      {
+        slug: 'outreach-connect',
+        name: 'OUTREACH Connect',
+        description: 'Outreach engine — lead generation, relationship mapping, engagement automation.',
+        category: 'Sales',
+        color: '#ea580c',
+        initials: 'OC',
+        specs: ['Sales', 'Marketing'],
+        manifest: manifest('OUTREACH Connect', 'Outreach engine', ['activeTab', 'storage'], { background: true, content: true }),
+        background: '// OUTREACH Connect — Background Service Worker\nconsole.log("[OUTREACH] Outreach engine initialized.");\n',
+        content: '// OUTREACH Connect — Content Script\n(function() {\n  console.log("[OUTREACH] Engagement analysis on:", location.hostname);\n})();\n',
+      },
+      {
+        slug: 'chimera-alpha',
+        name: 'CHIMERA Alpha',
+        description: 'Physical domain orchestrator — 89 field nodes, 144 agents. Coordinates real-world operations.',
+        category: 'Alpha Council',
+        color: '#b91c1c',
+        initials: 'CH',
+        specs: ['Orchestration', 'Operations'],
+        manifest: manifest('CHIMERA Alpha', 'Physical domain orchestrator', ['storage', 'alarms'], { background: true }),
+        background: '// CHIMERA Alpha — Background Service Worker\nconst PHI = 1.618033988749895;\nconst NODES = 89;\nconst AGENTS = 144;\nconsole.log("[CHIMERA] Physical domain orchestrator. Nodes:", NODES, "Agents:", AGENTS);\n',
+        content: null,
+      },
+      {
+        slug: 'phantom-alpha',
+        name: 'PHANTOM Alpha',
+        description: 'Virtual domain orchestrator — 89 nodes, 233 agents. Coordinates digital intelligence.',
+        category: 'Alpha Council',
+        color: '#4338ca',
+        initials: 'PH',
+        specs: ['Orchestration', 'Strategy'],
+        manifest: manifest('PHANTOM Alpha', 'Virtual domain orchestrator', ['storage', 'alarms'], { background: true }),
+        background: '// PHANTOM Alpha — Background Service Worker\nconst PHI = 1.618033988749895;\nconst NODES = 89;\nconst AGENTS = 233;\nconsole.log("[PHANTOM] Virtual domain orchestrator. Nodes:", NODES, "Agents:", AGENTS);\n',
+        content: null,
+      },
+      {
+        slug: 'orbital-alpha',
+        name: 'ORBITAL Alpha',
+        description: 'Space domain orchestrator — 55 nodes, 89 monitors. Oversees spatial and field operations.',
+        category: 'Alpha Council',
+        color: '#0369a1',
+        initials: 'OB',
+        specs: ['Orchestration', 'DataAnalysis'],
+        manifest: manifest('ORBITAL Alpha', 'Space domain orchestrator', ['storage', 'alarms'], { background: true }),
+        background: '// ORBITAL Alpha — Background Service Worker\nconst PHI = 1.618033988749895;\nconst NODES = 55;\nconst MONITORS = 89;\nconsole.log("[ORBITAL] Space domain orchestrator. Nodes:", NODES, "Monitors:", MONITORS);\n',
+        content: null,
+      },
+    ];
+
+    /* ──────────────────────────────────────────────────────────
+       DOM references
+       ────────────────────────────────────────────────────────── */
+
+    const grid = document.getElementById('extension-grid');
+    const workerDot = document.getElementById('worker-dot');
+    const workerStatus = document.getElementById('worker-status');
+    const beatCountEl = document.getElementById('beat-count');
+    const extCountEl = document.getElementById('ext-count');
+    const extTotalEl = document.getElementById('ext-total');
+    const bundleBtn = document.getElementById('bundle-btn');
+    const bundleInfo = document.getElementById('bundle-info');
+
+    extTotalEl.textContent = EXTENSIONS.length;
+
+    /* ──────────────────────────────────────────────────────────
+       Render cards
+       ────────────────────────────────────────────────────────── */
+
+    const blobUrls = {};
+    let readyCount = 0;
+
+    function renderCards() {
+      grid.innerHTML = '';
+      for (const ext of EXTENSIONS) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = 'card-' + ext.slug;
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-icon" style="background: ${ext.color}20; color: ${ext.color}; border: 1px solid ${ext.color}40;">
+              ${ext.initials}
+            </div>
+            <div>
+              <div class="card-title">${ext.name}</div>
+              <div class="card-slug">${ext.slug}</div>
+            </div>
+          </div>
+          <div class="card-desc">${ext.description}</div>
+          <div class="card-specs">
+            ${ext.specs.map(s => '<span class="spec-tag">' + s + '</span>').join('')}
+          </div>
+          <div class="card-footer">
+            <span class="card-size" id="size-${ext.slug}">—</span>
+            <a class="download-link pending" id="dl-${ext.slug}" href="#" download="${ext.slug}.zip">
+              ⏳ Building…
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    renderCards();
+
+    /* ──────────────────────────────────────────────────────────
+       Spawn Web Worker
+       ────────────────────────────────────────────────────────── */
+
+    let worker = null;
+
+    function spawnWorker() {
+      worker = new Worker('download-worker.js');
+
+      worker.onmessage = function (e) {
+        const msg = e.data;
+
+        switch (msg.type) {
+          case 'zip-ready': {
+            const url = URL.createObjectURL(msg.blob);
+            blobUrls[msg.slug] = url;
+
+            const dlEl = document.getElementById('dl-' + msg.slug);
+            const sizeEl = document.getElementById('size-' + msg.slug);
+
+            if (dlEl) {
+              dlEl.href = url;
+              dlEl.download = msg.filename;
+              dlEl.className = 'download-link';
+              dlEl.textContent = '↓ ' + msg.filename;
+            }
+
+            if (sizeEl) {
+              const kb = (msg.blob.size / 1024).toFixed(1);
+              sizeEl.textContent = kb + ' KB';
+            }
+
+            // Bundle button
+            if (msg.slug === 'all-extensions') {
+              bundleBtn.href = url;
+              bundleBtn.download = msg.filename;
+              bundleBtn.removeAttribute('disabled');
+              const kb = (msg.blob.size / 1024).toFixed(1);
+              bundleInfo.textContent = 'All extensions bundled — ' + kb + ' KB';
+            } else {
+              readyCount++;
+              extCountEl.textContent = readyCount;
+            }
+            break;
+          }
+
+          case 'all-ready':
+            workerStatus.textContent = 'ready (' + msg.count + ' zips built)';
+            workerDot.className = 'dot alive';
+            break;
+
+          case 'zip-error':
+            console.error('[Download Worker] Error building', msg.slug, msg.error);
+            const errEl = document.getElementById('dl-' + msg.slug);
+            if (errEl) {
+              errEl.textContent = '✗ Error';
+              errEl.className = 'download-link';
+              errEl.style.color = 'var(--error)';
+              errEl.style.borderColor = 'var(--error)';
+            }
+            break;
+
+          case 'heartbeat':
+            beatCountEl.textContent = msg.beat;
+            if (readyCount < EXTENSIONS.length) {
+              workerDot.className = 'dot building';
+            }
+            break;
+
+          case 'stopped':
+            workerDot.className = 'dot';
+            workerStatus.textContent = 'stopped';
+            break;
+        }
+      };
+
+      worker.onerror = function (err) {
+        console.error('[Download Worker] Fatal error:', err);
+        workerDot.className = 'dot';
+        workerStatus.textContent = 'error: ' + (err.message || 'unknown');
+      };
+
+      // Send all extensions to build
+      workerDot.className = 'dot building';
+      workerStatus.textContent = 'building…';
+
+      worker.postMessage({
+        type: 'build',
+        extensions: EXTENSIONS,
+      });
+    }
+
+    spawnWorker();
+
+    /* ──────────────────────────────────────────────────────────
+       Cleanup on page unload — revoke blob URLs
+       ────────────────────────────────────────────────────────── */
+
+    window.addEventListener('beforeunload', function () {
+      for (const url of Object.values(blobUrls)) {
+        URL.revokeObjectURL(url);
+      }
+      if (worker) {
+        worker.postMessage({ type: 'stop' });
+        worker.terminate();
+      }
+    });
+  </script>
+</body>
+</html>

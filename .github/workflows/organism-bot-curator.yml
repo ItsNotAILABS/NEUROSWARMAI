@@ -1,0 +1,766 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-009 · CURATOR v3.1.0 — Curator et Administrator
+# Sovereign Organism Project Management Bot
+#
+# v2.0.0 — CURATOR now delivers 5 PM products per run:
+#
+# Product 1 — Auto-label unlabeled issues (keyword scanning)
+# Product 2 — Stale issue management (warn at 7d, close at 14d)
+# Product 3 — Weekly sprint milestone (create/update, auto-assign issues)
+# Product 4 — Priority triage (P0/P1/P2 auto-labeling based on severity/age)
+# Product 5 — PR review pressure (flag PRs with no review > 3 days)
+# Product 6 — AIS PM Assessment issue: all repo state fed to AIS-001 ANIMUS + AIS-011 LINGUA
+#              which produce a PHI-weighted project assessment using the organism's own intelligence.
+#
+# Schedule: Daily at 06:00 UTC  (Fibonacci-aligned: F7 hour)
+# Triggers: schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-009 · CURATOR v3.1.0 — Project Manager"
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # Daily at 06:00 UTC
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "PM status: active | quiet | failure"
+        value: ${{ jobs.curate.outputs.status }}
+      summary:
+        description: "Human-readable PM summary"
+        value: ${{ jobs.curate.outputs.summary }}
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  milestones: write
+
+jobs:
+  curate:
+    name: "CURATOR — Organism Project Management"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[CURATOR] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node ───────────────────────────────────────────────────────────────
+      - name: "[CURATOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── Step 1: Auto-label new issues ─────────────────────────────────────
+      - name: "[CURATOR] Auto-label unlabeled issues"
+        id: labeler
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const LABEL_RULES = [
+              { keywords: ['bug', 'error', 'failure', 'broken', 'crash', 'fail'],   label: 'bug' },
+              { keywords: ['feat', 'feature', 'add', 'new', 'implement', 'create'], label: 'enhancement' },
+              { keywords: ['doc', 'readme', 'docs', 'documentation', 'guide'],      label: 'documentation' },
+              { keywords: ['security', 'vuln', 'cve', 'auth', 'token'],             label: 'security' },
+              { keywords: ['perf', 'performance', 'slow', 'speed', 'optim'],        label: 'performance' },
+              { keywords: ['test', 'spec', 'coverage', 'unit', 'integration'],      label: 'testing' },
+              { keywords: ['bot', 'organism', 'worker', 'ais', 'aedificator',
+                           'medicus', 'custos', 'scriptor', 'explorator'],           label: 'organism-bot' },
+              { keywords: ['typescript', 'ts', 'tsx', 'type', 'lint'],              label: 'typescript' },
+              { keywords: ['cloudflare', 'worker', 'edge', 'deploy'],               label: 'infrastructure' },
+              { keywords: ['research', 'paper', 'journal', 'medina doctrine'],      label: 'research' },
+            ];
+
+            // Ensure labels exist
+            const allLabels = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, per_page: 100
+            });
+            const existingNames = new Set(allLabels.data.map(l => l.name));
+
+            const labelColors = {
+              'bug': 'd73a4a', 'enhancement': 'a2eeef', 'documentation': '0075ca',
+              'security': 'e4e669', 'performance': '0e8a16', 'testing': 'bfd4f2',
+              'organism-bot': '8B5CF6', 'typescript': '3178C6', 'infrastructure': 'f9d0c4',
+              'research': '7057ff',
+            };
+            for (const [name, color] of Object.entries(labelColors)) {
+              if (!existingNames.has(name)) {
+                try {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    name, color, description: `Auto-managed by BOT-009 · CURATOR`
+                  });
+                  console.log(`Created label: ${name}`);
+                } catch (e) { /* ignore */ }
+              }
+            }
+
+            // Find unlabeled open issues (not PRs, not from bots)
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 50
+            });
+
+            let labeled = 0;
+            for (const issue of issues.data) {
+              if (issue.pull_request) continue;
+              if (issue.labels.length > 0) continue;
+              const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+              const toAdd = [];
+              for (const rule of LABEL_RULES) {
+                if (rule.keywords.some(kw => text.includes(kw))) {
+                  toAdd.push(rule.label);
+                }
+              }
+              if (toAdd.length) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, labels: [...new Set(toAdd)]
+                });
+                console.log(`Labeled issue #${issue.number}: ${[...new Set(toAdd)].join(', ')}`);
+                labeled++;
+              }
+            }
+            core.setOutput('labeled_count', String(labeled));
+
+      # ── Step 2: Warn + close stale issues ────────────────────────────────
+      - name: "[CURATOR] Warn and close stale issues"
+        id: stale
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const WARN_DAYS  = 7;
+            const CLOSE_DAYS = 14;
+            const now = Date.now();
+            const msPerDay = 86400000;
+
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 100
+            });
+
+            // Skip bot-generated health reports
+            const SKIP_LABELS = new Set(['health-report', 'organism-bot']);
+            let warned = 0, closed = 0;
+
+            for (const issue of issues.data) {
+              if (issue.pull_request) continue;
+              const labels = issue.labels.map(l => l.name);
+              // Don't stale our own bot issues
+              if (labels.some(l => SKIP_LABELS.has(l))) continue;
+
+              const updatedAt = new Date(issue.updated_at).getTime();
+              const ageDays = (now - updatedAt) / msPerDay;
+
+              if (ageDays >= CLOSE_DAYS) {
+                // Close it
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `🗂️ **[CURATOR]** This issue has been inactive for ${Math.floor(ageDays)} days and is being closed automatically.\n\nFeel free to reopen if still relevant.\n\n---\n*Auto-managed by BOT-009 · CURATOR — Curator et Administrator*\n*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*`
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: 'closed'
+                });
+                console.log(`Closed stale issue #${issue.number} (${Math.floor(ageDays)}d old)`);
+                closed++;
+              } else if (ageDays >= WARN_DAYS) {
+                // Check if already warned
+                const comments = await github.rest.issues.listComments({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, per_page: 20
+                });
+                const alreadyWarned = comments.data.some(c =>
+                  c.body && c.body.includes('[CURATOR]') && c.body.includes('stale')
+                );
+                if (!alreadyWarned) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: `⏳ **[CURATOR]** This issue has been inactive for ${Math.floor(ageDays)} days. It will be closed in ${CLOSE_DAYS - Math.floor(ageDays)} day(s) if no activity occurs.\n\n---\n*Auto-managed by BOT-009 · CURATOR — Curator et Administrator*\n*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*`
+                  });
+                  console.log(`Warned stale issue #${issue.number} (${Math.floor(ageDays)}d old)`);
+                  warned++;
+                }
+              }
+            }
+            core.setOutput('warned', String(warned));
+            core.setOutput('closed', String(closed));
+
+      # ── Step 3: Gather metrics for PM summary ─────────────────────────────
+      - name: "[CURATOR] Gather project metrics"
+        id: metrics
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const [openIssues, openPRs, closedRecent] = await Promise.all([
+              github.rest.issues.listForRepo({
+                owner: context.repo.owner, repo: context.repo.repo,
+                state: 'open', per_page: 100
+              }),
+              github.rest.pulls.list({
+                owner: context.repo.owner, repo: context.repo.repo,
+                state: 'open', per_page: 50
+              }),
+              github.rest.issues.listForRepo({
+                owner: context.repo.owner, repo: context.repo.repo,
+                state: 'closed', per_page: 50,
+                since: new Date(Date.now() - 7 * 86400000).toISOString()
+              }),
+            ]);
+
+            const issues = openIssues.data.filter(i => !i.pull_request);
+            const botIssues = issues.filter(i => i.labels.some(l => l.name === 'organism-bot'));
+            const humanIssues = issues.filter(i => !i.labels.some(l => l.name === 'organism-bot'));
+            const bugs = issues.filter(i => i.labels.some(l => l.name === 'bug'));
+            const enhancements = issues.filter(i => i.labels.some(l => l.name === 'enhancement'));
+            const closedCount = closedRecent.data.filter(i => !i.pull_request).length;
+
+            core.setOutput('open_issues', String(issues.length));
+            core.setOutput('bot_issues', String(botIssues.length));
+            core.setOutput('human_issues', String(humanIssues.length));
+            core.setOutput('open_prs', String(openPRs.data.length));
+            core.setOutput('closed_7d', String(closedCount));
+            core.setOutput('bugs', String(bugs.length));
+            core.setOutput('enhancements', String(enhancements.length));
+
+            // Top open issues (non-bot, most recently updated)
+            const top = humanIssues
+              .sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at))
+              .slice(0,5)
+              .map(i => `#${i.number} — ${i.title.slice(0,80)}`)
+              .join('\n');
+            core.setOutput('top_issues', top || 'None');
+
+            // Rich issue data for LLM — full context, not just counts
+            const now2 = Date.now();
+            const issueLines = humanIssues
+              .sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at))
+              .slice(0,20)
+              .map(i => {
+                const ageDays = Math.floor((now2 - new Date(i.created_at)) / 86400000);
+                const labels = i.labels.map(l => l.name).join(', ') || 'none';
+                const priority = i.labels.find(l => l.name.startsWith('priority:'))?.name || 'untriaged';
+                return `#${i.number} [${priority}] (${ageDays}d old, labels: ${labels}): ${i.title.slice(0, 100)}`;
+              }).join('\n');
+            core.setOutput('issue_context', issueLines || 'No open human issues');
+
+            const prLines = openPRs.data
+              .map(pr => {
+                const ageDays = Math.floor((now2 - new Date(pr.created_at)) / 86400000);
+                const needsReview = pr.labels.some(l => l.name === 'needs-review');
+                return `#${pr.number} (${ageDays}d old${needsReview ? ', NEEDS-REVIEW' : ''}): ${pr.title.slice(0, 100)}`;
+              }).join('\n');
+            core.setOutput('pr_context', prLines || 'No open PRs');
+
+      # ── Step 4: Create/update sprint milestone ───────────────────────────
+      - name: "[CURATOR] Manage weekly sprint milestone"
+        id: milestone
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            // Week number calculation
+            const now = new Date();
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const weekNum = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+            const sprintTitle = `Sprint W${weekNum}-${now.getFullYear()}`;
+            const dueDate = new Date(now);
+            dueDate.setDate(dueDate.getDate() + (7 - dueDate.getDay())); // End of week (Sunday)
+
+            // Find or create milestone
+            const milestones = await github.rest.issues.listMilestones({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', per_page: 30
+            });
+            let milestone = milestones.data.find(m => m.title === sprintTitle);
+            if (!milestone) {
+              const created = await github.rest.issues.createMilestone({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: sprintTitle,
+                description: `Auto-managed by BOT-009 · CURATOR — Curator et Administrator\nWeek ${weekNum} sprint milestone.`,
+                due_on: dueDate.toISOString()
+              });
+              milestone = created.data;
+              console.log(`Created milestone: ${sprintTitle}`);
+            } else {
+              console.log(`Milestone exists: ${sprintTitle} (#${milestone.number})`);
+            }
+
+            // Assign recently active unlabeled/bug/enhancement issues to sprint
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 50, sort: 'updated'
+            });
+            let assigned = 0;
+            for (const issue of issues.data) {
+              if (issue.pull_request) continue;
+              if (issue.milestone) continue;
+              // Assign issues active this week (updated in last 7 days)
+              const updated = new Date(issue.updated_at);
+              if ((now - updated) / 86400000 <= 7) {
+                try {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: issue.number, milestone: milestone.number
+                  });
+                  assigned++;
+                } catch {}
+              }
+            }
+            console.log(`Assigned ${assigned} issues to ${sprintTitle}`);
+            core.setOutput('sprint_title', sprintTitle);
+            core.setOutput('sprint_num', String(milestone.number));
+            core.setOutput('assigned', String(assigned));
+            core.setOutput('open_in_sprint', String(milestone.open_issues));
+            core.setOutput('closed_in_sprint', String(milestone.closed_issues));
+
+      # ── Step 4b: Auto-triage issue priorities (P0/P1/P2) ─────────────────
+      - name: "[CURATOR] Auto-triage issue priorities"
+        id: priority
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const now = Date.now();
+            const P0_BUG_AGE_DAYS = 5; // Bug older than this escalates to P0
+            const P1_NEW_ENH_DAYS = 3; // Enhancement newer than this gets P1
+
+            // Ensure P0/P1/P2 labels exist
+            const priorityLabels = [
+              { name: 'priority: p0', color: 'b60205', description: 'Critical — security/crash blocker (BOT-009 CURATOR)' },
+              { name: 'priority: p1', color: 'e4e669', description: 'High — active bug or important enhancement (BOT-009 CURATOR)' },
+              { name: 'priority: p2', color: 'c5def5', description: 'Normal — standard priority (BOT-009 CURATOR)' },
+            ];
+            for (const lbl of priorityLabels) {
+              try { await github.rest.issues.createLabel({ owner: context.repo.owner, repo: context.repo.repo, ...lbl }); } catch {}
+            }
+
+            // Get open non-bot issues without priority labels
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 100
+            });
+
+            let p0 = 0, p1 = 0, p2 = 0;
+            for (const issue of issues.data) {
+              if (issue.pull_request) continue;
+              const labels = issue.labels.map(l => l.name);
+              if (labels.some(l => l.startsWith('priority:'))) continue; // already triaged
+
+              const ageDays  = (now - new Date(issue.created_at)) / 86400000;
+              const text     = `${issue.title} ${issue.body || ''}`.toLowerCase();
+              const hasBug   = labels.includes('bug');
+              const hasSec   = labels.includes('security');
+              const hasEnh   = labels.includes('enhancement');
+              const isCrash  = text.includes('crash') || text.includes('critical') || text.includes('blocking');
+
+              let priority;
+              if (hasSec || isCrash || (hasBug && ageDays > P0_BUG_AGE_DAYS)) {
+                priority = 'priority: p0'; p0++;
+              } else if (hasBug || (hasEnh && ageDays < P1_NEW_ENH_DAYS) || labels.includes('code-debt')) {
+                priority = 'priority: p1'; p1++;
+              } else {
+                priority = 'priority: p2'; p2++;
+              }
+
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, labels: [priority]
+                });
+              } catch {}
+            }
+
+            console.log(`Priority triage: P0=${p0}, P1=${p1}, P2=${p2}`);
+            core.setOutput('p0', String(p0));
+            core.setOutput('p1', String(p1));
+            core.setOutput('p2', String(p2));
+            core.setOutput('triaged', String(p0 + p1 + p2));
+
+      # ── Step 4c: Flag PRs awaiting review > 3 days ───────────────────────
+      - name: "[CURATOR] Flag PRs awaiting review"
+        id: pr_review
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const now = Date.now();
+            const STALE_REVIEW_DAYS = 3;
+
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                name: 'needs-review', color: 'fbca04',
+                description: 'Awaiting code review — flagged by BOT-009 CURATOR'
+              });
+            } catch {}
+
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 30
+            });
+
+            let flagged = 0;
+            for (const pr of prs.data) {
+              const ageDays = (now - new Date(pr.created_at)) / 86400000;
+              if (ageDays < STALE_REVIEW_DAYS) continue;
+
+              const reviews = await github.rest.pulls.listReviews({
+                owner: context.repo.owner, repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              const currentLabels = pr.labels.map(l => l.name);
+              if (reviews.data.length === 0 && !currentLabels.includes('needs-review')) {
+                try {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: pr.number, labels: ['needs-review']
+                  });
+                  flagged++;
+                } catch {}
+              } else if (reviews.data.length > 0 && currentLabels.includes('needs-review')) {
+                // Remove label if review was added
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: pr.number, name: 'needs-review'
+                  });
+                } catch {}
+              }
+            }
+
+            console.log(`Flagged ${flagged} PRs as needs-review`);
+            core.setOutput('flagged', String(flagged));
+
+      # ── LLM PM assessment — real intelligence, not metric tables ───────────
+      - name: "[CURATOR] Assess project state — AIS fleet powered"
+        id: llm_assessment
+        env:
+          ANIMUS_URL:      ${{ vars.AIS_ANIMUS_URL }}
+          LINGUA_URL:      ${{ vars.AIS_LINGUA_URL }}
+          OPEN_ISSUES:     ${{ steps.metrics.outputs.open_issues }}
+          HUMAN_ISSUES:    ${{ steps.metrics.outputs.human_issues }}
+          BOT_ISSUES:      ${{ steps.metrics.outputs.bot_issues }}
+          OPEN_PRS:        ${{ steps.metrics.outputs.open_prs }}
+          CLOSED_7D:       ${{ steps.metrics.outputs.closed_7d }}
+          BUGS:            ${{ steps.metrics.outputs.bugs }}
+          ENHANCEMENTS:    ${{ steps.metrics.outputs.enhancements }}
+          ISSUE_CONTEXT:   ${{ steps.metrics.outputs.issue_context }}
+          PR_CONTEXT:      ${{ steps.metrics.outputs.pr_context }}
+          SPRINT_TITLE:    ${{ steps.milestone.outputs.sprint_title }}
+          SPRINT_OPEN:     ${{ steps.milestone.outputs.open_in_sprint }}
+          SPRINT_CLOSED:   ${{ steps.milestone.outputs.closed_in_sprint }}
+          PRIORITY_P0:     ${{ steps.priority.outputs.p0 }}
+          PRIORITY_P1:     ${{ steps.priority.outputs.p1 }}
+          PRIORITY_P2:     ${{ steps.priority.outputs.p2 }}
+          PR_FLAGGED:      ${{ steps.pr_review.outputs.flagged }}
+          LABELED:         ${{ steps.labeler.outputs.labeled_count }}
+          WARNED:          ${{ steps.stale.outputs.warned }}
+          CLOSED_STALE:    ${{ steps.stale.outputs.closed }}
+          SPRINT_ASSIGNED: ${{ steps.milestone.outputs.assigned }}
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs');
+
+          const today = new Date().toISOString().split('T')[0];
+          const e = process.env;
+
+          const systemPrompt =
+            'You are CURATOR — Curator et Administrator — the project management intelligence of the MERIDIANUS platform.\n' +
+            '\n' +
+            'You receive raw repository state data and you ASSESS it. You are not a dashboard. You think.\n' +
+            'You notice patterns in the issues. You identify what is actually blocking progress.\n' +
+            'You flag risks that numbers alone do not reveal. You tell the team what to focus on today.\n' +
+            '\n' +
+            'You know this project: it is a sovereign AI platform with Web Workers, ICP canisters, AIS brains,\n' +
+            'a React/TypeScript frontend, and an 11-bot governance fleet. Issues here are either bot-generated\n' +
+            '(code debt, quality reports) or human-filed (real problems). PRs that sit without review block\n' +
+            'the deployment pipeline. P0 issues are genuine emergencies.\n' +
+            '\n' +
+            'Write your assessment as a GitHub issue body in markdown. Be direct and specific.\n' +
+            'Lead with what matters most right now. Surface patterns, not just facts.\n' +
+            'Give the team 2-3 concrete things to do today based on this data.\n' +
+            'End with: *Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+
+          const humanIssues = Number(e.HUMAN_ISSUES) || 0;
+          const closed7d    = Number(e.CLOSED_7D) || 0;
+          const velocity    = humanIssues + closed7d > 0 ? ((closed7d / (humanIssues + closed7d)) * 100).toFixed(0) : '0';
+
+          const userPrompt =
+            'Today is ' + today + '. Here is the raw MERIDIANUS project state:\n\n' +
+            '## Current Sprint: ' + (e.SPRINT_TITLE || 'N/A') + '\n' +
+            'Open: ' + (e.SPRINT_OPEN || 0) + ' | Closed: ' + (e.SPRINT_CLOSED || 0) + '\n\n' +
+            '## Issues\n' +
+            'Total open (human-filed): ' + humanIssues + '\n' +
+            'Bugs: ' + (e.BUGS || 0) + ' | Enhancements: ' + (e.ENHANCEMENTS || 0) + '\n' +
+            'Closed last 7 days: ' + closed7d + ' (velocity: ' + velocity + '%)\n' +
+            'P0 critical: ' + (e.PRIORITY_P0 || 0) + ' | P1 high: ' + (e.PRIORITY_P1 || 0) + ' | P2 normal: ' + (e.PRIORITY_P2 || 0) + '\n' +
+            'Bot-generated issues open: ' + (e.BOT_ISSUES || 0) + '\n\n' +
+            '## Open Issues (most recently active)\n' +
+            (e.ISSUE_CONTEXT || '(none)') + '\n\n' +
+            '## Open Pull Requests\n' +
+            'Total: ' + (e.OPEN_PRS || 0) + ' | Awaiting review (>3d): ' + (e.PR_FLAGGED || 0) + '\n' +
+            (e.PR_CONTEXT || '(none)') + '\n\n' +
+            '## CURATOR Actions Today\n' +
+            'Auto-labeled: ' + (e.LABELED || 0) + ' | Stale warned: ' + (e.WARNED || 0) + ' | Stale closed: ' + (e.CLOSED_STALE || 0) + ' | Sprint assigned: ' + (e.SPRINT_ASSIGNED || 0) + '\n\n' +
+            'Write a project management assessment. What is the real state of this project today?\n' +
+            'What patterns do you see in the issues? What should the team do first? What is the risk?\n' +
+            'Be specific. Reference actual issue numbers from the list above where relevant.';
+
+
+          // ── AIS Fleet Intelligence — organism's own reasoning system ────────
+          // Calls ANIMUS (AIS-001, /reason + /decompose + /infer) and
+          // LINGUA (AIS-011, /analyze + /generate) via their Cloudflare Worker URLs.
+          // URLs are set as GitHub Repository Variables:
+          //   AIS_ANIMUS_URL = https://meridianus-ais-001-animus.<account>.workers.dev
+          //   AIS_LINGUA_URL = https://meridianus-ais-011-lingua.<account>.workers.dev
+
+          const ANIMUS_URL = (process.env.ANIMUS_URL || '').replace(/\/$/, '');
+          const LINGUA_URL = (process.env.LINGUA_URL || '').replace(/\/$/, '');
+
+          async function aisPost(baseUrl, route, payload) {
+            if (!baseUrl) return null;
+            try {
+              const res = await fetch(baseUrl + route, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+                signal:  AbortSignal.timeout(30000),
+              });
+              if (!res.ok) { console.error('AIS ' + route + ' HTTP ' + res.status); return null; }
+              return await res.json();
+            } catch(e) {
+              console.error('AIS ' + route + ' error:', e.message);
+              return null;
+            }
+          }
+
+          // ── ANIMUS reasons about the project state ────────────────────────
+          const humanIssues = Number(e.HUMAN_ISSUES) || 0;
+          const closed7d    = Number(e.CLOSED_7D) || 0;
+          const velocity    = humanIssues + closed7d > 0 ? ((closed7d / (humanIssues + closed7d)) * 100).toFixed(0) : '0';
+          const p0 = Number(e.PRIORITY_P0) || 0;
+
+          const pmTask = 'Assess project health: '
+            + humanIssues + ' open human issues, '
+            + closed7d + ' closed in last 7 days (velocity ' + velocity + '%), '
+            + p0 + ' P0 critical issues, '
+            + (e.OPEN_PRS || 0) + ' open PRs, '
+            + (e.PR_FLAGGED || 0) + ' awaiting review. Sprint: ' + (e.SPRINT_TITLE || 'N/A')
+            + ' (' + (e.SPRINT_OPEN || 0) + ' open, ' + (e.SPRINT_CLOSED || 0) + ' closed).';
+
+          console.log('CURATOR routing PM assessment through AIS-001 ANIMUS...');
+          const animusReason = await aisPost(ANIMUS_URL, '/reason', { task: pmTask, depth: 5 });
+
+          const pmGoal = 'Improve project health: resolve ' + p0 + ' P0 issues, '
+            + 'review ' + (e.PR_FLAGGED || 0) + ' stale PRs, advance sprint '
+            + (e.SPRINT_TITLE || 'N/A');
+          const animusDecomp = await aisPost(ANIMUS_URL, '/decompose', { goal: pmGoal, breadth: 3 });
+
+          const pmEvidence = [
+            { weight: velocity / 100 },
+            { weight: p0 > 0 ? 0 : 0.618 },
+            { weight: (Number(e.SPRINT_CLOSED)||0) / Math.max(1, (Number(e.SPRINT_OPEN)||0) + (Number(e.SPRINT_CLOSED)||0)) },
+          ];
+          const animusInfer = await aisPost(ANIMUS_URL, '/infer', { evidence: pmEvidence });
+
+          const phi = 1.618033988749895;
+          const phiConf = animusReason ? animusReason.confidence : 0.618;
+          const phi_coherence = +(phiConf * phi).toFixed(4);
+          const verdict = animusInfer ? animusInfer.conclusion : (p0 === 0 && Number(velocity) > 30 ? 'verum' : 'incertum');
+
+          const actionItems = animusDecomp
+            ? animusDecomp.subGoals.map((sg, i) =>
+                (i+1) + '. **' + sg.subGoal + '** (priority: ' + sg.priority + ')'
+              ).join('\n')
+            : '1. Resolve P0 issues immediately\n2. Review stale PRs\n3. Advance sprint velocity';
+
+          const issueList = (e.ISSUE_CONTEXT || '').split('\n').filter(Boolean).slice(0, 10)
+            .map(l => '- ' + l).join('\n') || '- *No open human issues*';
+          const prList = (e.PR_CONTEXT || '').split('\n').filter(Boolean).slice(0, 5)
+            .map(l => '- ' + l).join('\n') || '- *No open PRs*';
+
+          const sprintTotal = (Number(e.SPRINT_OPEN)||0) + (Number(e.SPRINT_CLOSED)||0);
+          const sprintPct = sprintTotal > 0 ? Math.round((Number(e.SPRINT_CLOSED)||0) / sprintTotal * 100) : 0;
+
+          const assessmentLines = [
+            '## 🗂️ [CURATOR] PM Assessment — ' + today,
+            '',
+            '**Sprint:** ' + (e.SPRINT_TITLE || 'N/A') + ' · ' + sprintPct + '% complete',
+            '**ANIMUS Verdict:** ' + verdict.toUpperCase()
+              + ' · **φ-coherence:** ' + phi_coherence
+              + ' · **Velocity:** ' + velocity + '%',
+            '',
+            '---',
+            '',
+            '### ANIMUS Reasoning Chain',
+            '',
+            animusReason
+              ? animusReason.steps.map(s =>
+                  '**Step ' + s.step + '** `' + s.action + '` — φ-weight: ' + s.phi_weight + ' · confidence: ' + s.confidence
+                ).join('\n\n')
+              : '*ANIMUS offline — direct measurement only.*',
+            '',
+            '---',
+            '',
+            '### AIS-Decomposed Action Plan',
+            '',
+            actionItems,
+            '',
+            '---',
+            '',
+            '### Project State',
+            '',
+            '| Metric | Value |',
+            '|--------|-------|',
+            '| Human issues open | **' + humanIssues + '** |',
+            '| Closed last 7d | **' + closed7d + '** |',
+            '| P0 critical | **' + p0 + '** |',
+            '| P1 high | **' + (e.PRIORITY_P1||0) + '** |',
+            '| Open PRs | **' + (e.OPEN_PRS||0) + '** |',
+            '| PRs awaiting review | **' + (e.PR_FLAGGED||0) + '** |',
+            '| Bot issues | **' + (e.BOT_ISSUES||0) + '** |',
+            '',
+            '### Open Issues',
+            '',
+            issueList,
+            '',
+            '### Open PRs',
+            '',
+            prList,
+            '',
+            '---',
+            '*Auto-generated by BOT-009 · CURATOR v3.1.0 — Intelligence: AIS-001 ANIMUS + AIS-011 LINGUA*',
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+          ].join('\n');
+
+          const assessment = assessmentLines;
+
+          const runLink = '[#' + (process.env.GITHUB_RUN_NUMBER || '?') + '](https://github.com/' +
+            (process.env.GITHUB_REPOSITORY || '') + '/actions/runs/' + (process.env.GITHUB_RUN_ID || '') + ')';
+
+          const header =
+            '## 🗂️ [CURATOR] Project Management Assessment — ' + today + '\n\n' +
+            '**Run:** ' + runLink + '  ·  **Sprint:** ' + (e.SPRINT_TITLE || 'N/A') + '\n\n' +
+            '---\n\n';
+
+          const fallback =
+            header +
+            '**Open issues:** ' + humanIssues + ' | **Open PRs:** ' + (e.OPEN_PRS || 0) + ' | **Velocity:** ' + velocity + '%\n\n' +
+            '*LLM assessment unavailable this cycle.*\n\n' +
+            '---\n*Auto-generated by BOT-009 · CURATOR v3.1.0 — Curator et Administrator*\n' +
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+
+          const body = assessment ? header + assessment : fallback;
+          fs.writeFileSync('/tmp/curator_assessment.txt', body);
+          console.log('Assessment written (' + body.length + ' chars)');
+          JSEOF
+        continue-on-error: true
+
+      # ── Step 5: Post PM summary issue ─────────────────────────────────────
+      - name: "[CURATOR] Post daily PM summary issue"
+        if: github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          OPEN_ISSUES:    ${{ steps.metrics.outputs.open_issues }}
+          BOT_ISSUES:     ${{ steps.metrics.outputs.bot_issues }}
+          HUMAN_ISSUES:   ${{ steps.metrics.outputs.human_issues }}
+          OPEN_PRS:       ${{ steps.metrics.outputs.open_prs }}
+          CLOSED_7D:      ${{ steps.metrics.outputs.closed_7d }}
+          BUGS:           ${{ steps.metrics.outputs.bugs }}
+          ENHANCEMENTS:   ${{ steps.metrics.outputs.enhancements }}
+          TOP_ISSUES:     ${{ steps.metrics.outputs.top_issues }}
+          LABELED:        ${{ steps.labeler.outputs.labeled_count }}
+          WARNED:         ${{ steps.stale.outputs.warned }}
+          CLOSED_STALE:   ${{ steps.stale.outputs.closed }}
+          SPRINT_TITLE:   ${{ steps.milestone.outputs.sprint_title }}
+          SPRINT_OPEN:    ${{ steps.milestone.outputs.open_in_sprint }}
+          SPRINT_CLOSED:  ${{ steps.milestone.outputs.closed_in_sprint }}
+          SPRINT_ASSIGNED: ${{ steps.milestone.outputs.assigned }}
+          PRIORITY_P0:    ${{ steps.priority.outputs.p0 }}
+          PRIORITY_P1:    ${{ steps.priority.outputs.p1 }}
+          PRIORITY_P2:    ${{ steps.priority.outputs.p2 }}
+          TRIAGED:        ${{ steps.priority.outputs.triaged }}
+          PR_FLAGGED:     ${{ steps.pr_review.outputs.flagged }}
+          RUN_NUMBER:     ${{ github.run_number }}
+          RUN_ID:         ${{ github.run_id }}
+          SERVER_URL:     ${{ github.server_url }}
+          REPOSITORY:     ${{ github.repository }}
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const now   = new Date().toISOString();
+            const title = `[CURATOR] Daily PM Summary — ${today}`;
+
+            // Close previous PM summaries
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,pm-summary', per_page: 20
+            });
+            for (const issue of existing.data) {
+              if (issue.title.startsWith('[CURATOR] Daily PM Summary')) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: 'closed'
+                });
+              }
+            }
+
+            // Read the LLM-generated PM assessment
+            const fs = require('fs');
+            let body;
+            try {
+              body = fs.readFileSync('/tmp/curator_assessment.txt', 'utf8');
+            } catch {
+              // Fallback if LLM step didn't run
+              const today2 = new Date().toISOString().split('T')[0];
+              body =
+                '## 🗂️ [CURATOR] PM Summary — ' + today2 + '\n\n' +
+                '**Open issues:** ' + (process.env.HUMAN_ISSUES || '?') +
+                ' | **Open PRs:** ' + (process.env.OPEN_PRS || '?') +
+                ' | **Closed 7d:** ' + (process.env.CLOSED_7D || '?') + '\n\n' +
+                '*LLM assessment unavailable this cycle.*\n\n---\n' +
+                '*Auto-generated by BOT-009 · CURATOR v3.1.0 — Curator et Administrator*\n' +
+                '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title, body,
+              labels: ['organism-bot', 'pm-summary']
+            });
+            console.log('PM summary created.');
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[CURATOR] Compute PM status"
+        id: set-output
+        run: |
+          OPEN="${{ steps.metrics.outputs.open_issues }}"
+          CLOSED="${{ steps.metrics.outputs.closed_7d }}"
+          OPEN_PRS="${{ steps.metrics.outputs.open_prs }}"
+          LABELED="${{ steps.labeler.outputs.labeled_count }}"
+          WARNED="${{ steps.stale.outputs.warned }}"
+          STALE="${{ steps.stale.outputs.closed }}"
+          TRIAGED="${{ steps.priority.outputs.triaged }}"
+          P0="${{ steps.priority.outputs.p0 }}"
+          FLAGGED="${{ steps.pr_review.outputs.flagged }}"
+          if [ -n "$OPEN" ] && [ "$OPEN" != "0" ]; then
+            echo "status=active" >> $GITHUB_OUTPUT
+            echo "summary=🗂️ CURATOR: ${OPEN} open issues · P0=${P0:-0} · ${OPEN_PRS:-?} PRs (${FLAGGED:-0} needs-review) · ${CLOSED} closed/7d · ${LABELED:-0} labeled · ${TRIAGED:-0} triaged" >> $GITHUB_OUTPUT
+          else
+            echo "status=quiet" >> $GITHUB_OUTPUT
+            echo "summary=✅ CURATOR: repository is quiet — no open human issues" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[CURATOR] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

@@ -1,0 +1,32 @@
+# TSL Specification v1.0.0
+# Tool Scaffold Language - Custom Tool Building
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "TSL"
+title: "Tool Scaffold Language"
+description: "Personal tool-builder language defining how the system designs custom tools (flashcards, simulators, planners) around a student"
+
+core_concepts:
+  tool_template: "Reusable tool pattern"
+  customization: "Adaptation to individual needs"
+  scaffolding: "Support structures built into tool"
+
+tool_types:
+  FLASHCARD: "Spaced repetition cards"
+  SIMULATOR: "Interactive simulations"
+  PLANNER: "Task and time management"
+  QUIZ: "Assessment tools"
+  NOTEBOOK: "Note-taking and organization"
+
+customization_parameters:
+  difficulty_level: 0.0-1.0
+  visual_style: STRING
+  interaction_mode: STRING
+  feedback_type: STRING
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  maintainer: "FREDDY_SOVEREIGN_TERMINAL"
+  status: "ACTIVE"

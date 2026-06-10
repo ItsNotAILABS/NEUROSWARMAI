@@ -1,0 +1,187 @@
+name: "🧠 BOT-014 COGNITIO — Intelligence Report"
+
+on:
+  schedule:
+    - cron: "0 10 * * 3"   # Every Wednesday 10:00 UTC (mid-week intelligence pulse)
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+  actions: read
+
+jobs:
+  cognitio-report:
+    name: "COGNITIO Intelligence Report → GitHub Issues"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Intelligence Report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const PHI_INV = 0.6180339887498949;
+            const PHI     = 1.6180339887498949;
+            const now     = new Date();
+            const week    = now.toISOString().slice(0, 10);
+            const since   = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+            // ── 1. Recent research papers (docs/research/) ──────────────────
+            const { data: repoTree } = await github.rest.git.getTree({
+              owner:     context.repo.owner,
+              repo:      context.repo.repo,
+              tree_sha:  'HEAD',
+              recursive: '1',
+            });
+
+            const papers = repoTree.tree
+              .filter(f => f.path.startsWith('docs/research/') && f.path.endsWith('.md'))
+              .sort((a, b) => a.path.localeCompare(b.path));
+
+            // ── 2. Recent commits to nova/ and docs/research/ ───────────────
+            const novaCommits = await github.rest.repos.listCommits({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              path:    'nova',
+              since,
+              per_page: 20,
+            });
+
+            const researchCommits = await github.rest.repos.listCommits({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              path:    'docs/research',
+              since,
+              per_page: 20,
+            });
+
+            // ── 3. AIS-related workflow runs ────────────────────────────────
+            const allRuns = await github.rest.actions.listWorkflowRunsForRepo({
+              owner:    context.repo.owner,
+              repo:     context.repo.repo,
+              per_page: 100,
+            });
+
+            const aisRuns = allRuns.data.workflow_runs.filter(r =>
+              ['neural', 'learning', 'protocol', 'alpha'].some(k => r.name?.toLowerCase().includes(k))
+            );
+            const aisSuccess = aisRuns.filter(r => r.conclusion === 'success').length;
+            const aisTotal   = aisRuns.length;
+
+            // ── 4. Nova tool commit activity ────────────────────────────────
+            const toolCommits = await github.rest.repos.listCommits({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              path:    'nova/tools',
+              since,
+              per_page: 20,
+            });
+
+            // ── 5. Code quality issues (legatus label) ──────────────────────
+            const codeQualityIssues = await github.rest.issues.listForRepo({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              state:  'open',
+              labels: 'code-quality',
+              per_page: 20,
+            });
+
+            // ── 6. Format report ────────────────────────────────────────────
+            const intelligenceScore = (
+              (papers.length / 10) * 0.3 +
+              (aisTotal > 0 ? aisSuccess / aisTotal : 0) * 0.4 +
+              Math.min(novaCommits.data.length / 10, 1) * 0.3
+            );
+            const emoji = intelligenceScore >= PHI_INV ? '🧠' : intelligenceScore >= 0.4 ? '🔵' : '🟡';
+
+            const lines = [
+              `## ${emoji} Organism Intelligence Report — ${week}`,
+              `> **COGNITIO (BOT-014)** · MAQUE/FLOS pathway: \`REPORT\` · φ-sync 873ms`,
+              ``,
+              `### 🤖 AIS Fleet Status`,
+              `| System | Code | Status |`,
+              `|--------|------|--------|`,
+              `| ANIMUS — Reasoning | ANIM | ✅ Registered |`,
+              `| LINGUA — Language | LING | ✅ Registered |`,
+              `| OPTICA — Vision | OPTI | ✅ Registered |`,
+              `| MEMORIA — Memory | MEMO | ✅ Registered |`,
+              `| FABRICA — Build | FABR | ✅ Registered |`,
+              `| PROPHETA — Predict | PROP | ✅ Registered |`,
+              `| VERITAS — Truth | VERI | ✅ Registered |`,
+              `| KOSMOS — Universe | KOSM | ✅ Registered |`,
+              `| TACTUS — Somatic | TACT | ✅ Registered |`,
+              `| NEXUS — Mesh | NEXU | ✅ Registered |`,
+              ``,
+              `### 🌐 Multimodal Systems`,
+              `| System | Code | Modalities |`,
+              `|--------|------|------------|`,
+              `| ANIMUS-NOVA | ANIN | text + logic + code |`,
+              `| LINGUA-NOVA | LINN | language + audio + music |`,
+              `| OPTICA-NOVA | OPTN | vision + spatial + 3D |`,
+              `| TACTUS-NOVA | TACN | haptic + motion + IoT |`,
+              `| NEXUS-NOVA  | NEXN | all modalities (universal mesh) |`,
+              ``,
+            ];
+
+            if (papers.length > 0) {
+              lines.push(`### 📚 Research Papers (${papers.length} total)`);
+              papers.forEach(p => {
+                const name = p.path.split('/').pop().replace('.md', '');
+                lines.push(`- \`${name}\``);
+              });
+              lines.push(``);
+            }
+
+            if (novaCommits.data.length > 0 || toolCommits.data.length > 0) {
+              lines.push(`### ⚡ Nova Intelligence Activity (this week)`);
+              lines.push(`- Nova layer commits: ${novaCommits.data.length}`);
+              lines.push(`- Nova tools commits: ${toolCommits.data.length}`);
+              lines.push(`- Research commits: ${researchCommits.data.length}`);
+              lines.push(``);
+            }
+
+            if (aisRuns.length > 0) {
+              lines.push(`### 🔬 AIS Workflow Runs`);
+              lines.push(`| Metric | Value |`);
+              lines.push(`|--------|-------|`);
+              lines.push(`| Total AIS workflow runs | ${aisTotal} |`);
+              lines.push(`| Successful | ${aisSuccess} |`);
+              lines.push(`| Health | ${aisTotal > 0 ? (aisSuccess/aisTotal*100).toFixed(1) : '–'}% |`);
+              lines.push(``);
+            }
+
+            if (codeQualityIssues.data.length > 0) {
+              lines.push(`### 📋 Open Code Quality Issues (${codeQualityIssues.data.length})`);
+              codeQualityIssues.data.slice(0, 5).forEach(i =>
+                lines.push(`- [#${i.number}](${i.html_url}) ${i.title}`)
+              );
+              lines.push(``);
+            }
+
+            lines.push(`### 🧬 Protocol Layer`);
+            lines.push(`| Protocol | Code | Description |`);
+            lines.push(`|----------|------|-------------|`);
+            lines.push(`| MAQUE | MAQU | Message Artifact Query Unit Exchange |`);
+            lines.push(`| VIVI  | VIVI | Viviarium Internal Vehicle Intelligence |`);
+            lines.push(`| FLOS  | FLOS | Flow Line Operating System |`);
+            lines.push(`| APEX  | APEX | Artifact Protocol Exchange |`);
+            lines.push(`| GRAM  | GRAM | Graph Registry Artifact Matrix |`);
+            lines.push(``);
+            lines.push(`**Intelligence Score:** ${(intelligenceScore * 100).toFixed(1)}% (φ⁻¹ threshold = 61.8%)`);
+            lines.push(``);
+            lines.push(`---`);
+            lines.push(`*APEX: \`APEX-COGN-F34-${Date.now()}\` · VIVI thread: REPORT pathway · φ⁻¹=${PHI_INV}*`);
+
+            const body = lines.join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `${emoji} [COGNITIO] Intelligence Report — ${week}`,
+              body,
+              labels: ['organism-bot', 'intelligence-report'],
+            });
+
+            console.log(`Created issue #${issue.data.number}: ${issue.data.html_url}`);

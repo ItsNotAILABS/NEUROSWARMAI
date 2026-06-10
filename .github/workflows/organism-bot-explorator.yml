@@ -1,0 +1,324 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-007 · EXPLORATOR — Explorator et Inspector
+# Sovereign Organism Issue Scanner
+#
+# Runs every 8 hours to scan the codebase for:
+#   • TODO / FIXME / HACK comments in organism workers
+#   • console.error calls without accompanying handling
+#   • Duplicate tool IDs across all workers
+#   • AIS_DEFS entries missing latinName field
+#   • Web workers not exporting a heartbeat handler
+# Opens a single categorized GitHub Issue per scan cycle if findings exist.
+#
+# Schedule: Every 8 hours at :55 past the hour  (Fibonacci-aligned)
+# Triggers: schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-007 · EXPLORATOR — Issue Scanner"
+
+on:
+  schedule:
+    - cron: "55 */8 * * *"   # Every 8 hours at :55
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Scan status: clean | findings"
+        value: ${{ jobs.scan.outputs.status }}
+      summary:
+        description: "Human-readable scan summary"
+        value: ${{ jobs.scan.outputs.summary }}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    name: "EXPLORATOR — Organism Codebase Scan"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[EXPLORATOR] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node ───────────────────────────────────────────────────────────────
+      - name: "[EXPLORATOR] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── Scan 1: TODO / FIXME / HACK comments ──────────────────────────────
+      - name: "[EXPLORATOR] Scan for TODO / FIXME / HACK comments"
+        id: todos
+        run: |
+          RESULTS=$(grep -rn "TODO\|FIXME\|HACK" \
+            organism/web/ organism/cloudflare/ src/ extension/ \
+            --include="*.js" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules --exclude-dir=dist \
+            2>/dev/null | head -50 || true)
+          COUNT=$(echo "${RESULTS}" | grep -c "." || echo 0)
+          if [ "${COUNT}" -gt 0 ] && [ -n "${RESULTS}" ]; then
+            echo "count=${COUNT}" >> $GITHUB_OUTPUT
+            echo "has_findings=true" >> $GITHUB_OUTPUT
+            echo "findings<<EOF" >> $GITHUB_OUTPUT
+            echo "${RESULTS}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "has_findings=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Scan 2: Duplicate tool IDs ─────────────────────────────────────────
+      - name: "[EXPLORATOR] Scan for duplicate tool IDs"
+        id: dupes
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+          const idMap = {};
+          const dir = 'organism/web';
+          for (const f of fs.readdirSync(dir).filter(x => x.endsWith('-worker.js'))) {
+            const src = fs.readFileSync(path.join(dir, f), 'utf8');
+            for (const m of src.matchAll(/id:\s*'([A-Z]+-\d+)'/g)) {
+              const id = m[1];
+              if (!idMap[id]) idMap[id] = [];
+              idMap[id].push(f);
+            }
+          }
+          const dupes = Object.entries(idMap).filter(([,files]) => files.length > 1);
+          if (dupes.length > 0) {
+            console.log('has_findings=true');
+            console.log('count=' + dupes.length);
+            console.log('findings<<EOF');
+            for (const [id, files] of dupes) {
+              console.log(`  ${id}: found in ${files.join(', ')}`);
+            }
+            console.log('EOF');
+          } else {
+            console.log('has_findings=false');
+            console.log('count=0');
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Scan 3: Missing latinName in AIS_DEFS ─────────────────────────────
+      - name: "[EXPLORATOR] Scan for missing latinName in AIS_DEFS"
+        id: latinnames
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs');
+          const src = fs.readFileSync('organism/web/orchestrator.js', 'utf8');
+          // Extract AIS_DEFS blocks and check for latinName
+          const entries = src.matchAll(/\{[^}]*aisId:\s*'(AIS-\d+)'[^}]*\}/gs);
+          const missing = [];
+          for (const m of entries) {
+            if (!m[0].includes('latinName')) {
+              const idMatch = m[0].match(/aisId:\s*'(AIS-\d+)'/);
+              const nameMatch = m[0].match(/name:\s*'([^']+)'/);
+              missing.push((idMatch?.[1]||'?') + ' ' + (nameMatch?.[1]||'?'));
+            }
+          }
+          if (missing.length > 0) {
+            console.log('has_findings=true');
+            console.log('count=' + missing.length);
+            console.log('findings<<EOF');
+            missing.forEach(e => console.log('  ' + e));
+            console.log('EOF');
+          } else {
+            console.log('has_findings=false');
+            console.log('count=0');
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Scan 4: Workers without onmessage handler ─────────────────────────
+      - name: "[EXPLORATOR] Scan for workers missing onmessage handler"
+        id: handlers
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+          const dir = 'organism/web';
+          const missing = [];
+          for (const f of fs.readdirSync(dir).filter(x => x.endsWith('-worker.js'))) {
+            const src = fs.readFileSync(path.join(dir, f), 'utf8');
+            if (!src.includes('onmessage') && !src.includes('addEventListener(\'message')) {
+              missing.push(f);
+            }
+          }
+          if (missing.length > 0) {
+            console.log('has_findings=true');
+            console.log('count=' + missing.length);
+            console.log('findings<<EOF');
+            missing.forEach(f => console.log('  ' + f));
+            console.log('EOF');
+          } else {
+            console.log('has_findings=false');
+            console.log('count=0');
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Scan 5: console.error without context ─────────────────────────────
+      - name: "[EXPLORATOR] Scan for bare console.error calls"
+        id: consoleerr
+        run: |
+          RESULTS=$(grep -rn "console\.error(" \
+            organism/web/ organism/cloudflare/ \
+            --include="*.js" \
+            2>/dev/null | grep -v "//.*console\.error" | head -30 || true)
+          COUNT=$(echo "${RESULTS}" | grep -c "." || echo 0)
+          if [ "${COUNT}" -gt 0 ] && [ -n "${RESULTS}" ]; then
+            echo "count=${COUNT}" >> $GITHUB_OUTPUT
+            echo "has_findings=true" >> $GITHUB_OUTPUT
+            echo "findings<<EOF" >> $GITHUB_OUTPUT
+            echo "${RESULTS}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "has_findings=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Aggregate all findings ─────────────────────────────────────────────
+      - name: "[EXPLORATOR] Aggregate findings"
+        id: aggregate
+        run: |
+          TOTAL=0
+          HAS=false
+          [ "${{ steps.todos.outputs.has_findings }}" = "true" ] && \
+            TOTAL=$((TOTAL + ${{ steps.todos.outputs.count }})) && HAS=true
+          [ "${{ steps.dupes.outputs.has_findings }}" = "true" ] && \
+            TOTAL=$((TOTAL + ${{ steps.dupes.outputs.count }})) && HAS=true
+          [ "${{ steps.latinnames.outputs.has_findings }}" = "true" ] && \
+            TOTAL=$((TOTAL + ${{ steps.latinnames.outputs.count }})) && HAS=true
+          [ "${{ steps.handlers.outputs.has_findings }}" = "true" ] && \
+            TOTAL=$((TOTAL + ${{ steps.handlers.outputs.count }})) && HAS=true
+          [ "${{ steps.consoleerr.outputs.has_findings }}" = "true" ] && \
+            TOTAL=$((TOTAL + ${{ steps.consoleerr.outputs.count }})) && HAS=true
+          echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+          echo "has_findings=${HAS}" >> $GITHUB_OUTPUT
+
+      # ── Open Issue with findings ───────────────────────────────────────────
+      - name: "[EXPLORATOR] Open scan findings issue"
+        if: steps.aggregate.outputs.has_findings == 'true' && github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        env:
+          TODOS_HAS: ${{ steps.todos.outputs.has_findings }}
+          TODOS_COUNT: ${{ steps.todos.outputs.count || 0 }}
+          TODOS_FINDINGS: ${{ steps.todos.outputs.findings }}
+          DUPES_HAS: ${{ steps.dupes.outputs.has_findings }}
+          DUPES_COUNT: ${{ steps.dupes.outputs.count || 0 }}
+          DUPES_FINDINGS: ${{ steps.dupes.outputs.findings }}
+          LATIN_HAS: ${{ steps.latinnames.outputs.has_findings }}
+          LATIN_COUNT: ${{ steps.latinnames.outputs.count || 0 }}
+          LATIN_FINDINGS: ${{ steps.latinnames.outputs.findings }}
+          HANDLERS_HAS: ${{ steps.handlers.outputs.has_findings }}
+          HANDLERS_COUNT: ${{ steps.handlers.outputs.count || 0 }}
+          HANDLERS_FINDINGS: ${{ steps.handlers.outputs.findings }}
+          CONSOLEERR_HAS: ${{ steps.consoleerr.outputs.has_findings }}
+          CONSOLEERR_COUNT: ${{ steps.consoleerr.outputs.count || 0 }}
+          CONSOLEERR_FINDINGS: ${{ steps.consoleerr.outputs.findings }}
+          TOTAL: ${{ steps.aggregate.outputs.total }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          AGGREGATE_TOTAL: ${{ steps.aggregate.outputs.total }}
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const title = `[EXPLORATOR] Codebase scan findings — ${today}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,organism-scan'
+            });
+            if (existing.data.some(i => i.title === title)) {
+              console.log('Duplicate scan issue skipped.');
+              return;
+            }
+            const sections = [];
+            if (process.env.TODOS_HAS === 'true') {
+              sections.push('### TODO / FIXME / HACK Comments', '```', process.env.TODOS_FINDINGS || '', '```', '');
+            }
+            if (process.env.DUPES_HAS === 'true') {
+              sections.push('### Duplicate Tool IDs', '```', process.env.DUPES_FINDINGS || '', '```', '');
+            }
+            if (process.env.LATIN_HAS === 'true') {
+              sections.push('### AIS_DEFS Missing latinName', '```', process.env.LATIN_FINDINGS || '', '```', '');
+            }
+            if (process.env.HANDLERS_HAS === 'true') {
+              sections.push('### Workers Missing onmessage Handler', '```', process.env.HANDLERS_FINDINGS || '', '```', '');
+            }
+            if (process.env.CONSOLEERR_HAS === 'true') {
+              sections.push('### Bare console.error Calls', '```', process.env.CONSOLEERR_FINDINGS || '', '```', '');
+            }
+            const body = [
+              '## 🔍 [EXPLORATOR] Organism Codebase Scan Findings',
+              '',
+              `**Run:** [#${process.env.RUN_NUMBER}](${process.env.SERVER_URL}/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID})`,
+              `**Total findings:** ${process.env.TOTAL}`,
+            const todosHas       = process.env.TODOS_HAS === 'true';
+            const dupesHas       = process.env.DUPES_HAS === 'true';
+            const latinHas       = process.env.LATIN_HAS === 'true';
+            const handlersHas    = process.env.HANDLERS_HAS === 'true';
+            const consoleerrHas  = process.env.CONSOLEERR_HAS === 'true';
+            const sections = [
+              '## 🔍 [EXPLORATOR] Organism Codebase Scan Findings',
+              '',
+              `**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+              `**Total findings:** ${process.env.AGGREGATE_TOTAL}`,
+              '',
+              '### Scan Summary',
+              '| Scan | Findings |',
+              '|------|----------|',
+              `| TODO/FIXME/HACK comments | ${process.env.TODOS_COUNT} |`,
+              `| Duplicate tool IDs | ${process.env.DUPES_COUNT} |`,
+              `| Missing latinName (AIS_DEFS) | ${process.env.LATIN_COUNT} |`,
+              `| Workers missing onmessage | ${process.env.HANDLERS_COUNT} |`,
+              `| Bare console.error calls | ${process.env.CONSOLEERR_COUNT} |`,
+              '',
+              ...sections,
+              '---',
+              '*Auto-generated by BOT-007 · EXPLORATOR — Explorator et Inspector*',
+            ].join('\n');
+            ];
+            if (todosHas) {
+              sections.push('### TODO / FIXME / HACK Comments', '```', process.env.TODOS_FINDINGS || '', '```', '');
+            }
+            if (dupesHas) {
+              sections.push('### Duplicate Tool IDs', '```', process.env.DUPES_FINDINGS || '', '```', '');
+            }
+            if (latinHas) {
+              sections.push('### AIS_DEFS Missing latinName', '```', process.env.LATIN_FINDINGS || '', '```', '');
+            }
+            if (handlersHas) {
+              sections.push('### Workers Missing onmessage Handler', '```', process.env.HANDLERS_FINDINGS || '', '```', '');
+            }
+            if (consoleerrHas) {
+              sections.push('### Bare console.error Calls', '```', process.env.CONSOLEERR_FINDINGS || '', '```', '');
+            }
+            sections.push('---', '*Auto-generated by BOT-007 · EXPLORATOR — Explorator et Inspector*');
+            const body = sections.join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title, body, labels: ['organism-bot', 'organism-scan']
+            });
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[EXPLORATOR] Compute scan status"
+        id: set-output
+        run: |
+          if [ "${{ steps.aggregate.outputs.has_findings }}" = "true" ]; then
+            echo "status=findings" >> $GITHUB_OUTPUT
+            echo "summary=🔍 EXPLORATOR: ${{ steps.aggregate.outputs.total }} total findings — GitHub Issue opened" >> $GITHUB_OUTPUT
+          else
+            echo "status=clean" >> $GITHUB_OUTPUT
+            echo "summary=✅ EXPLORATOR: codebase scan clean — no findings" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[EXPLORATOR] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

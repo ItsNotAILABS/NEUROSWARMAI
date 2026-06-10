@@ -1,0 +1,45 @@
+{
+  "id": "atlas://entity/geometry-lock",
+  "name": "Geometry Lock",
+  "latinName": "Clavis Geometrica",
+  "proto": "PROTO-226",
+  "archetypes": ["Protocol", "AccessGate", "ResonanceLock"],
+  "locations": [
+    {
+      "type": "source",
+      "uri": "protocols/geometric-key-protocol.js"
+    },
+    {
+      "type": "sdk",
+      "uri": "sdk/geometry-lock/geometry-lock-sdk.js"
+    },
+    {
+      "type": "bridge",
+      "uri": "sdk/geometry-lock/geometry-bridge.js"
+    }
+  ],
+  "languages": [
+    "atlas://language/cpl-l",
+    "atlas://language/ocl",
+    "atlas://language/scl"
+  ],
+  "math": {
+    "phi": 1.618033988749895,
+    "phi_inv": 0.6180339887498949,
+    "heartbeat_ms": 873,
+    "key_dimensions": 8,
+    "emergence_threshold": 0.6180339887498949,
+    "kuramoto_formula": "R = sqrt((mean cos Δθⱼ)² + (mean sin Δθⱼ)²)"
+  },
+  "contract": {
+    "id": "EXCHANGE-GEOMETRY-001",
+    "type": "EXCHANGE",
+    "trigger": "key-resonates",
+    "exchange": "forward-call-to-medina"
+  },
+  "state": {
+    "lifecycle": "active",
+    "risk": "low",
+    "health": "operational"
+  }
+}

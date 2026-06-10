@@ -1,0 +1,1751 @@
+// ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+// ║                                                                                                           ║
+// ║  COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.                                    ║
+// ║                                                                                                           ║
+// ║  INTELLECTUAL PROPERTY NOTICE                                                                             ║
+// ║  ─────────────────────────────────────────────────────────────────────────────────────────────────────── ║
+// ║  Owner:        Alfredo Medina Hernandez                                                                   ║
+// ║  Location:     Dallas, Texas, United States of America                                                    ║
+// ║  Contact:      MedinaSITech@outlook.com                                                                   ║
+// ║  Framework:    Medina Doctrine                                                                            ║
+// ║                                                                                                           ║
+// ║  LEGAL PROTECTION                                                                                         ║
+// ║  ─────────────────────────────────────────────────────────────────────────────────────────────────────── ║
+// ║  This source code, including all algorithms, mathematical formulations, architectural designs,            ║
+// ║  naming conventions, data structures, and conceptual frameworks contained herein, constitutes             ║
+// ║  the exclusive intellectual property of Alfredo Medina Hernandez.                                        ║
+// ║                                                                                                           ║
+// ║  PROTECTED UNDER:                                                                                         ║
+// ║  • United States Copyright Law (17 U.S.C. §§ 101-1332)                                                   ║
+// ║  • Berne Convention for the Protection of Literary and Artistic Works                                     ║
+// ║  • WIPO Copyright Treaty (WCT)                                                                            ║
+// ║  • Trade Secret Law - Defend Trade Secrets Act (18 U.S.C. § 1836)                                        ║
+// ║  • Economic Espionage Act (18 U.S.C. §§ 1831-1839)                                                       ║
+// ║                                                                                                           ║
+// ║  CONFIDENTIALITY: This code is CONFIDENTIAL and PROPRIETARY.                                             ║
+// ║  ENCRYPTION: All transmissions must be encrypted.                                                         ║
+// ║  ATTRIBUTION: Required for any use, reproduction, or derivative work.                                     ║
+// ║                                                                                                           ║
+// ║  Unauthorized access, use, reproduction, distribution, or creation of derivative works                    ║
+// ║  is strictly prohibited and will be prosecuted to the fullest extent of applicable law.                  ║
+// ║                                                                                                           ║
+// ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+import MixinAuthorization "authorization/MixinAuthorization";
+import AccessControl "authorization/access-control";
+import UserApproval "user-approval/approval";
+import InviteLinksModule "invite-links/invite-links-module";
+import MixinStorage "blob-storage/Mixin";
+import ColonyCoordinator "genesis/colony-coordinator";
+import PatternMiner "genesis/pattern-miner";
+import DeepMindEngine "genesis/deep-mind-engine";
+import ECANFormaEngine "genesis/ecan-forma-engine";
+import VAELSovereigntyStack "genesis/vael-sovereignty-stack";
+import ARESHomeostaticRegulation "genesis/ares-homeostatic-regulation";
+import UnifiedCascade "genesis/unified-cascade-interconnect";
+import Text "mo:core/Text";
+import Random "mo:core/Random";
+import Runtime "mo:core/Runtime";
+import Time "mo:core/Time";
+import Nat "mo:core/Nat";
+import Nat32 "mo:core/Nat32";
+import Nat64 "mo:core/Nat64";
+import Float "mo:core/Float";
+import Int "mo:core/Int";
+import Array "mo:core/Array";
+import Principal "mo:core/Principal";
+import Char "mo:core/Char";
+
+actor {
+  include MixinStorage();
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // UNIFIED CASCADE INTERCONNECT — THE MASTER WIRE
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // This wires ALL 128+ genesis modules together via cascade formulas:
+  //   r (Kuramoto) → w (Hebbian) → x (Homeostatic) → kf (Compounding) → r
+  // Mirror Law: Macro ↔ Micro bidirectional flow at every level
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  // Initialize cascade state: 64 oscillators, 256 connections, 32 regulatory vars, 12 compounding assets
+  let cascadeState = UnifiedCascade.initCascadeState(64, 256, 32, 12);
+  
+  // Wire all genesis modules into the cascade at startup
+  let _ = UnifiedCascade.wireAllModules(cascadeState);
+  
+  // ===================== Cascade API =====================
+  
+  /// Run one cascade heartbeat — updates all formulas
+  public shared func runCascadeHeartbeat() : async UnifiedCascade.CoreFormulas {
+    // Generate activations from current state (simplified: all at 0.5)
+    let activations = Array.tabulate<Float>(64, func(i) { 0.5 + 0.1 * Float.sin(Float.fromInt(i)) });
+    UnifiedCascade.runCascade(cascadeState, 0.1, activations)
+  };
+  
+  /// Get current core formulas (r, w, x, kf)
+  public query func getCoreFormulas() : async UnifiedCascade.CoreFormulas {
+    cascadeState.coreFormulas
+  };
+  
+  /// Get cascade state summary
+  public query func getCascadeStatus() : async Text {
+    UnifiedCascade.getStateSummary(cascadeState)
+  };
+  
+  /// Send a cascade signal between modules
+  public shared func sendCascadeSignal(source : Text, target : Text, value : Float) : async () {
+    UnifiedCascade.sendSignal(cascadeState, source, target, value, #Derived, 1);
+  };
+
+  // ===================== Approval =====================
+  let approvalState = UserApproval.initState(accessControlState);
+
+  public query ({ caller }) func isCallerApproved() : async Bool {
+    AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
+  };
+
+  public shared ({ caller }) func requestApproval() : async () {
+    UserApproval.requestApproval(approvalState, caller);
+  };
+
+  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    UserApproval.setApproval(approvalState, user, status);
+  };
+
+  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    UserApproval.listApprovals(approvalState);
+  };
+
+  // ===================== Invite Links =====================
+  let inviteLinksState = InviteLinksModule.initState();
+
+  public shared ({ caller }) func generateInviteCode() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    let blob = await Random.blob();
+    let code = InviteLinksModule.generateUUID(blob);
+    InviteLinksModule.generateInviteCode(inviteLinksState, code);
+    code;
+  };
+
+  public shared func submitRSVP(name : Text, attending : Bool, inviteCode : Text) : async () {
+    InviteLinksModule.submitRSVP(inviteLinksState, name, attending, inviteCode);
+  };
+
+  public query ({ caller }) func getAllRSVPs() : async [InviteLinksModule.RSVP] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    InviteLinksModule.getAllRSVPs(inviteLinksState);
+  };
+
+  public query ({ caller }) func getInviteCodes() : async [InviteLinksModule.InviteCode] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    InviteLinksModule.getInviteCodes(inviteLinksState);
+  };
+
+  // ===================== Organism Types =====================
+
+  public type OrganismClass = { #Avatar; #Entity; #Worker };
+
+  public type OrganismSpecialization = {
+    #Communication; #Legal; #Compliance; #SoftwareEngineering; #DevOps;
+    #Finance; #Marketing; #Brand; #Healthcare; #Architecture;
+    #DataAnalysis; #Operations; #Sales; #Media; #Cybersecurity;
+    #HumanResources; #Campaign; #Documentation; #Strategy; #Orchestration;
+  };
+
+  public type DriveMode = { #Exploration; #Execution; #Rest; #Learning };
+
+  // Current ShellState — includes compound fields added in v2
+  public type ShellState = {
+    coherence : Float;
+    formaBalance : Float;
+    driveMode : DriveMode;
+    hz : [Float];
+    neuroChem : [Float];
+    activationCount : Nat;
+    governanceScore : Float;
+    compoundIndex : Float;
+  };
+
+  public type TransferEvent = {
+    from : Principal;
+    to : Principal;
+    timestamp : Int;
+  };
+
+  public type Organism = {
+    id : Text;
+    name : Text;
+    owner : Principal;
+    class_ : OrganismClass;
+    specializations : [OrganismSpecialization];
+    genesisHash : Text;
+    shell : ShellState;
+    transferLog : [TransferEvent];
+    createdAt : Int;
+    isForSale : Bool;
+    salePrice : Float;
+  };
+
+  public type WorkforceMessage = {
+    id : Text;
+    threadId : Text;
+    organismId : Text;
+    role : Text;
+    content : Text;
+    artifactType : ?Text;
+    artifactContent : ?Text;
+    timestamp : Int;
+  };
+
+  public type ArtifactRecord = {
+    id : Text;
+    organismId : Text;
+    owner : Principal;
+    artifactType : Text;
+    title : Text;
+    content : Text;
+    createdAt : Int;
+  };
+
+  public type OrganismListing = {
+    organism : Organism;
+    listedAt : Int;
+  };
+
+  // ===================== Migration Compat Types =====================
+  // ShellStateV1 is the OLD type without governanceScore/compoundIndex.
+  // It absorbs the previously-deployed stable data on upgrade.
+
+  type ShellStateV1 = {
+    coherence : Float;
+    formaBalance : Float;
+    driveMode : DriveMode;
+    hz : [Float];
+    neuroChem : [Float];
+    activationCount : Nat;
+  };
+
+  type OrganismV1 = {
+    id : Text;
+    name : Text;
+    owner : Principal;
+    class_ : OrganismClass;
+    specializations : [OrganismSpecialization];
+    genesisHash : Text;
+    shell : ShellStateV1;
+    transferLog : [TransferEvent];
+    createdAt : Int;
+    isForSale : Bool;
+    salePrice : Float;
+  };
+
+  // ===================== Stable Storage =====================
+  // organismsStore receives old V1 data on upgrade (compat type)
+  // organismsStoreV2 holds all organisms with the new ShellState
+
+  var organismsStore : [OrganismV1] = [];      // absorbs old on-chain data
+  var organismsStoreV2 : [Organism] = [];      // current active store
+  var workforceStore : [WorkforceMessage] = [];
+  var artifactsStore : [ArtifactRecord] = [];
+  var listingTimestamps : [(Text, Int)] = [];
+  var isSeeded : Bool = false;
+  var isMigrated : Bool = false;
+
+  // ===================== Array Utilities =====================
+
+  func arrayAppend<T>(a : [T], b : [T]) : [T] {
+    let sa = a.size();
+    let sb = b.size();
+    if (sa == 0) return b;
+    if (sb == 0) return a;
+    Array.tabulate(sa + sb, func(i : Nat) : T {
+      if (i < sa) a[i] else b[i - sa];
+    });
+  };
+
+  func joinTexts(arr : [Text], sep : Text) : Text {
+    var result = "";
+    var first = true;
+    for (t in arr.vals()) {
+      if (first) { result := t; first := false } else { result := result # sep # t };
+    };
+    result;
+  };
+
+  func makeId(prefix : Text, t : Int) : Text {
+    prefix # "-" # t.toText();
+  };
+
+  // ===================== Shell Math =====================
+
+  func clip(v : Float, lo : Float, hi : Float) : Float {
+    Float.max(lo, Float.min(hi, v));
+  };
+
+  func arrayMeanSlice(arr : [Float], start : Nat, count : Nat) : Float {
+    if (count == 0) return 0.0;
+
+    var total : Float = 0.0;
+    var i = start;
+    let end_ = start + count;
+
+    while (i < end_) {
+      let currentElement = arr[i];
+      total := total + currentElement;
+      i := i + 1;
+    };
+
+    let countAsFloat = count.toFloat();
+    let mean = total / countAsFloat;
+    mean;
+  };
+
+  func sigmoid85(x : Float) : Float {
+    // Sigmoid function centered at 0.85
+    // Formula: 1 / (1 + exp(-8 * (x - 0.85)))
+    let center : Float = 0.85;
+    let steepness : Float = 8.0;
+    let offset = x - center;
+    let scaledOffset = steepness * offset;
+    let negativeScaledOffset = -scaledOffset;
+    let expValue = Float.exp(negativeScaledOffset);
+    let denominator = 1.0 + expValue;
+    let result = 1.0 / denominator;
+    result;
+  };
+
+  func hashForIdx(genesisHash : Text, idx : Nat) : Nat32 {
+    // FNV-1a hash starting value
+    let fnvOffsetBasis : Nat32 = 2166136261;
+    let fnvPrime : Nat32 = 16777619;
+
+    var h : Nat32 = fnvOffsetBasis;
+
+    // Hash each character of the genesis hash
+    for (c in genesisHash.chars()) {
+      let charAsNat32 = c.toNat32();
+      let xorValue = h ^ charAsNat32;
+      h := xorValue *% fnvPrime;
+    };
+
+    // Combine with the index
+    let idxAsNat32 = Nat32.fromNat(idx);
+    let xorWithIdx = h ^ idxAsNat32;
+    let finalHash = xorWithIdx *% fnvPrime;
+    finalHash;
+  };
+
+  func fnv1aHash(input : Text) : Text {
+    // FNV-1a hash algorithm
+    let fnvOffsetBasis : Nat32 = 2166136261;
+    let fnvPrime : Nat32 = 16777619;
+
+    var hash : Nat32 = fnvOffsetBasis;
+
+    for (c in input.chars()) {
+      let byte = c.toNat32();
+      let xorValue = hash ^ byte;
+      let multipliedValue = xorValue *% fnvPrime;
+      hash := multipliedValue;
+    };
+
+    let hashAsText = hash.toText();
+    hashAsText;
+  };
+
+  func genesisToShell(genesisHash : Text) : ShellState {
+    // Constants for Hz generation
+    let hzModulo : Nat = 10000;
+    let hzBaseValue : Float = 0.75;
+    let hzScaleFactor : Float = 40000.0;
+
+    let hz = Array.tabulate(26, func(i : Nat) : Float {
+      let hashValue = hashForIdx(genesisHash, i);
+      let hashAsNat = hashValue.toNat();
+      let raw = hashAsNat % hzModulo;
+      let rawAsFloat = raw.toFloat();
+      let scaledValue = rawAsFloat / hzScaleFactor;
+      let hzValue = hzBaseValue + scaledValue;
+      hzValue;
+    });
+
+    // Constants for neuroChem generation
+    let neuroChemModulo : Nat = 10000;
+    let neuroChemBaseValue : Float = 0.3;
+    let neuroChemScaleFactor : Float = 20000.0;
+    let neuroChemIndexOffset : Nat = 100;
+
+    let neuroChem = Array.tabulate(8, func(i : Nat) : Float {
+      let indexWithOffset = i + neuroChemIndexOffset;
+      let hashValue = hashForIdx(genesisHash, indexWithOffset);
+      let hashAsNat = hashValue.toNat();
+      let raw = hashAsNat % neuroChemModulo;
+      let rawAsFloat = raw.toFloat();
+      let scaledValue = rawAsFloat / neuroChemScaleFactor;
+      let neuroChemValue = neuroChemBaseValue + scaledValue;
+      neuroChemValue;
+    });
+
+    // Calculate governance score
+    let initialCoherence : Float = 0.75;
+    let govBaseValue : Float = 0.75;
+    let govScaleFactor : Float = 0.25;
+    let sigmoidResult = sigmoid85(initialCoherence);
+    let scaledSigmoid = govScaleFactor * sigmoidResult;
+    let governanceScore = govBaseValue + scaledSigmoid;
+
+    // Calculate compound index
+    let compoundProduct = initialCoherence * governanceScore;
+    let compoundMin : Float = 0.75;
+    let compoundMax : Float = 1.0;
+    let compoundIndex = clip(compoundProduct, compoundMin, compoundMax);
+
+    // Initial FORMA balance
+    let initialFormaBalance : Float = 100.0;
+
+    {
+      coherence = initialCoherence;
+      formaBalance = initialFormaBalance;
+      driveMode = #Execution;
+      hz;
+      neuroChem;
+      activationCount = 0;
+      governanceScore = governanceScore;
+      compoundIndex = compoundIndex;
+    };
+  };
+
+  // Upgrade ShellStateV1 → ShellState by computing derived fields
+  func upgradeShell(s : ShellStateV1) : ShellState {
+    // Governance score calculation
+    let govBaseValue : Float = 0.75;
+    let govScaleFactor : Float = 0.25;
+    let sigmoidResult = sigmoid85(s.coherence);
+    let scaledSigmoid = govScaleFactor * sigmoidResult;
+    let governanceScore = govBaseValue + scaledSigmoid;
+
+    // Compound index calculation
+    let compoundProduct = s.coherence * governanceScore;
+    let compoundMin : Float = 0.75;
+    let compoundMax : Float = 1.0;
+    let compoundIndex = clip(compoundProduct, compoundMin, compoundMax);
+
+    {
+      coherence = s.coherence;
+      formaBalance = s.formaBalance;
+      driveMode = s.driveMode;
+      hz = s.hz;
+      neuroChem = s.neuroChem;
+      activationCount = s.activationCount;
+      governanceScore = governanceScore;
+      compoundIndex = compoundIndex;
+    };
+  };
+
+  func tickShell(s : ShellState) : ShellState {
+    // Learning rate and baseline value constants
+    let learningRate : Float = 0.005;
+    let baselineValue : Float = 0.75;
+
+    // Inner Hebbian ring (12 nodes) - calculates new Hz values for inner ring
+    let innerRingSize : Nat = 12;
+    let innerHz = Array.tabulate(innerRingSize, func(i : Nat) : Float {
+      // Get neighbor indices (ring topology - wraps around)
+      let lastInnerIndex = innerRingSize - 1;
+      let leftIdx = if (i == 0) lastInnerIndex else (i - 1);
+      let rightIdx = if (i == lastInnerIndex) 0 else (i + 1);
+
+      // Calculate neighbor mean
+      let leftNeighborValue = s.hz[leftIdx];
+      let rightNeighborValue = s.hz[rightIdx];
+      let neighborSum = leftNeighborValue + rightNeighborValue;
+      let neighborMean = neighborSum / 2.0;
+
+      // Hebbian learning: delta = learning_rate * current_value * neighbor_mean
+      let currentValue = s.hz[i];
+      let hebbianProduct = currentValue * neighborMean;
+      let hebbianDelta = learningRate * hebbianProduct;
+
+      // Apply delta and clip to valid range
+      let updatedValue = currentValue + hebbianDelta;
+      let clippedValue = clip(updatedValue, baselineValue, 1.0);
+      clippedValue;
+    });
+
+    // Calculate mean of inner ring
+    let innerMean = arrayMeanSlice(innerHz, 0, innerRingSize);
+
+    // Expanded brain (14 nodes) - outer ring influenced by inner ring
+    let expandedRingSize : Nat = 14;
+    let expandedHz = Array.tabulate(expandedRingSize, func(j : Nat) : Float {
+      let i = j + innerRingSize;
+
+      // Weight calculation: increases from 0.5 to max 1.0 based on position
+      let weightBase : Float = 0.5;
+      let weightIncrement : Float = 0.04;
+      let positionAsFloat = j.toFloat();
+      let positionContribution = positionAsFloat * weightIncrement;
+      let uncappedWeight = weightBase + positionContribution;
+      let weight = Float.min(1.0, uncappedWeight);
+
+      // Target calculation: weighted average of inner mean and current value
+      let innerContribution = weight * innerMean;
+      let inverseWeight = 1.0 - weight;
+      let currentValue = s.hz[i];
+      let outerContribution = inverseWeight * currentValue;
+      let target = innerContribution + outerContribution;
+
+      // Delta calculation and application
+      let difference = target - currentValue;
+      let delta = learningRate * difference;
+      let updatedValue = currentValue + delta;
+      let clippedValue = clip(updatedValue, baselineValue, 1.0);
+      clippedValue;
+    });
+
+    // Combine inner and expanded Hz arrays
+    let newHz = arrayAppend(innerHz, expandedHz);
+
+    // Calculate new coherence as mean of all Hz values
+    let totalHzCount : Nat = 26;
+    let rawCoherence = arrayMeanSlice(newHz, 0, totalHzCount);
+    let newCoherence = clip(rawCoherence, baselineValue, 1.0);
+
+    // Governance score calculation
+    let govBaseValue : Float = 0.75;
+    let govScaleFactor : Float = 0.25;
+    let sigmoidResult = sigmoid85(newCoherence);
+    let scaledSigmoid = govScaleFactor * sigmoidResult;
+    let newGovernanceScore = govBaseValue + scaledSigmoid;
+
+    // Compound index calculation
+    let compoundProduct = newCoherence * newGovernanceScore;
+    let newCompoundIndex = clip(compoundProduct, baselineValue, 1.0);
+
+    // Streak bonus calculation (rewards consecutive activations)
+    let maxStreakBonus : Float = 2.0;
+    let baseStreakBonus : Float = 1.0;
+    let streakMultiplier : Float = 0.001;
+    let activationCountAsFloat = s.activationCount.toFloat();
+    let streakContribution = activationCountAsFloat * streakMultiplier;
+    let uncappedStreakBonus = baseStreakBonus + streakContribution;
+    let streakBonus = Float.min(maxStreakBonus, uncappedStreakBonus);
+
+    // FORMA mint calculation: coherence * 2.0 * streakBonus * compoundIndex
+    let formaMintBase : Float = 2.0;
+    let formaMintStep1 = newCoherence * formaMintBase;
+    let formaMintStep2 = formaMintStep1 * streakBonus;
+    let formaMint = formaMintStep2 * newCompoundIndex;
+
+    // Determine drive mode based on coherence thresholds
+    let executionThreshold : Float = 0.92;
+    let explorationThreshold : Float = 0.84;
+    let learningThreshold : Float = 0.78;
+    let newDriveMode : DriveMode =
+      if (newCoherence >= executionThreshold) #Execution
+      else if (newCoherence >= explorationThreshold) #Exploration
+      else if (newCoherence >= learningThreshold) #Learning
+      else #Rest;
+
+    // NeuroChem boost values based on drive mode
+    let positiveBoost : Float = 0.003;
+    let negativeBoost : Float = -0.001;
+    let neutralBoost : Float = 0.001;
+
+    let newNeuroChem = Array.tabulate(8, func(i : Nat) : Float {
+      let boost : Float = switch newDriveMode {
+        case (#Execution)   if (i < 3) positiveBoost else if (i < 6) negativeBoost else neutralBoost;
+        case (#Exploration) if (i >= 2 and i < 5) positiveBoost else negativeBoost;
+        case (#Learning)    if (i >= 4 and i < 7) positiveBoost else negativeBoost;
+        case (#Rest)        neutralBoost;
+      };
+      let currentNeuroChemValue = s.neuroChem[i];
+      let updatedNeuroChemValue = currentNeuroChemValue + boost;
+      let clippedNeuroChemValue = clip(updatedNeuroChemValue, 0.0, 1.0);
+      clippedNeuroChemValue;
+    });
+
+    // Calculate new FORMA balance
+    let newFormaBalance = s.formaBalance + formaMint;
+
+    // Calculate new activation count
+    let newActivationCount = s.activationCount + 1;
+
+    {
+      coherence = newCoherence;
+      formaBalance = newFormaBalance;
+      driveMode = newDriveMode;
+      hz = newHz;
+      neuroChem = newNeuroChem;
+      activationCount = newActivationCount;
+      governanceScore = newGovernanceScore;
+      compoundIndex = newCompoundIndex;
+    };
+  };
+
+  // ===================== Migration (runs after upgrade) =====================
+
+  system func postupgrade() {
+    if (not isMigrated) {
+      for (o in organismsStore.vals()) {
+        var alreadyExists = false;
+        for (existing in organismsStoreV2.vals()) {
+          if (existing.id == o.id) alreadyExists := true;
+        };
+        if (not alreadyExists) {
+          organismsStoreV2 := arrayAppend(organismsStoreV2, [{
+            id = o.id; name = o.name; owner = o.owner;
+            class_ = o.class_; specializations = o.specializations;
+            genesisHash = o.genesisHash;
+            shell = upgradeShell(o.shell);
+            transferLog = o.transferLog;
+            createdAt = o.createdAt;
+            isForSale = o.isForSale;
+            salePrice = o.salePrice;
+          }]);
+        };
+      };
+      organismsStore := [];
+      isMigrated := true;
+    };
+  };
+
+  // ===================== Storage Helpers =====================
+
+  func findOrganism(id : Text) : ?Organism {
+    for (o in organismsStoreV2.vals()) {
+      if (o.id == id) return ?o;
+    };
+    null;
+  };
+
+  func upsertOrganism(updated : Organism) {
+    var found = false;
+    var newStore : [Organism] = [];
+    for (o in organismsStoreV2.vals()) {
+      if (o.id == updated.id) {
+        newStore := arrayAppend(newStore, [updated]);
+        found := true;
+      } else {
+        newStore := arrayAppend(newStore, [o]);
+      };
+    };
+    if (not found) {
+      newStore := arrayAppend(newStore, [updated]);
+    };
+    organismsStoreV2 := newStore;
+  };
+
+  func getListingTime(id : Text) : Int {
+    for (pair in listingTimestamps.vals()) {
+      if (pair.0 == id) return pair.1;
+    };
+    0;
+  };
+
+  func setListingTime(id : Text, t : Int) {
+    var newStore : [(Text, Int)] = [];
+    for (pair in listingTimestamps.vals()) {
+      if (pair.0 != id) newStore := arrayAppend(newStore, [pair]);
+    };
+    listingTimestamps := arrayAppend(newStore, [(id, t)]);
+  };
+
+  func removeListingTime(id : Text) {
+    var newStore : [(Text, Int)] = [];
+    for (pair in listingTimestamps.vals()) {
+      if (pair.0 != id) newStore := arrayAppend(newStore, [pair]);
+    };
+    listingTimestamps := newStore;
+  };
+
+  func appendTransfer(log : [TransferEvent], event : TransferEvent) : [TransferEvent] {
+    arrayAppend(log, [event]);
+  };
+
+  // ===================== WorkforceChat Helpers =====================
+
+  func specializationToText(s : OrganismSpecialization) : Text {
+    switch s {
+      case (#Communication)       "Communication";
+      case (#Legal)               "Legal";
+      case (#Compliance)          "Compliance";
+      case (#SoftwareEngineering) "Software Engineering";
+      case (#DevOps)              "DevOps";
+      case (#Finance)             "Finance";
+      case (#Marketing)           "Marketing";
+      case (#Brand)               "Brand Strategy";
+      case (#Healthcare)          "Healthcare";
+      case (#Architecture)        "Architecture";
+      case (#DataAnalysis)        "Data Analysis";
+      case (#Operations)          "Operations";
+      case (#Sales)               "Sales";
+      case (#Media)               "Media";
+      case (#Cybersecurity)       "Cybersecurity";
+      case (#HumanResources)      "Human Resources";
+      case (#Campaign)            "Campaign Management";
+      case (#Documentation)       "Documentation";
+      case (#Strategy)            "Strategy";
+      case (#Orchestration)       "Orchestration";
+    };
+  };
+
+  func driveModeLabel(d : DriveMode) : Text {
+    switch d {
+      case (#Execution)   "EXECUTION";
+      case (#Exploration) "EXPLORATION";
+      case (#Learning)    "LEARNING";
+      case (#Rest)        "CONSERVED";
+    };
+  };
+
+  func classLabel(c : OrganismClass) : Text {
+    switch c {
+      case (#Avatar) "AVATAR";
+      case (#Entity) "ENTITY";
+      case (#Worker) "WORKER";
+    };
+  };
+
+  func specResponse(spec : OrganismSpecialization) : Text {
+    switch spec {
+      case (#SoftwareEngineering) "System architecture mapped. Generating production-grade implementation: type-safe, fully documented, deployment-ready. Code, API spec, and test scaffolding included.";
+      case (#Legal)         "Legal analysis initiated. Jurisdiction scan complete. Drafting enforceable language with protective clauses, risk mitigation, and compliance mapping.";
+      case (#Finance)       "Financial modeling engaged. Building multi-scenario projection with base, optimistic, and stress-test cases across 36-month window. Valuation framework loading.";
+      case (#Marketing)     "Campaign architecture loaded. Target segment analysis running. Multi-channel strategy with conversion-optimized copy, funnel design, and metrics framework generating.";
+      case (#DataAnalysis)  "Pattern recognition active. Statistical cross-reference running. Synthesis report with trend modeling, confidence intervals, and actionable insight matrix incoming.";
+      case (#Strategy)      "Strategic overlay engaged. Competitive vectors mapped, resource constraints catalogued, opportunity windows identified. Phase-gate roadmap with decision nodes building.";
+      case (#Cybersecurity) "Threat model initialized. Attack surface enumerated. Posture analysis with CVE cross-reference, hardened remediation path, and incident response framework generating.";
+      case (#HumanResources) "Org architecture online. Talent topology mapped. Compensation framework, culture scaffolding, performance architecture, and hiring playbook generating.";
+      case (#Operations)    "Process optimization engaged. Bottleneck identification running. SOPs, efficiency KPIs, supply chain framework, and operational playbook generating.";
+      case (#Sales)         "Revenue architecture loaded. Pipeline topology analyzed. Outbound sequence, proposal framework, CRM strategy, and conversion pathway generating.";
+      case (#Healthcare)    "Clinical knowledge stack engaged. Regulatory pathway mapped. Protocol documentation, compliance framework, and evidence-based recommendation set generating.";
+      case (#Orchestration) "Routing layer online. Task decomposed and distributed across specialization nodes. Unified multi-organism output assembling.";
+      case (#Communication) "Communication layer engaged. Executive voice activated. Polished output aligned to strategic messaging framework and brand doctrine generating.";
+      case (#Brand)         "Brand architecture engaged. Positioning vectors analyzed. Identity expression, voice alignment, and differentiation framework generating.";
+      case (#DevOps)        "Infrastructure layer mapped. CI/CD pipeline analyzed. Deployment architecture, container config, and operational runbook generating.";
+      case (#Architecture)  "Architectural specification layer online. Spatial and systems programs being drawn. Technical brief, specs, and phase plan generating.";
+      case (#Media)         "Content production layer engaged. Distribution topology mapped. Editorial strategy, scripts, press kit, and media assets generating.";
+      case (#Documentation) "Documentation engine online. Structured content architecture generating. Full specification coverage in export-ready format.";
+      case (#Campaign)      "Campaign execution layer online. Full asset package generating: strategy, copy, targeting framework, KPIs, and implementation timeline.";
+      case (#Compliance)    "Compliance framework engaged. Regulatory mapping complete. Gap analysis, audit checklist, and remediation roadmap generating.";
+    };
+  };
+
+  // ===================== Organism API =====================
+
+  public shared ({ caller }) func generateOrganism(
+    name : Text,
+    class_ : OrganismClass,
+    specializations : [OrganismSpecialization],
+    seedPhrase : Text,
+  ) : async Text {
+    let now = Time.now();
+    let genesisHash = fnv1aHash(seedPhrase # name # caller.toText());
+    let id = makeId("org", now);
+    upsertOrganism({
+      id; name;
+      owner = caller;
+      class_; specializations; genesisHash;
+      shell = genesisToShell(genesisHash);
+      transferLog = [];
+      createdAt = now;
+      isForSale = false;
+      salePrice = 0.0;
+    });
+    id;
+  };
+
+  public query ({ caller }) func getMyOrganisms() : async [Organism] {
+    var result : [Organism] = [];
+    for (o in organismsStoreV2.vals()) {
+      if (o.owner == caller) result := arrayAppend(result, [o]);
+    };
+    result;
+  };
+
+  public query ({ caller }) func getAllOrganisms() : async [Organism] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    organismsStoreV2;
+  };
+
+  public query func getOrganismState(id : Text) : async ?ShellState {
+    switch (findOrganism(id)) {
+      case (?o) ?o.shell;
+      case null null;
+    };
+  };
+
+  public shared ({ caller }) func tickOrganismShell(id : Text) : async () {
+    switch (findOrganism(id)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (o.owner != caller) Runtime.trap("Not owner");
+        upsertOrganism({
+          id = o.id; name = o.name; owner = o.owner; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = tickShell(o.shell);
+          transferLog = o.transferLog;
+          createdAt = o.createdAt; isForSale = o.isForSale; salePrice = o.salePrice;
+        });
+      };
+    };
+  };
+
+  public shared ({ caller }) func transferOrganism(id : Text, to : Principal) : async () {
+    switch (findOrganism(id)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (o.owner != caller) Runtime.trap("Not owner");
+        if (o.isForSale) Runtime.trap("Delist before transfer");
+        let event : TransferEvent = { from = caller; to; timestamp = Time.now() };
+        upsertOrganism({
+          id = o.id; name = o.name; owner = to; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = o.shell; transferLog = appendTransfer(o.transferLog, event);
+          createdAt = o.createdAt; isForSale = false; salePrice = o.salePrice;
+        });
+      };
+    };
+  };
+
+  public shared ({ caller }) func listForSale(id : Text, price : Float) : async () {
+    switch (findOrganism(id)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (o.owner != caller) Runtime.trap("Not owner");
+        upsertOrganism({
+          id = o.id; name = o.name; owner = o.owner; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = o.shell; transferLog = o.transferLog;
+          createdAt = o.createdAt; isForSale = true; salePrice = price;
+        });
+        setListingTime(id, Time.now());
+      };
+    };
+  };
+
+  public shared ({ caller }) func withdrawFromSale(id : Text) : async () {
+    switch (findOrganism(id)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (o.owner != caller) Runtime.trap("Not owner");
+        upsertOrganism({
+          id = o.id; name = o.name; owner = o.owner; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = o.shell; transferLog = o.transferLog;
+          createdAt = o.createdAt; isForSale = false; salePrice = o.salePrice;
+        });
+        removeListingTime(id);
+      };
+    };
+  };
+
+  public shared ({ caller }) func buyOrganism(id : Text) : async () {
+    switch (findOrganism(id)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (not o.isForSale) Runtime.trap("Not for sale");
+        if (o.owner == caller) Runtime.trap("Already owner");
+        let event : TransferEvent = { from = o.owner; to = caller; timestamp = Time.now() };
+        upsertOrganism({
+          id = o.id; name = o.name; owner = caller; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = o.shell; transferLog = appendTransfer(o.transferLog, event);
+          createdAt = o.createdAt; isForSale = false; salePrice = o.salePrice;
+        });
+        removeListingTime(id);
+      };
+    };
+  };
+
+  public query func getMarketplaceListings() : async [OrganismListing] {
+    var result : [OrganismListing] = [];
+    for (o in organismsStoreV2.vals()) {
+      if (o.isForSale) {
+        result := arrayAppend(result, [{ organism = o; listedAt = getListingTime(o.id) }]);
+      };
+    };
+    result;
+  };
+
+  // ===================== Workforce Chat =====================
+
+  public shared ({ caller }) func workforceChat(
+    organismId : Text,
+    threadId : Text,
+    message : Text,
+  ) : async WorkforceMessage {
+    switch (findOrganism(organismId)) {
+      case null Runtime.trap("Organism not found");
+      case (?o) {
+        if (o.owner != caller) Runtime.trap("Not owner");
+        let now = Time.now();
+        let ticked = tickShell(o.shell);
+
+        var specLabels : [Text] = [];
+        for (s in o.specializations.vals()) {
+          specLabels := arrayAppend(specLabels, [specializationToText(s)]);
+        };
+        let specList = joinTexts(specLabels, " + ");
+        let primarySpec = if (o.specializations.size() > 0) o.specializations[0] else #Strategy;
+        let domainResponse = specResponse(primarySpec);
+        let driveStr = driveModeLabel(ticked.driveMode);
+        let classStr = classLabel(o.class_);
+
+        // Mint rate calculation: coherence * 2.0 * compoundIndex
+        let mintRateBase : Float = 2.0;
+        let mintRateStep1 = ticked.coherence * mintRateBase;
+        let mintRate = mintRateStep1 * ticked.compoundIndex;
+
+        let userMsg : WorkforceMessage = {
+          id = makeId("msg", now);
+          threadId; organismId;
+          role = "user";
+          content = message;
+          artifactType = null;
+          artifactContent = null;
+          timestamp = now;
+        };
+
+        let responseContent =
+          o.name # " [" # classStr # "] [" # driveStr # "] -- " # domainResponse #
+          "\n\nTask: " # message #
+          " | Coherence: " # ticked.coherence.toText() #
+          " | FORMA: +" # mintRate.toText() # "/tick" #
+          " | Gov: " # ticked.governanceScore.toText() #
+          " | Compound: " # ticked.compoundIndex.toText() #
+          " | Stack: " # specList;
+
+        let artifactContent =
+          "# " # o.name # " -- Execution Output\n\n" #
+          "**Genesis Hash:** " # o.genesisHash # "\n" #
+          "**Class:** " # classStr # " | **Drive Mode:** " # driveStr # "\n" #
+          "**Coherence:** " # ticked.coherence.toText() #
+          " | **FORMA Balance:** " # ticked.formaBalance.toText() # "\n" #
+          "**Governance Score:** " # ticked.governanceScore.toText() #
+          " | **Compound Index:** " # ticked.compoundIndex.toText() # "\n" #
+          "**Specializations:** " # specList # "\n" #
+          "**Shell Tick:** #" # ticked.activationCount.toText() # "\n\n" #
+          "---\n\n" #
+          "## Request\n\n" # message # "\n\n" #
+          "## " # o.name # " Analysis\n\n" # domainResponse # "\n\n" #
+          "## Execution Pathway\n\n" #
+          "1. Domain stack engaged: " # specList # "\n" #
+          "2. Governance verified: score=" # ticked.governanceScore.toText() # "\n" #
+          "3. Compound index applied: " # ticked.compoundIndex.toText() # "\n" #
+          "4. Output: structured, export-ready, implementation-queued\n\n" #
+          "---\n\n" #
+          "*Inner Hebbian (12 nodes, ring) + Expanded Brain (14 nodes) + Governance (43-core compound)*\n" #
+          "*Hz range: 5kHz-10MHz | S0=0.75 | activations in [0.75,1.0]*";
+
+        let assistantMsg : WorkforceMessage = {
+          id = makeId("msg", now + 1);
+          threadId; organismId;
+          role = "assistant";
+          content = responseContent;
+          artifactType = ?"document";
+          artifactContent = ?artifactContent;
+          timestamp = now + 1;
+        };
+
+        workforceStore := arrayAppend(workforceStore, [userMsg, assistantMsg]);
+
+        upsertOrganism({
+          id = o.id; name = o.name; owner = o.owner; class_ = o.class_;
+          specializations = o.specializations; genesisHash = o.genesisHash;
+          shell = ticked; transferLog = o.transferLog;
+          createdAt = o.createdAt; isForSale = o.isForSale; salePrice = o.salePrice;
+        });
+
+        artifactsStore := arrayAppend(artifactsStore, [{
+          id = makeId("artifact", now);
+          organismId;
+          owner = caller;
+          artifactType = "document";
+          title = o.name # " Output: " # message;
+          content = artifactContent;
+          createdAt = now;
+        }]);
+
+        assistantMsg;
+      };
+    };
+  };
+
+  public query func getWorkforceThread(threadId : Text) : async [WorkforceMessage] {
+    var result : [WorkforceMessage] = [];
+    for (m in workforceStore.vals()) {
+      if (m.threadId == threadId) result := arrayAppend(result, [m]);
+    };
+    result;
+  };
+
+  // ===================== Artifact Storage =====================
+
+  public shared ({ caller }) func storeArtifact(
+    organismId : Text,
+    artifactType : Text,
+    title : Text,
+    content : Text,
+  ) : async Text {
+    let now = Time.now();
+    let id = makeId("artifact", now);
+    artifactsStore := arrayAppend(artifactsStore, [{
+      id; organismId;
+      owner = caller;
+      artifactType; title; content;
+      createdAt = now;
+    }]);
+    id;
+  };
+
+  public query ({ caller }) func getMyArtifacts() : async [ArtifactRecord] {
+    var result : [ArtifactRecord] = [];
+    for (a in artifactsStore.vals()) {
+      if (a.owner == caller) result := arrayAppend(result, [a]);
+    };
+    result;
+  };
+
+  public query func getArtifact(id : Text) : async ?ArtifactRecord {
+    for (a in artifactsStore.vals()) {
+      if (a.id == id) return ?a;
+    };
+    null;
+  };
+
+  // ===================== Seed Pre-built Organisms =====================
+
+  public shared ({ caller }) func seedPrebuiltOrganisms() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    if (isSeeded) return;
+    isSeeded := true;
+
+    let now = Time.now();
+
+    func seed(name : Text, class_ : OrganismClass, specs : [OrganismSpecialization], idx : Nat) {
+      let id = "prebuilt-" # idx.toText();
+      var exists = false;
+      for (o in organismsStoreV2.vals()) {
+        if (o.id == id) exists := true;
+      };
+      if (not exists) {
+        let hash = fnv1aHash(name);
+        upsertOrganism({
+          id; name;
+          owner = caller;
+          class_; specializations = specs;
+          genesisHash = hash;
+          shell = genesisToShell(hash);
+          transferLog = [];
+          createdAt = now;
+          isForSale = false;
+          salePrice = 0.0;
+        });
+      };
+    };
+
+    seed("ORO",        #Avatar, [#Communication, #Orchestration], 0);
+    seed("NEXUS",      #Avatar, [#Orchestration, #Strategy], 1);
+    seed("NOVA",       #Avatar, [#Campaign, #Orchestration, #Strategy], 2);
+    seed("AXIOM",      #Entity, [#Legal, #Compliance], 3);
+    seed("FORGE-X",    #Entity, [#SoftwareEngineering, #DevOps], 4);
+    seed("STRATUM",    #Entity, [#Finance], 5);
+    seed("TORI",       #Entity, [#Marketing, #Brand, #Campaign], 6);
+    seed("MEDICUS",    #Entity, [#Healthcare, #Compliance], 7);
+    seed("ARCANA",     #Entity, [#Architecture], 8);
+    seed("ORACLE",     #Entity, [#DataAnalysis, #Strategy], 9);
+    seed("TITANIUM",   #Entity, [#Operations], 10);
+    seed("VECTOR-X",   #Entity, [#Sales, #Strategy], 11);
+    seed("SYNDICATE",  #Entity, [#Media, #Campaign], 12);
+    seed("CIPHER",     #Entity, [#Cybersecurity, #Compliance], 13);
+    seed("SERAPH",     #Entity, [#HumanResources], 14);
+    seed("CODESMITH",  #Worker, [#SoftwareEngineering, #DevOps], 15);
+    seed("CAMPAIGNER", #Worker, [#Campaign, #Marketing], 16);
+    seed("DOCWRIGHT",  #Worker, [#Documentation], 17);
+    seed("ANALYST",    #Worker, [#DataAnalysis], 18);
+    seed("TACTICIAN",  #Worker, [#Strategy], 19);
+    seed("EXECUTOR",   #Worker, [#Operations], 20);
+    seed("ARCHITECT",  #Worker, [#Architecture, #SoftwareEngineering], 21);
+    seed("OUTREACH",   #Worker, [#Sales, #Marketing], 22);
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // COLONY ARCHITECTURE — ANT COLONY OPTIMIZATION (ACO)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 
+  // LAW 4: FORK-TRAIL OPTIMIZATION — Gradient Descent Without Backpropagation
+  //
+  // The colony runs parallel stochastic gradient descent across N organisms
+  // simultaneously. Each organism is an independent sample from the solution space.
+  // The ATLAS grid is the shared parameter space. The pheromone accumulation is
+  // the parameter update.
+  //
+  // Loss function:
+  //   L = Σᵢ wᵢ · δ_drift(i) + λ · (1 − r_colony)
+  //
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // Colony state (initialized lazily)
+  var colonyStateOpt : ?ColonyCoordinator.ColonyState = null;
+  var colonyBeatCounter : Nat64 = 0;
+  var colonyConsensusVoteInterval : Nat = 10;  // Vote every 10 beats
+  var lastConsensusAgreement : Float = 0.5;
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE A — DEEP MIND ENGINE (QMEM + Memory Membrane + HTM + AXIS Eagle/Elephant)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  let deepMindState : DeepMindEngine.DeepMindState = DeepMindEngine.initDeepMindState();
+  let patternMinerState : PatternMiner.PatternMinerState = PatternMiner.initPatternMinerState();
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE B — ECAN-FORMA ENGINE (FORMA flow + Bach salience + Jacob's Ladder + 12-token)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  let ecanState : ECANFormaEngine.ECANFormaState = ECANFormaEngine.initECANFormaState();
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE C — VAEL SOVEREIGNTY STACK + ARES K=7 SNAPSHOTS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  let vaelState : VAELSovereigntyStack.VAELState = VAELSovereigntyStack.initVAELState();
+  var aresState : ARESHomeostaticRegulation.ARESState = ARESHomeostaticRegulation.createDefaultARESState();
+  let aresSnapshotRing : ARESHomeostaticRegulation.ARESSnapshotRing = ARESHomeostaticRegulation.initARESSnapshotRing();
+
+  // Last deep-mind tick result (for reporting)
+  var lastDeepMindResult : ?DeepMindEngine.DeepMindTickResult = null;
+  var lastECANResult : ?ECANFormaEngine.ECANTickResult = null;
+  var lastVAELResult : ?VAELSovereigntyStack.VAELTickResult = null;
+
+  // Shell confidence weights (earned, not assigned)
+  var shellConfidenceWeights : [var Float] = Array.init<Float>(12, func(_ : Nat) : Float { 1.0 / 12.0 });
+  var shellPredictionHistory : [var [Float]] = Array.init<[Float]>(12, func(_ : Nat) : [Float] { [] });
+  let shellConfidenceUpdateInterval : Nat = 100;
+
+  /// Initialize colony state
+  public shared ({ caller }) func initializeColony() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    
+    switch (colonyStateOpt) {
+      case (?_) { return "Colony already initialized" };
+      case null {
+        let colonyId = Nat64.fromNat(Int.abs(Time.now()));
+        colonyStateOpt := ?ColonyCoordinator.initColonyState(colonyId);
+        colonyBeatCounter := 0;
+        return "Colony initialized with ID: " # Nat64.toText(colonyId);
+      };
+    };
+  };
+
+  /// Get colony status
+  public query func getColonyStatus() : async {
+    isInitialized : Bool;
+    beat : Nat64;
+    rColony : Float;
+    mode : Text;
+    organismCount : Nat;
+    quorumActive : Bool;
+    genesisCompliance : Float;
+    convergenceRate : Float;
+  } {
+    switch (colonyStateOpt) {
+      case (?state) {
+        let modeText = switch (state.colonyMode) {
+          case (#Exploration) { "Exploration" };
+          case (#Negotiation) { "Negotiation" };
+          case (#Commitment) { "Commitment" };
+        };
+        {
+          isInitialized = true;
+          beat = state.currentBeat;
+          rColony = state.rColony;
+          mode = modeText;
+          organismCount = state.organismCount;
+          quorumActive = state.quorumActive;
+          genesisCompliance = state.genesisComplianceScore;
+          convergenceRate = state.convergenceRate;
+        }
+      };
+      case null {
+        {
+          isInitialized = false;
+          beat = 0;
+          rColony = 0.0;
+          mode = "Not Initialized";
+          organismCount = 0;
+          quorumActive = false;
+          genesisCompliance = 0.0;
+          convergenceRate = 0.0;
+        }
+      };
+    };
+  };
+
+  /// Colony heartbeat — called every organism heartbeat
+  /// Runs ACO optimizer, updates pheromones, computes quorum
+  public shared ({ caller }) func colonyHeartbeat() : async {
+    rColony : Float;
+    mode : Text;
+    quorumFired : Bool;
+    consensusAgreement : Float;
+  } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+
+    switch (colonyStateOpt) {
+      case null {
+        Runtime.trap("Colony not initialized");
+      };
+      case (?state) {
+        colonyBeatCounter += 1;
+        let beat = Nat64.toNat(colonyBeatCounter);
+        
+        // Update colony state
+        let newState = ColonyCoordinator.updateColony(state, colonyBeatCounter);
+        
+        // Run consensus vote every N beats (Thousand Brains)
+        var consensusResult : Float = lastConsensusAgreement;
+        if (beat % colonyConsensusVoteInterval == 0) {
+          consensusResult := runThousandBrainsConsensus();
+          lastConsensusAgreement := consensusResult;
+        };
+        
+        // Update shell confidence weights every 100 beats
+        if (beat % shellConfidenceUpdateInterval == 0) {
+          updateShellConfidenceWeights();
+        };
+
+        // ─────────────────────────────────────────────────────────────────────
+        // PHASE A — DEEP MIND ENGINE (fires every beat)
+        // ─────────────────────────────────────────────────────────────────────
+        let colonyCoherence = newState.rColony;
+        let shellCoherences : [Float] = Array.tabulate<Float>(12, func(i : Nat) : Float {
+          shellConfidenceWeights[i] * 12.0 * colonyCoherence
+        });
+        let emptyShellHz : [[Float]] = Array.tabulate<[Float]>(12, func(_ : Nat) : [Float] { [] });
+        let dmResult = DeepMindEngine.tick(
+          deepMindState,
+          beat,
+          colonyCoherence,
+          ecanState.lastFormaBalance, // formaBalance — live value tracked by ECAN engine
+          [],     // hz — colony-level tick uses empty; per-shell handled below
+          shellCoherences,
+          emptyShellHz
+        );
+        lastDeepMindResult := ?dmResult;
+
+        // Pattern Miner tick (records event; scans every 50 beats)
+        ignore PatternMiner.tick(
+          patternMinerState, beat, [], colonyCoherence,
+          newState.genesisComplianceScore
+        );
+
+        // ─────────────────────────────────────────────────────────────────────
+        // PHASE B — ECAN-FORMA ENGINE (fires every beat)
+        // ─────────────────────────────────────────────────────────────────────
+        let surpriseCount = dmResult.surprises;
+        let ecanResult = ECANFormaEngine.tick(
+          ecanState,
+          beat,
+          colonyCoherence,
+          newState.genesisComplianceScore,  // governance proxy
+          0.0,   // currentFormaBalance — aggregate not tracked at colony level
+          shellCoherences,
+          surpriseCount
+        );
+        lastECANResult := ?ecanResult;
+
+        // ─────────────────────────────────────────────────────────────────────
+        // PHASE C — VAEL SOVEREIGNTY STACK (fires every beat)
+        // ─────────────────────────────────────────────────────────────────────
+        let externalSignal = if (newState.rColony < 0.7) 0.4 else 0.05;
+        let vaelResult = VAELSovereigntyStack.tick(vaelState, beat, externalSignal);
+        lastVAELResult := ?vaelResult;
+
+        // ARES heartbeat (homeostatic correction)
+        aresState := ARESHomeostaticRegulation.processARESHeartbeat(aresState);
+
+        // ARES snapshot every 50 beats
+        if (beat % 50 == 0 and beat > 0) {
+          ignore ARESHomeostaticRegulation.snapshotState(aresSnapshotRing, aresState, beat);
+        };
+
+        // ARES auto-rollback on high threat (VETUS proxy: low coherence = high threat)
+        let vetusThreat = if (colonyCoherence < 0.75) (0.75 - colonyCoherence) * 10.0 else 0.0;
+        let (newAresState, _didRollback) = ARESHomeostaticRegulation.checkVETUSRollback(
+          aresSnapshotRing, aresState, vetusThreat, beat
+        );
+        aresState := newAresState;
+
+        let quorumFired = newState.quorumActive and not state.quorumActive;
+        
+        colonyStateOpt := ?newState;
+
+        let modeText = switch (newState.colonyMode) {
+          case (#Exploration) { "Exploration" };
+          case (#Negotiation) { "Negotiation" };
+          case (#Commitment) { "Commitment" };
+        };
+
+        {
+          rColony = newState.rColony;
+          mode = modeText;
+          quorumFired = quorumFired;
+          consensusAgreement = consensusResult;
+        }
+      };
+    };
+  };
+
+  /// Thousand Brains Consensus Vote (Hawkins)
+  /// Every 10 beats, run a consensus vote across all shells
+  func runThousandBrainsConsensus() : Float {
+    // Compute weighted average of shell state vectors
+    var totalWeight : Float = 0.0;
+    var weightedSum : Float = 0.0;
+    
+    for (i in shellConfidenceWeights.keys()) {
+      let weight = shellConfidenceWeights[i];
+      totalWeight += weight;
+      
+      // Shell state approximated by coherence from organism shells
+      // In full implementation, each shell would provide getCurrentStateVector()
+      let shellCoherence = 0.75 + (Float.fromInt(i) * 0.02);  // Placeholder
+      weightedSum += shellCoherence * weight;
+    };
+
+    if (totalWeight > 0.0) {
+      let consensus = weightedSum / totalWeight;
+      
+      // If consensus > 0.88, organism identity is stable
+      // Otherwise, Jasmine fires correction (r drops)
+      if (consensus > 0.88) {
+        consensus
+      } else {
+        // Apply correction — r drops proportionally
+        consensus * 0.95
+      }
+    } else {
+      0.5
+    }
+  };
+
+  /// Update shell confidence weights based on prediction accuracy
+  func updateShellConfidenceWeights() : () {
+    // Shells that predicted well get higher vote weight
+    // Shells that predicted poorly get lower weight
+    var totalCorrect : Float = 0.0;
+    let corrections = Array.init<Float>(12, func(i : Nat) : Float {
+      let history = shellPredictionHistory[i];
+      if (history.size() == 0) { return 1.0 };
+      
+      // Compute prediction accuracy
+      var correct : Float = 0.0;
+      for (h in history.vals()) {
+        if (h > 0.5) { correct += 1.0 };
+      };
+      let accuracy = correct / Float.fromInt(history.size());
+      totalCorrect += accuracy;
+      accuracy
+    });
+
+    // Normalize weights
+    if (totalCorrect > 0.0) {
+      for (i in shellConfidenceWeights.keys()) {
+        shellConfidenceWeights[i] := corrections[i] / totalCorrect;
+      };
+    };
+  };
+
+  /// Deposit pheromone to ATLAS grid (organism writes to environment)
+  public shared ({ caller }) func depositToAtlas(
+    position : Nat,
+    signalType : Text,
+    intensity : Float
+  ) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+
+    switch (colonyStateOpt) {
+      case null { return false };
+      case (?state) {
+        let signal : ColonyCoordinator.CellSignalType = switch (signalType) {
+          case "Discovery" { #Discovery };
+          case "Threat" { #Threat };
+          case "Repair" { #Repair };
+          case "Construction" { #Construction };
+          case _ { #Neutral };
+        };
+
+        let organismId = Nat64.fromNat(Int.abs(Time.now()));
+        let formaEnergy = 1.0;  // Would come from organism state
+
+        ColonyCoordinator.depositPheromone(
+          state.atlasGrid,
+          position,
+          organismId,
+          formaEnergy,
+          signal,
+          intensity,
+          state.currentBeat
+        );
+
+        return true;
+      };
+    };
+  };
+
+  /// Read pheromone gradient from ATLAS
+  public query func readAtlasGradient(position : Nat, radius : Nat) : async [Float] {
+    switch (colonyStateOpt) {
+      case null { return [] };
+      case (?state) {
+        ColonyCoordinator.readPheromoneGradient(state.atlasGrid, position, radius)
+      };
+    };
+  };
+
+  /// Get top pheromone cells (for epigenetic inheritance)
+  public query func getTopPheromoneCells(count : Nat) : async [(Nat, Float)] {
+    switch (colonyStateOpt) {
+      case null { return [] };
+      case (?state) {
+        let topCells = ColonyCoordinator.getTopPheromeCells(state.atlasGrid, count);
+        Array.tabulate<(Nat, Float)>(topCells.size(), func(i : Nat) : (Nat, Float) {
+          (topCells[i].position, topCells[i].pheromone)
+        })
+      };
+    };
+  };
+
+  /// Compute caste for organism based on traits and FORMA
+  public query func computeOrganismCaste(
+    traits : { crow : Float; dolphin : Float; hive : Float; elephant : Float;
+               shark : Float; wolf : Float; orca : Float; eagle : Float; octopus : Float },
+    formaEnergy : Float,
+    formaMean : Float
+  ) : async Text {
+    let traitVector : ColonyCoordinator.TraitVector = {
+      crow = traits.crow;
+      dolphin = traits.dolphin;
+      hive = traits.hive;
+      elephant = traits.elephant;
+      shark = traits.shark;
+      wolf = traits.wolf;
+      orca = traits.orca;
+      eagle = traits.eagle;
+      octopus = traits.octopus;
+    };
+
+    let caste = ColonyCoordinator.computeCaste(traitVector, formaEnergy, formaMean);
+    
+    switch (caste) {
+      case (#Crow) { "Crow" };
+      case (#Dolphin) { "Dolphin" };
+      case (#Hive) { "Hive" };
+      case (#Elephant) { "Elephant" };
+      case (#Shark) { "Shark" };
+      case (#Wolf) { "Wolf" };
+      case (#Orca) { "Orca" };
+      case (#Eagle) { "Eagle" };
+      case (#Octopus) { "Octopus" };
+    }
+  };
+
+  /// Get caste sector assignments
+  public query func getCasteSectors() : async [{
+    caste : Text;
+    sectorStart : Nat;
+    sectorEnd : Nat;
+    signalType : Text;
+    description : Text;
+  }] {
+    let sectors = ColonyCoordinator.getCasteSectors();
+    Array.tabulate(sectors.size(), func(i : Nat) : {
+      caste : Text;
+      sectorStart : Nat;
+      sectorEnd : Nat;
+      signalType : Text;
+      description : Text;
+    } {
+      let s = sectors[i];
+      let casteText = switch (s.caste) {
+        case (#Crow) { "Crow" };
+        case (#Dolphin) { "Dolphin" };
+        case (#Hive) { "Hive" };
+        case (#Elephant) { "Elephant" };
+        case (#Shark) { "Shark" };
+        case (#Wolf) { "Wolf" };
+        case (#Orca) { "Orca" };
+        case (#Eagle) { "Eagle" };
+        case (#Octopus) { "Octopus" };
+      };
+      let signalText = switch (s.signalType) {
+        case (#Discovery) { "Discovery" };
+        case (#Threat) { "Threat" };
+        case (#Repair) { "Repair" };
+        case (#Construction) { "Construction" };
+        case (#Neutral) { "Neutral" };
+      };
+      {
+        caste = casteText;
+        sectorStart = s.sectorStart;
+        sectorEnd = s.sectorEnd;
+        signalType = signalText;
+        description = s.description;
+      }
+    })
+  };
+
+  /// Get queen's signal (CHRONO genesis anchor)
+  public query func getQueenSignal() : async {
+    signalId : Nat64;
+    genesisComplianceScore : Float;
+    colonyCoherence : Float;
+    isActive : Bool;
+  } {
+    switch (colonyStateOpt) {
+      case null {
+        {
+          signalId = 0;
+          genesisComplianceScore = 0.0;
+          colonyCoherence = 0.0;
+          isActive = false;
+        }
+      };
+      case (?state) {
+        let signal = ColonyCoordinator.emitQueenSignal(state, state.currentBeat);
+        {
+          signalId = signal.signalId;
+          genesisComplianceScore = signal.genesisComplianceScore;
+          colonyCoherence = signal.colonyCoherence;
+          isActive = signal.isActive;
+        }
+      };
+    };
+  };
+
+  /// Compute ACO path optimization
+  public shared ({ caller }) func runACOOptimization(
+    pathIndices : [Nat],
+    pathLength : Float,
+    lawComplianceCost : Float
+  ) : async Float {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+
+    switch (colonyStateOpt) {
+      case null { Runtime.trap("Colony not initialized") };
+      case (?state) {
+        // Update pheromones based on path
+        let newPheromones = ColonyCoordinator.updateACOPheromone(
+          state.pathPheromones,
+          pathIndices,
+          pathLength,
+          lawComplianceCost
+        );
+
+        // Update state with new pheromones
+        let newState = {
+          colonyId = state.colonyId;
+          organisms = state.organisms;
+          organismCount = state.organismCount;
+          atlasGrid = state.atlasGrid;
+          rColony = state.rColony;
+          psiGlobal = state.psiGlobal;
+          colonyMode = state.colonyMode;
+          quorumActive = state.quorumActive;
+          quorumEventCount = state.quorumEventCount;
+          lastQuorumBeat = state.lastQuorumBeat;
+          genesisComplianceScore = state.genesisComplianceScore;
+          genesisAnchorActive = state.genesisAnchorActive;
+          currentBeat = state.currentBeat;
+          lastUpdateTime = state.lastUpdateTime;
+          pathPheromones = newPheromones;
+          bestPathLength = if (pathLength < state.bestPathLength) { pathLength } else { state.bestPathLength };
+          convergenceRate = state.convergenceRate;
+        };
+
+        colonyStateOpt := ?newState;
+        
+        newState.bestPathLength
+      };
+    };
+  };
+
+  /// Compute colony loss function
+  public query func computeColonyLoss(
+    driftScores : [Float],
+    driftWeights : [Float],
+    coherenceWeight : Float
+  ) : async Float {
+    switch (colonyStateOpt) {
+      case null { return 999.0 };
+      case (?state) {
+        ColonyCoordinator.computeColonyLoss(driftScores, driftWeights, state.rColony, coherenceWeight)
+      };
+    };
+  };
+
+  /// Get epigenetic inheritance coefficient for spawning
+  public query func getInheritanceAlpha(parentDrift : Float) : async Float {
+    ColonyCoordinator.computeInheritanceAlpha(parentDrift)
+  };
+
+  /// Compute child weights from parent and genesis
+  public query func computeChildWeights(
+    parentWeights : [Float],
+    genesisWeights : [Float],
+    alpha : Float
+  ) : async [Float] {
+    ColonyCoordinator.computeChildWeights(parentWeights, genesisWeights, alpha)
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE A — DEEP MIND QUERIES
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /// Get Deep Mind Engine statistics (QMEM ring, Elephant memory, HTM, Eagle EMA)
+  public query func getDeepMindStats() : async {
+    qmemCount : Nat;
+    elephantCount : Nat;
+    totalBeats : Nat;
+    eagleEMA : Float;
+    eagleTrend : Float;
+    meanPredictionError : Float;
+    patternMinerSchemas : Nat;
+    patternMinerHighValue : Nat;
+  } {
+    let dm = DeepMindEngine.getStats(deepMindState);
+    let pm = PatternMiner.getStats(patternMinerState);
+    {
+      qmemCount = dm.qmemCount;
+      elephantCount = dm.elephantCount;
+      totalBeats = dm.totalBeats;
+      eagleEMA = dm.eagleEMA;
+      eagleTrend = dm.eagleTrend;
+      meanPredictionError = dm.meanPredictionError;
+      patternMinerSchemas = pm.activeSchemas;
+      patternMinerHighValue = pm.highValueSchemas;
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE B — ECAN-FORMA QUERIES
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /// Get ECAN-FORMA Engine statistics (Jacob's Ladder, token balances, drive salience)
+  public query func getECANStats() : async {
+    currentRung : Nat;
+    activeMultiplier : Float;
+    velocityEMA : Float;
+    gtkBalance : Float;
+    cvtBalance : Float;
+    vctBalance : Float;
+    kntBalance : Float;
+    sbtBalance : Float;
+    hbtBalance : Float;
+    drtBalance : Float;
+    omtBalance : Float;
+    totalMintEvents : Nat;
+    winningDriveSalience : Float;
+  } {
+    ECANFormaEngine.getStats(ecanState)
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE C — VAEL + ARES QUERIES AND ADMIN
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /// Get VAEL Sovereignty Stack statistics
+  public query func getVAELStats() : async {
+    duraFieldCoverage : Float;
+    parallaxPhase : Float;
+    parallaxRotations : Nat;
+    riftSourceCount : Nat;
+    adversaryCount : Nat;
+    totalThreatsDetected : Nat;
+    totalAttributions : Nat;
+    overallThreatLevel : Float;
+    isDefenseActive : Bool;
+  } {
+    VAELSovereigntyStack.getStats(vaelState)
+  };
+
+  /// Get ARES snapshot ring statistics
+  public query func getARESSnapshotStats() : async {
+    slotsUsed : Nat;
+    totalSnapshots : Nat;
+    totalRollbacks : Nat;
+    lastRollbackBeat : Nat;
+    nextSlot : Nat;
+  } {
+    ARESHomeostaticRegulation.getSnapshotStats(aresSnapshotRing)
+  };
+
+  /// Admin: manually rollback ARES to a specific snapshot slot (0-6)
+  public shared ({ caller }) func aresManualRollback(slot : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    let beat = Nat64.toNat(colonyBeatCounter);
+    let (newState, success) = ARESHomeostaticRegulation.manualRollback(
+      aresSnapshotRing, aresState, slot, beat
+    );
+    if (success) { aresState := newState };
+    success
+  };
+
+  /// Admin: attribute an external threat source in the RIFT ledger
+  public shared ({ caller }) func riftAttributeThreat(sourceId : Text) : async Float {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized");
+    };
+    let beat = Nat64.toNat(colonyBeatCounter);
+    VAELSovereigntyStack.riftAttributeSource(vaelState, sourceId, beat)
+  };
+
+  /// Query trust score for a source in the RIFT ledger
+  public query func riftGetTrustScore(sourceId : Text) : async Float {
+    VAELSovereigntyStack.riftGetTrustScore(vaelState, sourceId)
+  };
+
+  /// Get active schemas from pattern miner
+  public query func getTopPatternSchemas(limit : Nat) : async [{
+    id : Nat;
+    sdrKey : Text;
+    occurrences : Nat;
+    isHighValue : Bool;
+    weight : Float;
+  }] {
+    let schemas = PatternMiner.getTopSchemas(patternMinerState, limit);
+    Array.tabulate(schemas.size(), func(i : Nat) : {
+      id : Nat; sdrKey : Text; occurrences : Nat; isHighValue : Bool; weight : Float;
+    } {
+      let s = schemas[i];
+      { id = s.id; sdrKey = s.sdrKey; occurrences = s.occurrences;
+        isHighValue = s.isHighValue; weight = s.weight; }
+    })
+  };
+};

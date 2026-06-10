@@ -1,0 +1,280 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-004 · CUSTOS — Custos et Protector
+# Sovereign Organism Integrity Guardian
+#
+# Every 12 hours and on every PR, CUSTOS audits the full organism:
+#   • 35 Web Workers syntax-valid and all registered in orchestrator.js
+#   • 69 AIS Cloudflare Workers syntax-valid and all in orchestrator.js
+#   • No orphaned .js files in organism/ without registry entries
+#   • Extension files intact (manifest, sidepanel, background, content)
+#   • WORKER_DEFS count matches actual organism/web/ files
+#   • AIS_DEFS count matches actual organism/cloudflare/ files
+# Opens a GitHub Issue for any integrity violation found.
+#
+# Schedule: Every 12 hours at :34 past the hour  (Fibonacci-aligned)
+# Triggers: schedule · pull_request · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-004 · CUSTOS — Guardian"
+
+on:
+  schedule:
+    - cron: "34 */12 * * *"   # Every 12 hours at :34
+  pull_request:
+    paths:
+      - "organism/**"
+      - "extension/**"
+      - "src/**"
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Integrity status: clean | violations"
+        value: ${{ jobs.guard.outputs.status }}
+      summary:
+        description: "Human-readable integrity summary"
+        value: ${{ jobs.guard.outputs.summary }}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  guard:
+    name: "CUSTOS — Organism Integrity Audit"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[CUSTOS] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node ───────────────────────────────────────────────────────────────
+      - name: "[CUSTOS] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── Check 1: Web Worker syntax ─────────────────────────────────────────
+      - name: "[CUSTOS] Audit Web Worker syntax (35 workers)"
+        id: web_syntax
+        run: |
+          FAIL=0; ERRORS=""
+          for f in organism/web/*-worker.js; do
+            if ! node --check "$f" 2>/tmp/ne; then
+              FAIL=1; ERRORS="${ERRORS}\n  ✗ $(basename $f): $(head -1 /tmp/ne)"
+            fi
+          done
+          COUNT=$(ls organism/web/*-worker.js 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=${COUNT}" >> $GITHUB_OUTPUT
+          if [ "$FAIL" -eq 1 ]; then
+            echo "ok=false" >> $GITHUB_OUTPUT
+            printf "errors<<EOF\n%b\nEOF\n" "${ERRORS}" >> $GITHUB_OUTPUT
+          else
+            echo "ok=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Check 2: WORKER_DEFS registry vs actual files ──────────────────────
+      - name: "[CUSTOS] Verify WORKER_DEFS registry completeness"
+        id: web_registry
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const src = fs.readFileSync('organism/web/orchestrator.js', 'utf8');
+          // Extract files listed in WORKER_DEFS
+          const defined = [...src.matchAll(/file:\s*'([^']+)'/g)].map(m => m[1]);
+          const actual = fs.readdirSync('organism/web').filter(f => f.endsWith('-worker.js'));
+          const missing = actual.filter(f => !defined.includes(f));
+          const orphaned = defined.filter(f => f.endsWith('-worker.js') && !actual.includes(f));
+          const out = [];
+          if (missing.length) out.push('MISSING_FROM_REGISTRY: ' + missing.join(', '));
+          if (orphaned.length) out.push('ORPHANED_IN_REGISTRY: ' + orphaned.join(', '));
+          if (out.length) {
+            process.stdout.write('result=violations\n');
+            process.stdout.write('details=' + out.join(' | ') + '\n');
+            process.exit(0);
+          } else {
+            process.stdout.write('result=clean\n');
+          }
+          EOF
+          # Capture node output into step outputs
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs');
+          const src = fs.readFileSync('organism/web/orchestrator.js', 'utf8');
+          const defined = [...src.matchAll(/file:\s*'([^']+)'/g)].map(m => m[1]);
+          const actual = fs.readdirSync('organism/web').filter(f => f.endsWith('-worker.js'));
+          const missing = actual.filter(f => !defined.includes(f));
+          const orphaned = defined.filter(f => f.endsWith('-worker.js') && !actual.includes(f));
+          if (missing.length || orphaned.length) {
+            const parts = [];
+            if (missing.length) parts.push('Missing from WORKER_DEFS: ' + missing.join(', '));
+            if (orphaned.length) parts.push('Orphaned in WORKER_DEFS: ' + orphaned.join(', '));
+            console.log('ok=false');
+            console.log('details=' + parts.join(' | '));
+          } else {
+            console.log('ok=true');
+            console.log('details=All ' + actual.length + ' workers registered');
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Check 3: Cloudflare AIS Worker syntax ─────────────────────────────
+      - name: "[CUSTOS] Audit AIS Cloudflare Worker syntax (69 brains)"
+        id: cf_syntax
+        run: |
+          FAIL=0; ERRORS=""
+          for f in organism/cloudflare/*.js; do
+            [ "$(basename $f)" = "index.js" ] && continue
+            if ! node --check "$f" 2>/tmp/ne; then
+              FAIL=1; ERRORS="${ERRORS}\n  ✗ $(basename $f): $(head -1 /tmp/ne)"
+            fi
+          done
+          COUNT=$(ls organism/cloudflare/*.js 2>/dev/null | grep -v 'index.js' | wc -l | tr -d ' ')
+          echo "count=${COUNT}" >> $GITHUB_OUTPUT
+          if [ "$FAIL" -eq 1 ]; then
+            echo "ok=false" >> $GITHUB_OUTPUT
+            printf "errors<<EOF\n%b\nEOF\n" "${ERRORS}" >> $GITHUB_OUTPUT
+          else
+            echo "ok=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Check 4: AIS_DEFS registry vs actual cloudflare files ─────────────
+      - name: "[CUSTOS] Verify AIS_DEFS registry completeness"
+        id: cf_registry
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs');
+          const src = fs.readFileSync('organism/web/orchestrator.js', 'utf8');
+          // AIS_DEFS entries have file: '../cloudflare/<name>.js'
+          const defined = [...src.matchAll(/file:\s*'\.\.\/cloudflare\/([^']+)'/g)].map(m => m[1]);
+          const actual = fs.readdirSync('organism/cloudflare')
+            .filter(f => f.endsWith('.js') && f !== 'index.js');
+          const missing = actual.filter(f => !defined.includes(f));
+          const orphaned = defined.filter(f => !actual.includes(f));
+          if (missing.length || orphaned.length) {
+            const parts = [];
+            if (missing.length) parts.push('Missing from AIS_DEFS: ' + missing.join(', '));
+            if (orphaned.length) parts.push('Orphaned in AIS_DEFS: ' + orphaned.join(', '));
+            console.log('ok=false');
+            console.log('details=' + parts.join(' | '));
+          } else {
+            console.log('ok=true');
+            console.log('details=All ' + actual.length + ' AIS brains registered');
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Check 5: Extension file integrity ─────────────────────────────────
+      - name: "[CUSTOS] Verify extension file integrity"
+        id: extension
+        run: |
+          FAIL=0; MISSING=""
+          for f in extension/jarvis/manifest.json extension/jarvis/sidepanel.js \
+                   extension/jarvis/background.js extension/jarvis/content.js \
+                   extension/jarvis/sidepanel.html; do
+            if [ ! -f "$f" ]; then
+              FAIL=1; MISSING="${MISSING} $f"
+            fi
+          done
+          # Validate manifest JSON
+          node -e "JSON.parse(require('fs').readFileSync('extension/jarvis/manifest.json','utf8'))" 2>/tmp/mje || {
+            FAIL=1; MISSING="${MISSING} manifest.json(invalid-JSON)"
+          }
+          if [ "$FAIL" -eq 1 ]; then
+            echo "ok=false" >> $GITHUB_OUTPUT
+            echo "missing=${MISSING}" >> $GITHUB_OUTPUT
+          else
+            echo "ok=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Aggregate violations ───────────────────────────────────────────────
+      - name: "[CUSTOS] Aggregate integrity violations"
+        id: violations
+        run: |
+          VIOLS=""
+          [ "${{ steps.web_syntax.outputs.ok }}" != "true" ] && \
+            VIOLS="${VIOLS}\n### Web Worker Syntax Errors\n${{ steps.web_syntax.outputs.errors }}"
+          [ "${{ steps.web_registry.outputs.ok }}" != "true" ] && \
+            VIOLS="${VIOLS}\n### WORKER_DEFS Registry\n${{ steps.web_registry.outputs.details }}"
+          [ "${{ steps.cf_syntax.outputs.ok }}" != "true" ] && \
+            VIOLS="${VIOLS}\n### Cloudflare Worker Syntax Errors\n${{ steps.cf_syntax.outputs.errors }}"
+          [ "${{ steps.cf_registry.outputs.ok }}" != "true" ] && \
+            VIOLS="${VIOLS}\n### AIS_DEFS Registry\n${{ steps.cf_registry.outputs.details }}"
+          [ "${{ steps.extension.outputs.ok }}" != "true" ] && \
+            VIOLS="${VIOLS}\n### Extension Missing Files\n${{ steps.extension.outputs.missing }}"
+
+          if [ -z "$VIOLS" ]; then
+            echo "has_violations=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_violations=true" >> $GITHUB_OUTPUT
+            printf "details<<EOF\n%b\nEOF\n" "${VIOLS}" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Open Issue on violations ───────────────────────────────────────────
+      - name: "[CUSTOS] Open integrity violation issue"
+        if: steps.violations.outputs.has_violations == 'true' && github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[CUSTOS] Integrity violation — ${new Date().toISOString().split('T')[0]}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,integrity-violation'
+            });
+            if (existing.data.some(i => i.title === title)) {
+              console.log('Duplicate issue skipped.');
+              return;
+            }
+            const body = [
+              '## 🛡️ [CUSTOS] Organism Integrity Violation',
+              '',
+              `**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+              `**Triggered by:** ${{ github.event_name }}`,
+              '',
+              '### Integrity Audit Results',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| Web Worker syntax (${{ steps.web_syntax.outputs.count }}) | ${{ steps.web_syntax.outputs.ok == 'true' && '✅' || '❌' }} |`,
+              `| WORKER_DEFS registry | ${{ steps.web_registry.outputs.ok == 'true' && '✅' || '❌' }} |`,
+              `| AIS Cloudflare syntax (${{ steps.cf_syntax.outputs.count }}) | ${{ steps.cf_syntax.outputs.ok == 'true' && '✅' || '❌' }} |`,
+              `| AIS_DEFS registry | ${{ steps.cf_registry.outputs.ok == 'true' && '✅' || '❌' }} |`,
+              `| Extension integrity | ${{ steps.extension.outputs.ok == 'true' && '✅' || '❌' }} |`,
+              '',
+              '### Violation Details',
+              '${{ steps.violations.outputs.details }}',
+              '',
+              '---',
+              '*Auto-generated by BOT-004 · CUSTOS — Custos et Protector*',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title, body, labels: ['organism-bot', 'integrity-violation']
+            });
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[CUSTOS] Compute integrity status"
+        id: set-output
+        run: |
+          if [ "${{ steps.violations.outputs.has_violations }}" = "true" ]; then
+            echo "status=violations" >> $GITHUB_OUTPUT
+            PARTS=""
+            [ "${{ steps.web_syntax.outputs.ok }}"    != "true" ] && PARTS="${PARTS} web-syntax"
+            [ "${{ steps.web_registry.outputs.ok }}"  != "true" ] && PARTS="${PARTS} web-registry"
+            [ "${{ steps.cf_syntax.outputs.ok }}"     != "true" ] && PARTS="${PARTS} cf-syntax"
+            [ "${{ steps.cf_registry.outputs.ok }}"   != "true" ] && PARTS="${PARTS} cf-registry"
+            [ "${{ steps.extension.outputs.ok }}"     != "true" ] && PARTS="${PARTS} extension"
+            echo "summary=❌ CUSTOS found integrity violations in:${PARTS}" >> $GITHUB_OUTPUT
+          else
+            echo "status=clean" >> $GITHUB_OUTPUT
+            echo "summary=✅ CUSTOS: organism integrity clean — ${{ steps.web_syntax.outputs.count }} web workers · ${{ steps.cf_syntax.outputs.count }} AIS brains · extension valid" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "[CUSTOS] Final status"
+        run: |
+          echo "${{ steps.set-output.outputs.summary }}"
+          [ "${{ steps.set-output.outputs.status }}" = "clean" ]

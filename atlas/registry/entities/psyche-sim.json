@@ -1,0 +1,28 @@
+{
+  "id": "atlas://entity/psyche-sim",
+  "name": "Psyche Simulator",
+  "archetypes": ["Organism", "PsycheEngine"],
+  "locations": [
+    {
+      "type": "github_repo",
+      "uri": "https://github.com/FreddyCreates/psyche-sim"
+    }
+  ],
+  "languages": [
+    "atlas://language/cpl-l",
+    "atlas://language/ocl",
+    "atlas://language/pil",
+    "atlas://language/sil",
+    "atlas://language/til",
+    "atlas://language/ril",
+    "atlas://language/cil",
+    "atlas://language/myl",
+    "atlas://language/sym",
+    "atlas://language/tpl"
+  ],
+  "state": {
+    "lifecycle": "active",
+    "risk": "medium",
+    "health": "unknown"
+  }
+}

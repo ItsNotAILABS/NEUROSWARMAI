@@ -1,0 +1,16 @@
+{
+  "entity_id": "atlas://bot/organism-alpha-bot",
+  "op": "fleet_census_completed",
+  "timestamp": "2026-06-10T04:30:56Z",
+  "context": {
+    "bots_total": 9,
+    "bots_healthy": 9,
+    "missing_workflows": [],
+    "policy_compliance": 1.0000,
+    "divisions": {
+      "infrastructure": 3,
+      "analytics": 3,
+      "integration": 3
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# CHL Specification v1.0.0
+# Chaos Handling Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "CHL"
+title: "Chaos Handling Language"
+description: "How you treat anomalies and edge cases: bugs, features, myths, or new primitives"
+
+core_concepts:
+  anomaly: "Unexpected system behavior"
+  edge_case: "Boundary condition"
+  chaos: "Unpredictable dynamics"
+  emergence: "New patterns from chaos"
+
+response_strategies:
+  FIX: "Treat as bug, correct"
+  FEATURE: "Treat as enhancement, integrate"
+  MYTH: "Treat as lore, document"
+  PRIMITIVE: "Treat as new fundamental, formalize"
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

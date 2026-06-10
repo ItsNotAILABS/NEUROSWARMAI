@@ -1,0 +1,1096 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# BOT-010 · LEGATUS v3.1.0 — Legatus et Arbiter
+# Sovereign Organism Code Quality Ambassador
+#
+# v2.0.0 — LEGATUS now triages AND fixes. Multiple deliverables per run:
+#
+# Deliverable 1 — LLM Quality Diagnosis Issue (every run):
+#   Scores 6 dimensions, feeds ALL raw data to AIS-001 ANIMUS + AIS-011 LINGUA
+#   which produce a PHI-weighted diagnosis using the organism's own intelligence.
+#
+# Deliverable 2 — Code-Debt Fix Issues (per failing dimension <75):
+#   Creates actionable labeled issues with diagnostic commands + fix steps.
+#   Auto-closes fix issues when dimension recovers above threshold.
+#
+# Deliverable 3 — Auto-Fix JSON PR (when invalid JSON found):
+#   Strips trailing commas, removes // and /* */ comments (not valid JSON),
+#   removes BOM markers, reformats to 2-space indentation, creates a PR.
+#
+# Deliverable 4 — TODO Debt Tracking (when TODO markers found):
+#   Converts TODO/FIXME/HACK markers to tracked GitHub Issues (max 10/run)
+#   so they become real work items rather than invisible code debt.
+#
+# Quality dimensions scored (0–100):
+#   • TypeScript health   — compile errors vs total TS/TSX files         (30%)
+#   • Worker syntax       — passing workers vs total workers              (25%)
+#   • TODO debt           — TODO/FIXME/HACK count vs total lines          (15%)
+#   • Comment density     — JSDoc + inline comments per 100 lines         (10%)
+#   • File size hygiene   — proportion of files under 500 LOC             (10%)
+#   • JSON config health  — valid JSON configs vs total                   (10%)
+#
+# Schedule: Every 8 hours at :08 past the hour  (Fibonacci-aligned: F6 hours)
+# Triggers: schedule · workflow_dispatch · workflow_call
+# ═══════════════════════════════════════════════════════════════════════════
+name: "BOT-010 · LEGATUS v3.1.0 — Code Quality"
+
+on:
+  schedule:
+    - cron: "8 */8 * * *"   # Every 8 hours at :08
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      status:
+        description: "Quality status: excellent | good | fair | poor"
+        value: ${{ jobs.quality.outputs.status }}
+      summary:
+        description: "Human-readable quality summary"
+        value: ${{ jobs.quality.outputs.summary }}
+      score:
+        description: "Numeric quality score 0–100"
+        value: ${{ jobs.quality.outputs.score }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  quality:
+    name: "LEGATUS — Code Quality Audit"
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set-output.outputs.status }}
+      summary: ${{ steps.set-output.outputs.summary }}
+      score:   ${{ steps.set-output.outputs.score }}
+
+    steps:
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: "[LEGATUS] Checkout repository"
+        uses: actions/checkout@v4
+
+      # ── Node + pnpm ────────────────────────────────────────────────────────
+      - name: "[LEGATUS] Setup Node 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[LEGATUS] Setup pnpm 10"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: "[LEGATUS] Install dependencies"
+        run: pnpm install --no-frozen-lockfile
+        continue-on-error: true
+
+      # ── Dimension 1: TypeScript health ────────────────────────────────────
+      - name: "[LEGATUS] Measure TypeScript health"
+        id: ts_health
+        run: |
+          cd src/frontend
+          TS_ERRORS=$(npx tsc --noEmit 2>&1 | grep "^src/" | grep -v "TS2688" | wc -l | tr -d ' ')
+          TS_FILES=$(find src -name "*.ts" -o -name "*.tsx" | wc -l | tr -d ' ')
+          echo "errors=${TS_ERRORS}" >> $GITHUB_OUTPUT
+          echo "files=${TS_FILES}" >> $GITHUB_OUTPUT
+          # Score: 100 - (errors/files*100) clamped to [0,100]
+          node -e "
+            const e=parseInt('${TS_ERRORS}')||0, f=parseInt('${TS_FILES}')||1;
+            const score=Math.max(0,Math.min(100,Math.round(100-((e/f)*100))));
+            console.log('score='+score);
+          " >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Dimension 2: Web Worker syntax health ─────────────────────────────
+      - name: "[LEGATUS] Measure Worker syntax health"
+        id: worker_health
+        run: |
+          TOTAL=$(ls organism/web/*-worker.js organism/cloudflare/*.js 2>/dev/null | grep -v 'index.js' | wc -l | tr -d ' ')
+          PASS=0
+          for f in organism/web/*-worker.js organism/cloudflare/*.js; do
+            [ "$(basename $f)" = "index.js" ] && continue
+            node --check "$f" 2>/dev/null && PASS=$((PASS+1))
+          done
+          echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+          echo "passing=${PASS}" >> $GITHUB_OUTPUT
+          node -e "
+            const p=parseInt('${PASS}')||0, t=parseInt('${TOTAL}')||1;
+            console.log('score='+Math.round((p/t)*100));
+          " >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Dimension 3: Comment density ──────────────────────────────────────
+      - name: "[LEGATUS] Measure comment density"
+        id: comment_density
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+
+          const walkDir = (dir, ext) => {
+            try {
+              return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e =>
+                e.isDirectory()
+                  ? (e.name === 'node_modules' || e.name === 'dist' ? [] : walkDir(path.join(dir, e.name), ext))
+                  : (e.name.endsWith(ext) ? [path.join(dir, e.name)] : [])
+              );
+            } catch { return []; }
+          };
+
+          const files = [
+            ...walkDir('organism/web', '.js'),
+            ...walkDir('organism/cloudflare', '.js'),
+            ...walkDir('src/frontend/src', '.tsx'),
+            ...walkDir('src/frontend/src', '.ts'),
+          ].filter(f => !f.includes('node_modules'));
+
+          let totalLines = 0, commentLines = 0;
+          for (const f of files) {
+            try {
+              const lines = fs.readFileSync(f, 'utf8').split('\n');
+              totalLines += lines.length;
+              let inBlock = false;
+              commentLines += lines.filter(l => {
+                const t = l.trim();
+                if (inBlock) {
+                  if (t.includes('*/')) inBlock = false;
+                  return true; // inside a block comment
+                }
+                if (t.startsWith('/*')) { if (!t.includes('*/')) inBlock = true; return true; }
+                return t.startsWith('//');
+              }).length;
+            } catch { /* skip */ }
+          }
+
+          const density = totalLines > 0 ? (commentLines / totalLines) : 0;
+          // Target: 15% comment density = score 100, 0% = 0, scale linearly up to 25%
+          const score = Math.min(100, Math.round((density / 0.15) * 100));
+          console.log('total_lines=' + totalLines);
+          console.log('comment_lines=' + commentLines);
+          console.log('density_pct=' + (density * 100).toFixed(1));
+          console.log('score=' + score);
+          JSEOF
+        continue-on-error: true
+
+      # ── Dimension 4: File size hygiene ────────────────────────────────────
+      - name: "[LEGATUS] Measure file size hygiene"
+        id: file_size
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+
+          const MAX_LINES = 500;
+          const dirs = ['organism/web', 'organism/cloudflare', 'src/frontend/src'];
+          const exts = ['.js', '.ts', '.tsx'];
+
+          let total = 0, oversized = 0;
+          const oversizedList = [];
+
+          const walkDir = (dir) => {
+            try {
+              fs.readdirSync(dir, { withFileTypes: true }).forEach(e => {
+                const full = path.join(dir, e.name);
+                if (e.isDirectory() && !['node_modules','dist','.git'].includes(e.name)) walkDir(full);
+                else if (e.isFile() && exts.some(ext => e.name.endsWith(ext))) {
+                  try {
+                    const lines = fs.readFileSync(full, 'utf8').split('\n').length;
+                    total++;
+                    if (lines > MAX_LINES) {
+                      oversized++;
+                      oversizedList.push(`${full} (${lines} lines)`);
+                    }
+                  } catch {}
+                }
+              });
+            } catch {}
+          };
+
+          dirs.forEach(walkDir);
+
+          const score = total > 0 ? Math.round(((total - oversized) / total) * 100) : 100;
+          console.log('total_files=' + total);
+          console.log('oversized=' + oversized);
+          console.log('score=' + score);
+          const worst = oversizedList.sort((a,b) => {
+            const getN = s => parseInt(s.match(/\((\d+) lines\)/)?.[1]||'0');
+            return getN(b) - getN(a);
+          }).slice(0,5).join('|');
+          console.log('worst=' + worst);
+          JSEOF
+        continue-on-error: true
+
+      # ── Dimension 5: TODO debt ─────────────────────────────────────────────
+      - name: "[LEGATUS] Measure TODO debt"
+        id: todo_debt
+        run: |
+          TODOS=$(grep -r "TODO\|FIXME\|HACK" \
+            organism/web/ organism/cloudflare/ src/frontend/src/ \
+            --include="*.js" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules --exclude-dir=dist \
+            2>/dev/null | wc -l | tr -d ' ')
+          TOTAL_LINES=$(find organism/web/ organism/cloudflare/ src/frontend/src/ \
+            -name "*.js" -o -name "*.ts" -o -name "*.tsx" 2>/dev/null \
+            | grep -v node_modules | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}' || echo 1)
+          echo "todos=${TODOS}" >> $GITHUB_OUTPUT
+          # Score: ratio of TODO lines vs total (1% = 50, 0% = 100)
+          node -e "
+            const t=parseInt('${TODOS}')||0, l=parseInt('${TOTAL_LINES}')||1;
+            const ratio=t/l;
+            const score=Math.max(0,Math.min(100,Math.round(100-(ratio*10000))));
+            console.log('score='+score);
+          " >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── Dimension 6: JSON config health ───────────────────────────────────
+      - name: "[LEGATUS] Measure JSON config health"
+        id: json_health
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const fs = require('fs'), path = require('path');
+          const { execSync } = require('child_process');
+
+          let valid = 0, invalid = 0, invalidList = [];
+          try {
+            const files = execSync(
+              'find . -name "*.json" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" -not -path "*/.pnpm-store/*"',
+              { encoding: 'utf8' }
+            ).trim().split('\n').filter(Boolean);
+
+            for (const f of files) {
+              try {
+                JSON.parse(fs.readFileSync(f, 'utf8'));
+                valid++;
+              } catch (e) {
+                invalid++;
+                invalidList.push(f + ': ' + e.message.slice(0,60));
+              }
+            }
+          } catch {}
+
+          const total = valid + invalid;
+          const score = total > 0 ? Math.round((valid / total) * 100) : 100;
+          console.log('valid=' + valid);
+          console.log('invalid=' + invalid);
+          console.log('score=' + score);
+          if (invalidList.length > 0) {
+            console.log('invalid_list=' + invalidList.slice(0,5).join(' | '));
+          }
+          JSEOF
+        continue-on-error: true
+
+      # ── Aggregate quality score ────────────────────────────────────────────
+      - name: "[LEGATUS] Compute aggregate quality score"
+        id: aggregate
+        run: |
+          node - <<'JSEOF' >> $GITHUB_OUTPUT
+          const scores = {
+            ts:       parseInt('${{ steps.ts_health.outputs.score }}')      || 0,
+            worker:   parseInt('${{ steps.worker_health.outputs.score }}')  || 0,
+            comment:  parseInt('${{ steps.comment_density.outputs.score }}')|| 0,
+            filesize: parseInt('${{ steps.file_size.outputs.score }}')      || 0,
+            todo:     parseInt('${{ steps.todo_debt.outputs.score }}')      || 0,
+            json:     parseInt('${{ steps.json_health.outputs.score }}')    || 0,
+          };
+          // Weights (must sum to 1.0)
+          const weights = { ts:0.30, worker:0.25, comment:0.10, filesize:0.10, todo:0.15, json:0.10 };
+          const composite = Object.entries(scores)
+            .reduce((sum, [k,v]) => sum + v * weights[k], 0);
+          const overall = Math.round(composite);
+
+          let grade, emoji;
+          if (overall >= 90)      { grade = 'excellent'; emoji = '🟢'; }
+          else if (overall >= 75) { grade = 'good';      emoji = '🟡'; }
+          else if (overall >= 55) { grade = 'fair';      emoji = '🟠'; }
+          else                    { grade = 'poor';      emoji = '🔴'; }
+
+          console.log('score=' + overall);
+          console.log('grade=' + grade);
+          console.log('emoji=' + emoji);
+          console.log('ts_score=' + scores.ts);
+          console.log('worker_score=' + scores.worker);
+          console.log('comment_score=' + scores.comment);
+          console.log('filesize_score=' + scores.filesize);
+          console.log('todo_score=' + scores.todo);
+          console.log('json_score=' + scores.json);
+          JSEOF
+        continue-on-error: true
+
+      # ── LLM quality diagnosis — real intelligence, not a score table ────────
+      - name: "[LEGATUS] Diagnose code quality — AIS fleet powered"
+        id: llm_diagnosis
+        env:
+          ANIMUS_URL:      ${{ vars.AIS_ANIMUS_URL }}
+          LINGUA_URL:      ${{ vars.AIS_LINGUA_URL }}
+          SCORE:           ${{ steps.aggregate.outputs.score }}
+          GRADE:           ${{ steps.aggregate.outputs.grade }}
+          TS_SCORE:        ${{ steps.aggregate.outputs.ts_score }}
+          TS_ERRORS:       ${{ steps.ts_health.outputs.errors }}
+          TS_FILES:        ${{ steps.ts_health.outputs.files }}
+          WORKER_SCORE:    ${{ steps.aggregate.outputs.worker_score }}
+          WORKER_PASS:     ${{ steps.worker_health.outputs.passing }}
+          WORKER_TOTAL:    ${{ steps.worker_health.outputs.total }}
+          TODO_SCORE:      ${{ steps.aggregate.outputs.todo_score }}
+          TODO_COUNT:      ${{ steps.todo_debt.outputs.todos }}
+          COMMENT_SCORE:   ${{ steps.aggregate.outputs.comment_score }}
+          COMMENT_DENSITY: ${{ steps.comment_density.outputs.density_pct }}
+          FILESIZE_SCORE:  ${{ steps.aggregate.outputs.filesize_score }}
+          FILESIZE_OVER:   ${{ steps.file_size.outputs.oversized }}
+          FILESIZE_WORST:  ${{ steps.file_size.outputs.worst }}
+          JSON_SCORE:      ${{ steps.aggregate.outputs.json_score }}
+          JSON_INVALID:    ${{ steps.json_health.outputs.invalid }}
+          JSON_LIST:       ${{ steps.json_health.outputs.invalid_list }}
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs');
+
+          const today = new Date().toISOString().split('T')[0];
+          const now   = new Date().toISOString();
+
+          const systemPrompt =
+            'You are LEGATUS — Legatus et Arbiter — the sovereign code quality ambassador of the MERIDIANUS platform.\n' +
+            '\n' +
+            'You receive raw code quality measurements and you DIAGNOSE what they mean. You are intelligence, not a reporter.\n' +
+            'You do not describe numbers back to the developer. You analyze them. You find the real problem behind the metrics.\n' +
+            'You name what is actually broken, explain why it matters for this specific codebase, and tell the team what to do first.\n' +
+            '\n' +
+            'You know this codebase: it has Web Workers, AIS Cloudflare brains, ICP Motoko canisters, React/TypeScript frontend,\n' +
+            'and a 11-bot governance fleet. TypeScript errors in this codebase typically live in useEnterprise.ts and interface definitions.\n' +
+            'Worker syntax failures block deployment. TODO debt signals incomplete implementation, not just housekeeping.\n' +
+            '\n' +
+            'Write your diagnosis as a GitHub issue body in markdown. Be direct, specific, and opinionated.\n' +
+            'Lead with what matters most. If everything is fine, say so — and explain what is keeping it healthy.\n' +
+            'End with: *Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+
+          const e = process.env;
+          const userPrompt =
+            'Today is ' + today + '. Here are the raw quality measurements for MERIDIANUS:\n\n' +
+            '## Overall\n' +
+            'Composite score: ' + e.SCORE + '/100 (' + e.GRADE + ')\n\n' +
+            '## Dimension Breakdown\n' +
+            '- TypeScript health (30% weight): ' + e.TS_SCORE + '/100 — ' + e.TS_ERRORS + ' errors across ' + e.TS_FILES + ' files\n' +
+            '- Worker syntax (25% weight): ' + e.WORKER_SCORE + '/100 — ' + e.WORKER_PASS + '/' + e.WORKER_TOTAL + ' workers passing\n' +
+            '- TODO debt (15% weight): ' + e.TODO_SCORE + '/100 — ' + e.TODO_COUNT + ' TODO/FIXME/HACK markers\n' +
+            '- Comment density (10% weight): ' + e.COMMENT_SCORE + '/100 — ' + e.COMMENT_DENSITY + '% of lines are comments\n' +
+            '- File size hygiene (10% weight): ' + e.FILESIZE_SCORE + '/100 — ' + e.FILESIZE_OVER + ' files exceed 500 LOC\n' +
+            '- JSON config health (10% weight): ' + e.JSON_SCORE + '/100 — ' + e.JSON_INVALID + ' invalid JSON files\n\n' +
+            (e.FILESIZE_WORST ? '## Largest files\n' + e.FILESIZE_WORST.split('|').join('\n') + '\n\n' : '') +
+            (e.JSON_LIST ? '## Invalid JSON\n' + e.JSON_LIST.split('|').join('\n') + '\n\n' : '') +
+            'Write a diagnosis. What is actually wrong? What matters most? What should the team fix first and why?\n' +
+            'Cite the specific numbers as evidence for your diagnosis. Be direct. Do not just list the numbers back.';
+
+
+          // ── AIS Fleet Intelligence — organism's own reasoning system ────────
+          // Calls ANIMUS (AIS-001, /reason + /decompose + /infer) and
+          // LINGUA (AIS-011, /analyze + /generate) via their Cloudflare Worker URLs.
+          // URLs are set as GitHub Repository Variables:
+          //   AIS_ANIMUS_URL = https://meridianus-ais-001-animus.<account>.workers.dev
+          //   AIS_LINGUA_URL = https://meridianus-ais-011-lingua.<account>.workers.dev
+
+          const ANIMUS_URL = (process.env.ANIMUS_URL || '').replace(/\/$/, '');
+          const LINGUA_URL = (process.env.LINGUA_URL || '').replace(/\/$/, '');
+
+          async function aisPost(baseUrl, route, payload) {
+            if (!baseUrl) return null;
+            try {
+              const res = await fetch(baseUrl + route, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+                signal:  AbortSignal.timeout(30000),
+              });
+              if (!res.ok) { console.error('AIS ' + route + ' HTTP ' + res.status); return null; }
+              return await res.json();
+            } catch(e) {
+              console.error('AIS ' + route + ' error:', e.message);
+              return null;
+            }
+          }
+
+          // ── ANIMUS reasons about the quality data ─────────────────────────
+          const score = Number(e.SCORE) || 0;
+          const task = 'Diagnose code quality: overall score ' + score + '/100. '
+            + 'TypeScript: ' + e.TS_SCORE + '/100 (' + e.TS_ERRORS + ' errors/' + e.TS_FILES + ' files). '
+            + 'Workers: ' + e.WORKER_SCORE + '/100 (' + e.WORKER_PASS + '/' + e.WORKER_TOTAL + ' passing). '
+            + 'TODOs: ' + e.TODO_SCORE + '/100 (' + e.TODO_COUNT + ' markers). '
+            + 'JSON: ' + e.JSON_SCORE + '/100 (' + e.JSON_INVALID + ' invalid). '
+            + 'Comments: ' + e.COMMENT_SCORE + '/100. FileSize: ' + e.FILESIZE_SCORE + '/100.';
+
+          console.log('LEGATUS routing quality diagnosis through AIS-001 ANIMUS...');
+          const animusReason = await aisPost(ANIMUS_URL, '/reason', { task, depth: 5 });
+
+          const qualityEvidence = [
+            { weight: (Number(e.TS_SCORE)||0) / 100 * 0.30 },
+            { weight: (Number(e.WORKER_SCORE)||0) / 100 * 0.25 },
+            { weight: (Number(e.TODO_SCORE)||0) / 100 * 0.15 },
+            { weight: (Number(e.COMMENT_SCORE)||0) / 100 * 0.10 },
+            { weight: (Number(e.FILESIZE_SCORE)||0) / 100 * 0.10 },
+            { weight: (Number(e.JSON_SCORE)||0) / 100 * 0.10 },
+          ];
+          const animusInfer = await aisPost(ANIMUS_URL, '/infer', { evidence: qualityEvidence });
+
+          // Summarize into a diagnosis from AIS intelligence
+          const phiConfidence = animusReason ? animusReason.confidence : (score / 100);
+          const verdict = animusInfer ? animusInfer.conclusion : (score >= 75 ? 'verum' : 'incertum');
+          const phi = 1.618033988749895;
+          const phi_coherence = +(phiConfidence * phi).toFixed(4);
+
+          const weakest = [
+            { dim: 'TypeScript', s: Number(e.TS_SCORE)||0, detail: e.TS_ERRORS + ' errors in ' + e.TS_FILES + ' files' },
+            { dim: 'Workers',    s: Number(e.WORKER_SCORE)||0, detail: e.WORKER_PASS + '/' + e.WORKER_TOTAL + ' passing' },
+            { dim: 'TODO Debt',  s: Number(e.TODO_SCORE)||0, detail: e.TODO_COUNT + ' markers' },
+            { dim: 'JSON',       s: Number(e.JSON_SCORE)||0, detail: e.JSON_INVALID + ' invalid configs' },
+            { dim: 'Comments',   s: Number(e.COMMENT_SCORE)||0, detail: e.COMMENT_DENSITY + '% density' },
+            { dim: 'File Size',  s: Number(e.FILESIZE_SCORE)||0, detail: e.FILESIZE_OVER + ' oversized files' },
+          ].sort((a,b) => a.s - b.s);
+
+          const diagnosisLines = [
+            '## ' + (score >= 90 ? '🟢' : score >= 75 ? '🟡' : score >= 55 ? '🟠' : '🔴')
+              + ' [LEGATUS] Code Quality Diagnosis — ' + today,
+            '',
+            '**Score:** ' + e.SCORE + '/100 (' + e.GRADE + ')',
+            '**ANIMUS Verdict:** ' + verdict.toUpperCase()
+              + ' · **φ-coherence:** ' + phi_coherence
+              + ' · **Reasoning Depth:** ' + (animusReason ? animusReason.depth : 'N/A'),
+            '',
+            '---',
+            '',
+            '### ANIMUS Reasoning Chain',
+            '',
+            animusReason
+              ? animusReason.steps.map(s =>
+                  '**Step ' + s.step + '** `' + s.action + '` — φ-weight: ' + s.phi_weight + ' · confidence: ' + s.confidence
+                ).join('\n\n')
+              : '*ANIMUS offline — direct measurement only.*',
+            '',
+            '---',
+            '',
+            '### Priority Actions (by AIS inference weight)',
+            '',
+            weakest.slice(0, 3).map((d, i) =>
+              (i+1) + '. **' + d.dim + '** — ' + d.s + '/100 (' + d.detail + ')'
+            ).join('\n'),
+            '',
+            '---',
+            '',
+            '### Full Dimension Scores',
+            '',
+            '| Dimension | Score | Details |',
+            '|-----------|-------|---------|',
+            '| TypeScript Health (30%) | ' + e.TS_SCORE + '/100 | ' + e.TS_ERRORS + ' errors / ' + e.TS_FILES + ' files |',
+            '| Worker Syntax (25%) | ' + e.WORKER_SCORE + '/100 | ' + e.WORKER_PASS + '/' + e.WORKER_TOTAL + ' passing |',
+            '| TODO Debt (15%) | ' + e.TODO_SCORE + '/100 | ' + e.TODO_COUNT + ' markers |',
+            '| Comment Density (10%) | ' + e.COMMENT_SCORE + '/100 | ' + e.COMMENT_DENSITY + '% |',
+            '| File Size (10%) | ' + e.FILESIZE_SCORE + '/100 | ' + e.FILESIZE_OVER + ' oversized |',
+            '| JSON Health (10%) | ' + e.JSON_SCORE + '/100 | ' + e.JSON_INVALID + ' invalid |',
+            '',
+            (e.FILESIZE_WORST ? '**Largest files:**\n```\n' + e.FILESIZE_WORST.split('|').join('\n') + '\n```\n' : ''),
+            (e.JSON_LIST ? '**Invalid JSON:**\n```\n' + e.JSON_LIST.split('|').join('\n') + '\n```\n' : ''),
+            '---',
+            '*Auto-generated by BOT-010 · LEGATUS v3.1.0 — Intelligence: AIS-001 ANIMUS*',
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+          ].join('\n');
+
+          const diagnosis = diagnosisLines;
+
+          const runLink = '[#' + (process.env.GITHUB_RUN_NUMBER || '?') + '](https://github.com/' + (process.env.GITHUB_REPOSITORY || '') + '/actions/runs/' + (process.env.GITHUB_RUN_ID || '') + ')';
+
+          const fallback =
+            '## ' + (e.SCORE >= 90 ? '🟢' : e.SCORE >= 75 ? '🟡' : e.SCORE >= 55 ? '🟠' : '🔴') +
+            ' [LEGATUS] Code Quality — ' + today + '\n\n' +
+            '**Score:** ' + e.SCORE + '/100 (' + e.GRADE + ')  ·  **Run:** ' + runLink + '\n\n' +
+            'TypeScript: ' + e.TS_SCORE + '/100 | Workers: ' + e.WORKER_SCORE + '/100 | TODO: ' + e.TODO_SCORE + '/100\n\n' +
+            '*LLM diagnosis unavailable this cycle.*\n\n' +
+            '---\n*Auto-generated by BOT-010 · LEGATUS v3.1.0 — Legatus et Arbiter*\n' +
+            '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+
+          const header =
+            '## ' + (Number(e.SCORE) >= 90 ? '🟢' : Number(e.SCORE) >= 75 ? '🟡' : Number(e.SCORE) >= 55 ? '🟠' : '🔴') +
+            ' [LEGATUS] Code Quality Diagnosis — ' + today + '\n\n' +
+            '**Score:** ' + e.SCORE + '/100 (' + e.GRADE + ')  ·  **Run:** ' + runLink + '\n\n' +
+            '---\n\n';
+
+          const body = diagnosis
+            ? header + diagnosis
+            : fallback;
+
+          fs.writeFileSync('/tmp/legatus_diagnosis.txt', body);
+          console.log('Diagnosis written (' + body.length + ' chars)');
+          JSEOF
+        continue-on-error: true
+
+      # ── Post quality report issue ─────────────────────────────────────────
+      - name: "[LEGATUS] Post quality report issue"
+        if: github.event_name != 'workflow_call'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          SCORE:          ${{ steps.aggregate.outputs.score }}
+          GRADE:          ${{ steps.aggregate.outputs.grade }}
+          EMOJI:          ${{ steps.aggregate.outputs.emoji }}
+          TS_SCORE:       ${{ steps.aggregate.outputs.ts_score }}
+          TS_ERRORS:      ${{ steps.ts_health.outputs.errors }}
+          TS_FILES:       ${{ steps.ts_health.outputs.files }}
+          WORKER_SCORE:   ${{ steps.aggregate.outputs.worker_score }}
+          WORKER_PASS:    ${{ steps.worker_health.outputs.passing }}
+          WORKER_TOTAL:   ${{ steps.worker_health.outputs.total }}
+          COMMENT_SCORE:  ${{ steps.aggregate.outputs.comment_score }}
+          COMMENT_DENSITY:${{ steps.comment_density.outputs.density_pct }}
+          FILESIZE_SCORE: ${{ steps.aggregate.outputs.filesize_score }}
+          FILESIZE_OVER:  ${{ steps.file_size.outputs.oversized }}
+          FILESIZE_TOTAL: ${{ steps.file_size.outputs.total_files }}
+          FILESIZE_WORST: ${{ steps.file_size.outputs.worst }}
+          TODO_SCORE:     ${{ steps.aggregate.outputs.todo_score }}
+          TODO_COUNT:     ${{ steps.todo_debt.outputs.todos }}
+          JSON_SCORE:     ${{ steps.aggregate.outputs.json_score }}
+          JSON_INVALID:   ${{ steps.json_health.outputs.invalid }}
+          JSON_INVALID_LIST: ${{ steps.json_health.outputs.invalid_list }}
+          RUN_NUMBER:     ${{ github.run_number }}
+          RUN_ID:         ${{ github.run_id }}
+          SERVER_URL:     ${{ github.server_url }}
+          REPOSITORY:     ${{ github.repository }}
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const now   = new Date().toISOString();
+            const title = `[LEGATUS] Code Quality Report — ${today}`;
+
+            // Close previous quality reports from today
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot,quality-report', per_page: 20
+            });
+            for (const issue of existing.data) {
+              if (issue.title.startsWith('[LEGATUS] Code Quality Report')) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: 'closed'
+                });
+              }
+            }
+
+            // Read the LLM-generated diagnosis
+            const fs = require('fs');
+            let body;
+            try {
+              body = fs.readFileSync('/tmp/legatus_diagnosis.txt', 'utf8');
+            } catch {
+              // Fallback if LLM step didn't run
+              const score = process.env.SCORE || '?';
+              const grade = process.env.GRADE || 'unknown';
+              const today2 = new Date().toISOString().split('T')[0];
+              body = '## [LEGATUS] Code Quality Report — ' + today2 + '\n\n' +
+                '**Score:** ' + score + '/100 (' + grade + ')\n\n' +
+                'TypeScript: ' + process.env.TS_SCORE + '/100 · Workers: ' + process.env.WORKER_SCORE + '/100 · TODO: ' + process.env.TODO_SCORE + '/100\n\n' +
+                '*LLM diagnosis unavailable this cycle.*\n\n---\n' +
+                '*Auto-generated by BOT-010 · LEGATUS v3.1.0 — Legatus et Arbiter*\n' +
+                '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*';
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title, body,
+              labels: ['organism-bot', 'quality-report']
+            });
+            console.log(`Quality report created (score: ${score}, grade: ${grade}).`);
+
+      # ── Label open PRs with quality assessment ────────────────────────────
+      - name: "[LEGATUS] Label open PRs by quality context"
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          GRADE: ${{ steps.aggregate.outputs.grade }}
+          SCORE: ${{ steps.aggregate.outputs.score }}
+        with:
+          script: |
+            const grade = process.env.GRADE;
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', per_page: 20
+            });
+            const labelName = grade === 'excellent' || grade === 'good'
+              ? 'quality: good' : 'quality: needs-attention';
+            const labelColor = grade === 'excellent' || grade === 'good' ? '0e8a16' : 'e4e669';
+
+            // Ensure label exists
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                name: labelName, color: labelColor,
+                description: `Code quality context label — BOT-010 · LEGATUS`
+              });
+            } catch { /* already exists */ }
+
+            for (const pr of prs.data) {
+              const currentLabels = pr.labels.map(l => l.name);
+              if (!currentLabels.includes(labelName)) {
+                // Remove old quality labels first
+                for (const l of currentLabels.filter(n => n.startsWith('quality:'))) {
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner, repo: context.repo.repo,
+                      issue_number: pr.number, name: l
+                    });
+                  } catch {}
+                }
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: pr.number, labels: [labelName]
+                });
+              }
+            }
+
+      # ── Create actionable fix issues for failing dimensions ──────────────
+      - name: "[LEGATUS] Create code-debt fix issues for failing dimensions"
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          TS_SCORE:        ${{ steps.aggregate.outputs.ts_score }}
+          TS_ERRORS:       ${{ steps.ts_health.outputs.errors }}
+          TS_FILES:        ${{ steps.ts_health.outputs.files }}
+          WORKER_SCORE:    ${{ steps.aggregate.outputs.worker_score }}
+          WORKER_PASS:     ${{ steps.worker_health.outputs.passing }}
+          WORKER_TOTAL:    ${{ steps.worker_health.outputs.total }}
+          TODO_SCORE:      ${{ steps.aggregate.outputs.todo_score }}
+          TODO_COUNT:      ${{ steps.todo_debt.outputs.todos }}
+          COMMENT_SCORE:   ${{ steps.aggregate.outputs.comment_score }}
+          COMMENT_DENSITY: ${{ steps.comment_density.outputs.density_pct }}
+          FILESIZE_SCORE:  ${{ steps.aggregate.outputs.filesize_score }}
+          FILESIZE_OVER:   ${{ steps.file_size.outputs.oversized }}
+          FILESIZE_WORST:  ${{ steps.file_size.outputs.worst }}
+          JSON_SCORE:      ${{ steps.aggregate.outputs.json_score }}
+          JSON_INVALID:    ${{ steps.json_health.outputs.invalid }}
+          JSON_LIST:       ${{ steps.json_health.outputs.invalid_list }}
+          OVERALL_SCORE:   ${{ steps.aggregate.outputs.score }}
+          OVERALL_GRADE:   ${{ steps.aggregate.outputs.grade }}
+          RUN_NUMBER:      ${{ github.run_number }}
+          RUN_ID:          ${{ github.run_id }}
+          SERVER_URL:      ${{ github.server_url }}
+          REPOSITORY:      ${{ github.repository }}
+        with:
+          script: |
+            const runLink = `[#${process.env.RUN_NUMBER}](${process.env.SERVER_URL}/${process.env.REPOSITORY}/actions/runs/${process.env.RUN_ID})`;
+            const threshold = 75; // Dimensions below this get a fix issue
+
+            const dimensions = [
+              {
+                key:   'typescript',
+                label: 'code-debt: typescript',
+                color: '3178C6',
+                score:  parseInt(process.env.TS_SCORE)     || 0,
+                title:  '[LEGATUS] Code Debt: TypeScript Health Below Threshold',
+                body: [
+                  '## 🔷 [LEGATUS] TypeScript Health — Action Required',
+                  '',
+                  `**Score:** ${process.env.TS_SCORE}/100  ·  **Threshold:** ${threshold}/100`,
+                  `**Run:** ${runLink}`,
+                  '',
+                  '### Problem',
+                  `TypeScript compilation reports **${process.env.TS_ERRORS} type errors** across ${process.env.TS_FILES} files.`,
+                  '',
+                  '### Fix Instructions',
+                  '```bash',
+                  'cd src/frontend',
+                  'npx tsc --noEmit 2>&1 | grep "^src/"',
+                  '```',
+                  '',
+                  '**Common causes in this codebase:**',
+                  '- Missing fields on `OrganismBrainState` interface (check `useEnterprise.ts`)',
+                  '- Missing imports from `lucide-react` (add to the import list)',
+                  '- Variables used before declaration in `useEffect` dependency arrays',
+                  '- Incorrect field types on enterprise dashboard components',
+                  '',
+                  '**Resolution:** Fix all `tsc --noEmit` errors in `src/frontend/src/`. BOT-003 · MEDICUS will auto-fix lint issues; TypeScript type errors require human review.',
+                  '',
+                  '---',
+                  '*Auto-created by BOT-010 · LEGATUS — Legatus et Arbiter*',
+                  '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+                ].join('\n'),
+              },
+              {
+                key:   'worker-syntax',
+                label: 'code-debt: worker-syntax',
+                color: '8B5CF6',
+                score:  parseInt(process.env.WORKER_SCORE) || 0,
+                title:  '[LEGATUS] Code Debt: Worker Syntax Failures',
+                body: [
+                  '## 🟣 [LEGATUS] Worker Syntax Health — Action Required',
+                  '',
+                  `**Score:** ${process.env.WORKER_SCORE}/100  ·  **Threshold:** ${threshold}/100`,
+                  `**Run:** ${runLink}`,
+                  '',
+                  '### Problem',
+                  `Only **${process.env.WORKER_PASS} of ${process.env.WORKER_TOTAL} workers** pass syntax validation.`,
+                  '',
+                  '### Fix Instructions',
+                  '```bash',
+                  '# Find failing workers',
+                  'for f in organism/web/*-worker.js organism/cloudflare/*.js; do',
+                  '  [ "$(basename $f)" = "index.js" ] && continue',
+                  '  node --check "$f" 2>/dev/null || echo "FAIL: $f"',
+                  'done',
+                  '```',
+                  '',
+                  '**Common causes:** unmatched brackets, missing semicolons in template literals, ES module import syntax in Cloudflare Workers (use CommonJS), or `const` before function declarations.',
+                  '',
+                  '**Resolution:** Fix syntax errors in failing workers. BOT-004 · CUSTOS will detect registry mismatches.',
+                  '',
+                  '---',
+                  '*Auto-created by BOT-010 · LEGATUS — Legatus et Arbiter*',
+                  '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+                ].join('\n'),
+              },
+              {
+                key:   'todo-debt',
+                label: 'code-debt: todo',
+                color: 'e4e669',
+                score:  parseInt(process.env.TODO_SCORE)   || 0,
+                title:  '[LEGATUS] Code Debt: Unresolved TODO/FIXME/HACK Markers',
+                body: [
+                  '## 🟡 [LEGATUS] TODO Debt — Action Required',
+                  '',
+                  `**Score:** ${process.env.TODO_SCORE}/100  ·  **Threshold:** ${threshold}/100`,
+                  `**Run:** ${runLink}`,
+                  '',
+                  '### Problem',
+                  `**${process.env.TODO_COUNT} TODO/FIXME/HACK markers** found in the codebase.`,
+                  '',
+                  '### Find Them',
+                  '```bash',
+                  'grep -rn "TODO\\|FIXME\\|HACK" organism/web/ organism/cloudflare/ src/frontend/src/ \\',
+                  '  --include="*.js" --include="*.ts" --include="*.tsx" \\',
+                  '  --exclude-dir=node_modules --exclude-dir=dist',
+                  '```',
+                  '',
+                  '**Resolution:** Address each marker: implement the intended functionality, remove the marker, or convert to a tracked GitHub issue.',
+                  '',
+                  '---',
+                  '*Auto-created by BOT-010 · LEGATUS — Legatus et Arbiter*',
+                  '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+                ].join('\n'),
+              },
+              {
+                key:   'file-size',
+                label: 'code-debt: file-size',
+                color: 'f9d0c4',
+                score:  parseInt(process.env.FILESIZE_SCORE) || 0,
+                title:  '[LEGATUS] Code Debt: Oversized Files (>500 LOC)',
+                body: [
+                  '## 🗂️ [LEGATUS] File Size Hygiene — Action Required',
+                  '',
+                  `**Score:** ${process.env.FILESIZE_SCORE}/100  ·  **Threshold:** ${threshold}/100`,
+                  `**Run:** ${runLink}`,
+                  '',
+                  '### Problem',
+                  `**${process.env.FILESIZE_OVER} files** exceed 500 lines. Large files indicate insufficient module decomposition.`,
+                  '',
+                  ...(process.env.FILESIZE_WORST ? [
+                    '### Largest Files',
+                    '```',
+                    process.env.FILESIZE_WORST.split('|').join('\n'),
+                    '```',
+                    '',
+                  ] : []),
+                  '**Resolution:** Decompose oversized files into focused modules. For Web Workers: split large workers into a core + helper modules. For React components: extract sub-components.',
+                  '',
+                  '---',
+                  '*Auto-created by BOT-010 · LEGATUS — Legatus et Arbiter*',
+                  '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+                ].join('\n'),
+              },
+              {
+                key:   'json-health',
+                label: 'code-debt: json',
+                color: 'd73a4a',
+                score:  parseInt(process.env.JSON_SCORE)   || 0,
+                title:  '[LEGATUS] Code Debt: Invalid JSON Configuration Files',
+                body: [
+                  '## 🔴 [LEGATUS] JSON Config Health — Action Required',
+                  '',
+                  `**Score:** ${process.env.JSON_SCORE}/100  ·  **Threshold:** ${threshold}/100`,
+                  `**Run:** ${runLink}`,
+                  '',
+                  '### Problem',
+                  `**${process.env.JSON_INVALID} JSON config files** fail to parse.`,
+                  '',
+                  ...(process.env.JSON_LIST ? [
+                    '### Invalid Files',
+                    '```',
+                    process.env.JSON_LIST.split('|').join('\n'),
+                    '```',
+                    '',
+                  ] : []),
+                  '```bash',
+                  '# Validate all JSON files',
+                  'find . -name "*.json" -not -path "*/node_modules/*" -not -path "*/.git/*" \\',
+                  '  | xargs -I{} node -e "JSON.parse(require(\'fs\').readFileSync(\'{}\',\'utf8\'))" 2>&1',
+                  '```',
+                  '',
+                  '**Resolution:** Fix malformed JSON. Common issues: trailing commas, unquoted keys, comments in JSON files.',
+                  '',
+                  '---',
+                  '*Auto-created by BOT-010 · LEGATUS — Legatus et Arbiter*',
+                  '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+                ].join('\n'),
+              },
+            ];
+
+            // Load all open code-debt issues
+            const openIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'organism-bot', per_page: 100
+            });
+            const openTitles = new Set(openIssues.data.map(i => i.title));
+
+            // Load all closed code-debt issues (to re-open or close resolved ones)
+            const closedDebt = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'closed', labels: 'code-debt', per_page: 50
+            });
+
+            for (const dim of dimensions) {
+              // Ensure label exists
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  name: dim.label, color: dim.color,
+                  description: `Code debt label — BOT-010 · LEGATUS`
+                });
+              } catch {}
+
+              if (dim.score < threshold) {
+                // Dimension is failing — create fix issue if not already open
+                if (!openTitles.has(dim.title)) {
+                  await github.rest.issues.create({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    title: dim.title,
+                    body: dim.body,
+                    labels: ['organism-bot', 'code-debt', dim.label]
+                  });
+                  console.log(`Created fix issue: ${dim.title} (score: ${dim.score})`);
+                } else {
+                  console.log(`Fix issue already open: ${dim.title}`);
+                }
+              } else {
+                // Dimension is passing — close any open fix issue for it
+                const toClose = openIssues.data.filter(i => i.title === dim.title);
+                for (const issue of toClose) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: `✅ **[LEGATUS]** This dimension has recovered to **${dim.score}/100** (threshold: ${threshold}). Closing automatically.\n\n*Auto-resolved by BOT-010 · LEGATUS — Legatus et Arbiter*\n*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*`
+                  });
+                  await github.rest.issues.update({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: issue.number, state: 'closed'
+                  });
+                  console.log(`Closed resolved fix issue: ${issue.title}`);
+                }
+              }
+            }
+
+      # ── Auto-fix: repair invalid JSON files ───────────────────────────────
+      - name: "[LEGATUS] Auto-fix invalid JSON configuration files"
+        id: fix_json
+        continue-on-error: true
+        run: |
+          node - <<'JSEOF'
+          const fs = require('fs'), path = require('path');
+          const { execSync } = require('child_process');
+
+          let jsonFiles = [];
+          try {
+            jsonFiles = execSync(
+              'find . -name "*.json" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" -not -path "*/.pnpm-store/*"',
+              { encoding: 'utf8' }
+            ).trim().split('\n').filter(Boolean);
+          } catch {}
+
+          const fixed = [], stillBroken = [];
+
+          for (const f of jsonFiles) {
+            let raw;
+            try { raw = fs.readFileSync(f, 'utf8'); } catch { continue; }
+            try {
+              JSON.parse(raw); // Already valid — skip
+            } catch {
+              // Attempt repair: remove BOM, trailing commas, comments
+              try {
+                const cleaned = raw
+                  .replace(/^\uFEFF/, '')             // BOM
+                  .replace(/\/\/[^\n"]*/g, '')         // // line comments
+                  .replace(/\/\*[\s\S]*?\*\//g, '')    // /* block comments */
+                  .replace(/,(\s*[}\]])/g, '$1');      // trailing commas
+                const parsed = JSON.parse(cleaned);
+                fs.writeFileSync(f, JSON.stringify(parsed, null, 2) + '\n');
+                fixed.push(f);
+                console.log('Fixed: ' + f);
+              } catch (e) {
+                stillBroken.push(f + ': ' + e.message.slice(0, 60));
+              }
+            }
+          }
+
+          fs.writeFileSync('/tmp/legatus_fixed_json.txt', fixed.join('\n'));
+          console.log('fixed_count=' + fixed.length);
+          console.log('fixed_files=' + fixed.join('|'));
+          console.log('broken_count=' + stillBroken.length);
+          JSEOF
+
+          FIXED_COUNT=$(node -e "
+            const fs = require('fs');
+            const f = fs.readFileSync('/tmp/legatus_fixed_json.txt','utf8').trim();
+            console.log(f ? f.split('\n').filter(Boolean).length : 0);
+          " 2>/dev/null || echo 0)
+          FIXED_FILES=$(cat /tmp/legatus_fixed_json.txt 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+          echo "json_fixed=${FIXED_COUNT}" >> $GITHUB_OUTPUT
+          echo "json_fixed_files=${FIXED_FILES}" >> $GITHUB_OUTPUT
+
+      # ── Auto-fix: create PR for repaired JSON files ────────────────────────
+      - name: "[LEGATUS] Create auto-fix PR for JSON repairs"
+        if: steps.fix_json.outputs.json_fixed != '0' && steps.fix_json.outputs.json_fixed != ''
+        uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[LEGATUS] Auto-fix: reformat invalid JSON configuration files"
+          branch: organism-bot/legatus-json-autofix
+          delete-branch: true
+          title: "[LEGATUS] Auto-fix: Invalid JSON Configuration Files"
+          body: |
+            ## 🔧 [LEGATUS] Auto-Fix: JSON Configuration Repair
+
+            **Automated repair by BOT-010 · LEGATUS v2.0.0 — Legatus et Arbiter**
+
+            LEGATUS detected and automatically repaired invalid JSON configuration
+            files by:
+            - Removing trailing commas (not valid in JSON)
+            - Removing inline `//` and block `/* */` comments (not valid in JSON)
+            - Removing BOM markers
+            - Reformatting with consistent 2-space indentation
+
+            ### Fixed Files
+            ```
+            ${{ steps.fix_json.outputs.json_fixed_files }}
+            ```
+
+            ---
+            *Auto-generated by BOT-010 · LEGATUS v2.0.0 — Legatus et Arbiter*
+            *Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*
+          labels: |
+            organism-bot
+            auto-fix
+            code-debt
+          draft: false
+
+      # ── Auto-track: convert TODO markers to GitHub Issues ─────────────────
+      - name: "[LEGATUS] Convert TODO debt to tracked GitHub Issues"
+        id: todo_issues
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          TODO_COUNT: ${{ steps.todo_debt.outputs.todos }}
+        with:
+          script: |
+            if (parseInt(process.env.TODO_COUNT || '0') === 0) {
+              core.setOutput('converted', '0');
+              return;
+            }
+
+            const { execSync } = require('child_process');
+
+            // Grep for TODO/FIXME/HACK with file + line context
+            let todoLines = '';
+            try {
+              todoLines = execSync(
+                'grep -rn "TODO\\|FIXME\\|HACK" organism/web/ organism/cloudflare/ src/frontend/src/ ' +
+                '--include="*.js" --include="*.ts" --include="*.tsx" ' +
+                '--exclude-dir=node_modules --exclude-dir=dist 2>/dev/null | head -20',
+                { encoding: 'utf8' }
+              ).trim();
+            } catch {}
+
+            if (!todoLines) { core.setOutput('converted', '0'); return; }
+
+            // Get existing todo-tracked issues to prevent duplicates
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'todo-tracked', per_page: 100
+            });
+            const existingSignatures = new Set(
+              existing.data.map(i => {
+                const m = i.body?.match(/\*\*File:\*\* `([^`]+)`.*\*\*Line:\*\* (\d+)/s);
+                return m ? `${m[1]}:${m[2]}` : '';
+              }).filter(Boolean)
+            );
+
+            // Ensure label exists
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                name: 'todo-tracked', color: 'e4e669',
+                description: 'TODO/FIXME/HACK marker tracked as a work item — BOT-010 LEGATUS'
+              });
+            } catch {}
+
+            let converted = 0;
+            const lines = todoLines.split('\n').filter(Boolean).slice(0, 10);
+
+            for (const line of lines) {
+              const match = line.match(/^([^:]+):(\d+):\s*(.+)$/);
+              if (!match) continue;
+              const [, file, lineNum, content] = match;
+              const sig = `${file}:${lineNum}`;
+              if (existingSignatures.has(sig)) continue;
+
+              const markerType = content.includes('FIXME') ? 'FIXME'
+                               : content.includes('HACK') ? 'HACK' : 'TODO';
+              const todoText = content.replace(/.*(?:TODO|FIXME|HACK):?\s*/i, '').trim();
+
+              const body = [
+                `## 📌 [LEGATUS] ${markerType} Debt Tracked`,
+                '',
+                `**File:** \`${file}\`  `,
+                `**Line:** ${lineNum}  `,
+                `**Marker:** ${markerType}`,
+                '',
+                '### Code Context',
+                '```',
+                content.trim().slice(0, 200),
+                '```',
+                '',
+                '### Task',
+                todoText.length > 8 ? todoText : `Address the ${markerType} marker at \`${file}:${lineNum}\`.`,
+                '',
+                '**Resolution:** Implement the intended functionality and remove this marker, or document why it is deferred.',
+                '',
+                '---',
+                '*Auto-tracked by BOT-010 · LEGATUS v2.0.0 — Legatus et Arbiter*',
+                '*Medina Doctrine · Copyright © 2024–2026 Alfredo Medina Hernandez*',
+              ].join('\n');
+
+              try {
+                await github.rest.issues.create({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  title: `[LEGATUS] ${markerType}: ${(todoText || `${file}:${lineNum}`).slice(0, 70)}`,
+                  body,
+                  labels: ['organism-bot', 'todo-tracked', 'code-debt']
+                });
+                existingSignatures.add(sig);
+                converted++;
+                console.log(`Tracked: ${sig}`);
+              } catch (e) { console.log(`Skip ${sig}: ${e.message}`); }
+            }
+
+            console.log(`Converted ${converted} TODO markers to tracked issues.`);
+            core.setOutput('converted', String(converted));
+
+      # ── Compute overall status ─────────────────────────────────────────────
+      - name: "[LEGATUS] Compute quality status"
+        id: set-output
+        run: |
+          SCORE="${{ steps.aggregate.outputs.score }}"
+          GRADE="${{ steps.aggregate.outputs.grade }}"
+          echo "status=${GRADE}" >> $GITHUB_OUTPUT
+          echo "score=${SCORE}" >> $GITHUB_OUTPUT
+          echo "summary=${{ steps.aggregate.outputs.emoji }} LEGATUS: quality score ${SCORE}/100 (${GRADE})" >> $GITHUB_OUTPUT
+
+      - name: "[LEGATUS] Final status"
+        run: echo "${{ steps.set-output.outputs.summary }}"

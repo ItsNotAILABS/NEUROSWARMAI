@@ -1,0 +1,34 @@
+{
+  "id": "atlas://entity/command-platform",
+  "name": "Command Platform",
+  "archetypes": ["Organism", "SovereignTerminal", "CognitiveOS"],
+  "locations": [
+    {
+      "type": "github_repo",
+      "uri": "https://github.com/FreddyCreates/command-platform"
+    }
+  ],
+  "languages": [
+    "atlas://language/cpl-l",
+    "atlas://language/cpl-c",
+    "atlas://language/ocl",
+    "atlas://language/cpl-p",
+    "atlas://language/cil",
+    "atlas://language/cdl",
+    "atlas://language/tpl",
+    "atlas://language/hcl",
+    "atlas://language/mml",
+    "atlas://language/scl",
+    "atlas://language/err",
+    "atlas://language/chl",
+    "atlas://language/wfl",
+    "atlas://language/ddl",
+    "atlas://language/lml",
+    "atlas://language/uel"
+  ],
+  "state": {
+    "lifecycle": "active",
+    "risk": "low",
+    "health": "operational"
+  }
+}

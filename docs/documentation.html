@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — CHIMERIA Defense Systems</title>
+  <meta name="description" content="Complete API documentation, integration guides, and platform reference for CHIMERIA Defense Systems.">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">CHIMERIA DEFENSE</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="status.html">Status</a></li>
+      <li><a href="documentation.html" class="active">Docs</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="account.html">Account</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="page-content">
+  <div class="container">
+    <h1 class="section-title">Documentation</h1>
+    <p class="section-subtitle">API references, integration guides, and platform architecture</p>
+
+    <!-- Quick Start -->
+    <div class="card" style="margin-bottom: 48px; border-color: var(--primary);">
+      <h3 style="margin-bottom: 12px;">🚀 Quick Start</h3>
+      <p style="margin-bottom: 16px;">Get up and running with CHIMERIA Defense in under 5 minutes</p>
+      <div style="background: var(--dark); border-radius: 8px; padding: 20px; font-size: 0.85rem; overflow-x: auto;">
+        <div style="color: var(--text-dim); margin-bottom: 8px;"># Install the CHIMERIA CLI</div>
+        <div style="color: var(--primary);">$ npm install -g @chimeria/cli</div>
+        <div style="margin-top: 12px; color: var(--text-dim);"># Authenticate with your API key</div>
+        <div style="color: var(--primary);">$ chimeria auth login --key YOUR_API_KEY</div>
+        <div style="margin-top: 12px; color: var(--text-dim);"># Deploy your first defense configuration</div>
+        <div style="color: var(--primary);">$ chimeria deploy --config defense.yaml</div>
+        <div style="margin-top: 12px; color: var(--text-dim);"># Check system status</div>
+        <div style="color: var(--primary);">$ chimeria status --all</div>
+        <div style="color: var(--success); margin-top: 4px;">✓ 10/10 defense agents ACTIVE</div>
+      </div>
+    </div>
+
+    <!-- Documentation Categories -->
+    <div class="grid-3" style="margin-bottom: 48px;">
+      <div class="card">
+        <h3>📖 Platform Overview</h3>
+        <p>Architecture, concepts, and design principles behind the sovereign defense platform.</p>
+        <ul style="list-style: none; margin-top: 16px; font-size: 0.8rem;">
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Introduction to CHIMERIA</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Medina Doctrine Foundations</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">φ-Geometry Architecture</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Kuramoto Synchronization</a></li>
+          <li style="padding: 6px 0;"><a href="#">10 Runtime Laws</a></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>⚡ API Reference</h3>
+        <p>Complete REST API documentation for all defense endpoints and webhooks.</p>
+        <ul style="list-style: none; margin-top: 16px; font-size: 0.8rem;">
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Authentication & API Keys</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Defense Agent APIs</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Compliance Endpoints</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Webhook Configuration</a></li>
+          <li style="padding: 6px 0;"><a href="#">Rate Limits & Quotas</a></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🔧 Integration Guides</h3>
+        <p>Step-by-step guides for integrating CHIMERIA with your existing infrastructure.</p>
+        <ul style="list-style: none; margin-top: 16px; font-size: 0.8rem;">
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Healthcare (EHR/EMR)</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Cloud Providers (AWS/GCP/Azure)</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">SIEM Integration</a></li>
+          <li style="padding: 6px 0; border-bottom: 1px solid var(--border);"><a href="#">Identity Providers (SAML/OIDC)</a></li>
+          <li style="padding: 6px 0;"><a href="#">Blockchain Networks</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- API Endpoints Reference -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">Core API Endpoints</h2>
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 48px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+            <th>Auth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-success">GET</span></td>
+            <td><code>/api/v1/status</code></td>
+            <td>Get overall system status</td>
+            <td>API Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-success">GET</span></td>
+            <td><code>/api/v1/agents</code></td>
+            <td>List all defense agents and their state</td>
+            <td>API Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-info">POST</span></td>
+            <td><code>/api/v1/scan</code></td>
+            <td>Trigger a full defense scan</td>
+            <td>API Key + Scope</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-success">GET</span></td>
+            <td><code>/api/v1/compliance/report</code></td>
+            <td>Generate compliance report</td>
+            <td>API Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-info">POST</span></td>
+            <td><code>/api/v1/chimera/deploy-swarm</code></td>
+            <td>Deploy physical drone swarm</td>
+            <td>Enterprise Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-info">POST</span></td>
+            <td><code>/api/v1/phantom/spawn-swarm</code></td>
+            <td>Spawn virtual agent swarm</td>
+            <td>Enterprise Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-success">GET</span></td>
+            <td><code>/api/v1/threats</code></td>
+            <td>Get current threat intelligence feed</td>
+            <td>API Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-warning">PUT</span></td>
+            <td><code>/api/v1/config</code></td>
+            <td>Update defense configuration</td>
+            <td>Admin Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-info">POST</span></td>
+            <td><code>/api/v1/webhooks</code></td>
+            <td>Register alert webhook</td>
+            <td>API Key</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-success">GET</span></td>
+            <td><code>/api/v1/metrics</code></td>
+            <td>Get platform performance metrics</td>
+            <td>API Key</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SDKs -->
+    <h2 style="font-size: 1.3rem; margin-bottom: 20px;">SDKs & Libraries</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>JavaScript / TypeScript</h3>
+        <p>Full-featured SDK for Node.js and browser environments</p>
+        <div style="margin-top: 12px; background: var(--dark); padding: 12px; border-radius: 6px; font-size: 0.8rem;">
+          <code style="color: var(--primary);">npm install @chimeria/sdk</code>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Python</h3>
+        <p>Native Python SDK with async support and type hints</p>
+        <div style="margin-top: 12px; background: var(--dark); padding: 12px; border-radius: 6px; font-size: 0.8rem;">
+          <code style="color: var(--primary);">pip install chimeria-sdk</code>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Motoko / ICP</h3>
+        <p>Native Internet Computer canister integration library</p>
+        <div style="margin-top: 12px; background: var(--dark); padding: 12px; border-radius: 6px; font-size: 0.8rem;">
+          <code style="color: var(--primary);">import Chimeria "mo:chimeria"</code>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="platform-footer">
+  <div class="container">
+    <p>CHIMERIA Defense Systems — Sovereign AI Platform</p>
+    <p style="margin-top: 6px;">Copyright © 2024-2026 Alfredo Medina Hernandez. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="assets/js/platform.js"></script>
+</body>
+</html>

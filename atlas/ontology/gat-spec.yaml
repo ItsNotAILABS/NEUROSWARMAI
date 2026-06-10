@@ -1,0 +1,26 @@
+# GAT Specification v1.0.0
+# Gate Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "GAT"
+title: "Gate Language"
+description: "How access is granted/denied: initiation, permissions, tests, keys"
+
+core_concepts:
+  gate: "Access control point"
+  key: "Credential for passage"
+  test: "Challenge to prove worthiness"
+  initiation: "Process of granting access"
+
+access_levels:
+  - PUBLIC
+  - MEMBER
+  - TRUSTED
+  - PRIVILEGED
+  - SOVEREIGN
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

@@ -1,0 +1,27 @@
+# VAL Specification v1.0.0
+# Value Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "VAL"
+title: "Value Language"
+description: "What 'worth it' means: time, attention, energy, money, impact, beauty"
+
+core_concepts:
+  value: "Perceived worth or importance"
+  worth: "Justification for expenditure"
+  trade_off: "Exchange between values"
+
+value_dimensions:
+  - TIME
+  - ATTENTION
+  - ENERGY
+  - MONEY
+  - IMPACT
+  - BEAUTY
+  - MEANING
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

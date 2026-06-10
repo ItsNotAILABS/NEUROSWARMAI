@@ -1,0 +1,26 @@
+# RIT Specification v1.0.0
+# Ritual Language
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+version: "1.0.0"
+language: "RIT"
+title: "Ritual Language"
+description: "How transitions are marked: start/end of projects, promotions, deprecations, rites of passage"
+
+core_concepts:
+  ritual: "Ceremonial action marking significance"
+  transition: "Movement between states"
+  rite_of_passage: "Initiation into new status"
+  ceremony: "Formal observance"
+
+transition_types:
+  - BEGINNING
+  - ENDING
+  - TRANSFORMATION
+  - ELEVATION
+  - DEPRECATION
+
+meta:
+  schema_version: "1.0.0"
+  last_updated: "2026-05-02T00:00:00Z"
+  status: "ACTIVE"

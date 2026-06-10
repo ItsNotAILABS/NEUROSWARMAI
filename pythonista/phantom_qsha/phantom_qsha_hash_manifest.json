@@ -1,0 +1,19 @@
+{
+  "package": "phantom_qsha",
+  "version": "1.0.0",
+  "domain": "MEDINA.PHANTOM.QSHA.v1",
+  "files": {
+    "__init__.py": "5dbe32ea6c3229e541a7fda018653939406c1a60d54be1bb75ea8272da5a3c94",
+    "canonical.py": "5a1b740066954b4e07039a9d7aecf6fb7b28c610308ea2bc529d277c5b512b1d",
+    "errors.py": "6d711e9e0f7be864841ab2ccf6ed338e90bb5d2f3c9dbcf80074e2bb2bb2efe9",
+    "keys.py": "d689b027c946a61d1feb33fe3ed99ba7d71fa6d7c459df6a8e8009539a6da2f9",
+    "manifest.py": "7f166eb2252ff349d77c72fed89321b4326b6d6383430c84e6c5b9e4babe72d3",
+    "qsha.py": "b98b5e90259651eecfac2eefc32fa091360420546050543ef836009854621987",
+    "receipts.py": "56e41919fcdba34d138e2eccda37a795bf4b0b73244792fa9c5325be811deff3",
+    "replay.py": "8ac0d29687a035f2f3f83f1ff0f76e119d70e12f0c7a32865fd3e5f4c50e1060",
+    "shadow_wire.py": "0db1c6904d95ac07dc54ffc0df9d698d06fd34b0d82cb744aaccda297405392f",
+    "utils.py": "96b69ad5b595abdb4c27c92850365c20f02cf35aae1bcecd346458c7dc06bcf9",
+    "vault.py": "badc75628e99c2e1e62caba19a818e100bd1e2a22ef667951a5a74f1006e83ae"
+  },
+  "aggregate_commitment": "578a3038f198b5d8f54a164dac8328ca2124fc06bc5e9d19c5dd05f313dee350"
+}
