@@ -123,6 +123,74 @@ export {
 } from './swarm-airgap-protocols.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ADVANCED OPSEC PROTOCOLS (PROTO-263–272)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export {
+  shannonEntropy,
+  renyiEntropy,
+  ksDistance,
+  phiDecay,
+  klDivergence,
+  mahalanobisDistance,
+  logisticMap,
+  autocorrelation,
+  COVERT_CHANNEL_TYPES,
+  TEMPEST_ZONES,
+  COVER_TRAFFIC_PROFILES,
+  detectTimingChannel,
+  detectStorageChannel,
+  eliminateCovertChannel,
+  computeEmanationRisk,
+  generateTempestCountermeasures,
+  normalizeNodeBehavior,
+  generateTimingMask,
+  assessSideChannelVulnerability,
+  computeLinkability,
+  generateIdentityDivergence,
+  generateLatticeParameters,
+  computeQuantumAnonymitySet,
+  generateTrafficMorphing,
+  computeZeroizationEffectiveness,
+  generateForensicsResistancePlan,
+  scoreRelays,
+  generateObfuscatedPath,
+  generatePatternDisruption,
+} from './swarm-opsec-advanced-protocols.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADVANCED COUNTER-INTELLIGENCE PROTOCOLS (PROTO-273–282)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export {
+  bayesianUpdate,
+  multiHypothesisBayes,
+  phiExponentialDecay,
+  phiSigmoid,
+  cosineSimilarity,
+  phiWeightedAverage,
+  informationGain,
+  ADVERSARY_MODELS,
+  KILL_CHAIN_PHASES,
+  COGNITIVE_BIASES,
+  RECON_PATTERNS,
+  COUNTER_OP_PLAYBOOK,
+  buildTransitionMatrix,
+  predictAdversaryActions,
+  computeTrustDecay,
+  detectDoubleAgent,
+  designCognitiveWarfare,
+  assessSupplyChainIntegrity,
+  computeKillChainDisruption,
+  optimizeDisruptionAllocation,
+  orchestrateDeception,
+  correlateSIGINT,
+  detectAndCounterReconnaissance,
+  designResourceExhaustion,
+  generateCounterOperationPlan,
+} from './swarm-counterintel-advanced-protocols.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
 // SWARM ORCHESTRATOR
 // ═══════════════════════════════════════════════════════════════════════════
 

@@ -6,11 +6,11 @@
 
 ## CLASSIFICATION: SOVEREIGN SWARM INTELLIGENCE INFRASTRUCTURE
 
-This sublibrary implements **32 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-262)
+This sublibrary implements **52 ALPHA-tier SWARM protocols** (PROTO-231 through PROTO-282)
 that govern the distributed intelligence, coordination, security, and execution of the
 entire CHIMERIA organism fleet.
 
-Each protocol is anchored to one or more of the 8 Sovereign AI modules:
+Each protocol is anchored to one or more of the 10 Sovereign AI modules:
 
 | Module | Protocols | Domain |
 |--------|-----------|--------|
@@ -22,6 +22,8 @@ Each protocol is anchored to one or more of the 8 Sovereign AI modules:
 | SovereignAirGap | PROTO-251, 252, 253, 254 | Swarm isolation verification, key ceremony |
 | SovereignOPSEC | PROTO-255, 256, 257, 258 | Operational security, traffic resistance, camouflage |
 | SovereignCOUNTERINTEL | PROTO-259, 260, 261, 262 | Counter-intelligence, deception, threat hunting |
+| SovereignOPSEC-II | PROTO-263, 264, 265, 266, 267, 268, 269, 270, 271, 272 | Deep OPSEC: covert channel elimination, TEMPEST, behavioral normalization, side-channel prevention, identity compartmentalization, quantum anonymity, traffic morphing, forensics resistance, topology obfuscation, pattern disruption |
+| SovereignCOUNTERINTEL-II | PROTO-273, 274, 275, 276, 277, 278, 279, 280, 281, 282 | Advanced CI: behavior prediction, double-agent detection, cognitive warfare, supply chain interdiction, kill-chain disruption, deception orchestration, SIGINT correlation, counter-recon, resource exhaustion, autonomous counter-ops |
 
 ---
 
@@ -65,5 +67,7 @@ This software may be subject to:
 ├── swarm-airgap-protocols.js            (PROTO-251–254)
 ├── swarm-opsec-protocols.js             (PROTO-255–258)
 ├── swarm-counterintel-protocols.js      (PROTO-259–262)
+├── swarm-opsec-advanced-protocols.js    (PROTO-263–272)
+├── swarm-counterintel-advanced-protocols.js (PROTO-273–282)
 └── swarm-orchestrator.js                (Fleet orchestration engine)
 ```
