@@ -1,7 +1,7 @@
 # CHIMERIA DEFENSE — Security & OPSEC Doctrine
 
 ## COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
-## Framework: Medina Doctrine | www.neuroawarmai.com
+## Framework: Medina Doctrine | [www.neuroawarmai.com](https://www.neuroawarmai.com)
 
 ---
 
