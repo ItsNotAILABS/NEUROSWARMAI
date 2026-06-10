@@ -1,6 +1,12 @@
 {
-  "timestamp": "2026-06-10T13:01:45.536Z",
+  "timestamp": "2026-06-10T18:47:44.840Z",
   "metrics": {
+    "drone_swarm.coherence_mean": 0.91,
+    "drone_swarm.threat_fast_p50_ms": 0,
+    "drone_swarm.engine_attest_ratio": 1,
+    "drone_swarm.law_violations_critical": 0,
+    "drone_swarm.agents_healthy_ratio": 1,
+    "drone_swarm.jam_failover_ok": 1,
     "bot_fleet.health_ratio": 1,
     "bot_fleet.total_count": 9,
     "bot_fleet.policy_compliance": 1,
