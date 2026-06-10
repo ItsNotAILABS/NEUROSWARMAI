@@ -37,7 +37,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pythonista*", "python_substrate*"]
+include = ["pythonista*", "python_substrate*", "phantom_native*"]
 
 [tool.setuptools.package-dir]
 python_substrate = "src/python_substrate"
