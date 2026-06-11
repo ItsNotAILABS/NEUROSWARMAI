@@ -1,7 +1,7 @@
 {
   "entity_id": "atlas://bot/organism-economy-bot",
   "op": "economy_scan_completed",
-  "timestamp": "2026-06-10T05:38:42Z",
+  "timestamp": "2026-06-11T05:39:08Z",
   "context": {
     "assets_total": 177,
     "sdk_count": 2,
@@ -10,8 +10,8 @@
     "csv_registers": 0,
     "complexity_score": .1030,
     "coverage": {
-      "test_coverage": .0441,
-      "doc_coverage": .3392
+      "test_coverage": .0539,
+      "doc_coverage": .3333
     }
   }
 }
