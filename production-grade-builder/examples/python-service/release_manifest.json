@@ -1,0 +1,20 @@
+{
+  "name": "example-python-service",
+  "kind": "python-service",
+  "version": "0.1.0",
+  "builder": "production-grade-builder v1.0.0",
+  "built_at": "2026-06-11T08:31:36.626584+00:00",
+  "scores": {
+    "scores": {
+      "structure": 1.0,
+      "manifest_integrity": 1.0,
+      "readme_completeness": 1.0,
+      "policy_present": 1.0,
+      "gate_executable": 1.0
+    },
+    "overall": 1.0,
+    "threshold": 0.7,
+    "passed": true
+  },
+  "manifest_sha256": "f534a88753d4d0f810b36bae329016510c70f62396c794797f5ddc86e6676c63"
+}

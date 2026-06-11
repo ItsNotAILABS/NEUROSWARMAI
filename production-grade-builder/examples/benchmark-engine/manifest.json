@@ -1,0 +1,32 @@
+{
+  "name": "example-benchmark-engine",
+  "kind": "benchmark-engine",
+  "version": "0.1.0",
+  "builder_version": "1.0.0",
+  "description": "Performance measurement engine",
+  "entry": "bench.py",
+  "files": [
+    "PACKET_POLICY.md",
+    "README.md",
+    "bench.py",
+    "config.json",
+    "manifest.json",
+    "release_manifest.json",
+    "reports/build_report.md",
+    "reports/scores.json",
+    "src/metrics.py",
+    "src/runner.py",
+    "tools/quality_gate.py"
+  ],
+  "checksums": {
+    "README.md": "0f9e34c1adcbf198b58f726b0a552f1c7fb4ed6abf426525f9fb045bcea292ab",
+    "PACKET_POLICY.md": "5f007368d13a17306d0c319db337e39339956f7132061c84a77e8226833079ee",
+    "bench.py": "08fc5b5cc1e624680c6422b82de4be0d6aafbf3fcc46d15cd4139a9054bab7e9",
+    "src/runner.py": "1bcd16f70cbfe1b10a803eb050f83f15a1e884dcdf161ec7c608bf152193dcf3",
+    "src/metrics.py": "77c51c113ecd9735a00bbd3ec875274ec160925872a1229074b694c2844a45dc",
+    "config.json": "0e9f6ff8e8c0bfc3c61898de7bcbe1b728e9f090301d97043ecc6b3e08bfdcc6",
+    "tools/quality_gate.py": "685093290656819e27c4c5c0c54cb285899fb8a16efda0f8794a2d8e50dd379e",
+    "reports/build_report.md": "57682f5ec987826bf52f4937302b19f8f591f3c63c764a100130f2a6a8d39982",
+    "reports/scores.json": "8a579064cf31553ffad857afd70c71408bd09d9f02fae9510643a0ab0b0e2028"
+  }
+}

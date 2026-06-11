@@ -1,0 +1,3 @@
+# example-python-service — requirements.txt
+# Kind: python-service
+# TODO: Implement

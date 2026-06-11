@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "profiles": {
+    "static-app": {
+      "description": "HTML/CSS/JS frontend bundles",
+      "entry": "index.html",
+      "extra_files": ["src/app.js", "src/style.css"]
+    },
+    "python-service": {
+      "description": "Python backend service or library",
+      "entry": "main.py",
+      "extra_files": ["src/__init__.py", "src/service.py", "requirements.txt"]
+    },
+    "node-service": {
+      "description": "Node.js backend service or library",
+      "entry": "index.js",
+      "extra_files": ["src/server.js", "package.json"]
+    },
+    "benchmark-engine": {
+      "description": "Performance measurement engine",
+      "entry": "bench.py",
+      "extra_files": ["src/runner.py", "src/metrics.py", "config.json"]
+    },
+    "local-api": {
+      "description": "Local REST/gRPC API service",
+      "entry": "api.py",
+      "extra_files": ["src/routes.py", "src/models.py", "openapi.yaml"]
+    },
+    "ci-workflow": {
+      "description": "CI/CD pipeline definitions",
+      "entry": "ci.yaml",
+      "extra_files": ["workflows/build.yaml", "workflows/test.yaml"]
+    },
+    "dataset": {
+      "description": "Structured data packages",
+      "entry": "data.json",
+      "extra_files": ["schema.json", "README_DATA.md"]
+    },
+    "manifest": {
+      "description": "Configuration/declaration files",
+      "entry": "config.yaml",
+      "extra_files": ["schema.json"]
+    },
+    "proof-pack": {
+      "description": "Mathematical/cryptographic proof bundles",
+      "entry": "proof.md",
+      "extra_files": ["src/verify.py", "artifacts/signatures.json"]
+    },
+    "research-packet": {
+      "description": "Research papers, findings, references",
+      "entry": "paper.md",
+      "extra_files": ["references.bib", "figures/placeholder.md"]
+    },
+    "dashboard": {
+      "description": "Monitoring/visualization UI",
+      "entry": "index.html",
+      "extra_files": ["src/dashboard.js", "src/charts.js", "src/style.css"]
+    },
+    "docs": {
+      "description": "Documentation packages",
+      "entry": "index.md",
+      "extra_files": ["guide.md", "api-reference.md"]
+    },
+    "deploy-scaffold": {
+      "description": "Deployment infrastructure templates",
+      "entry": "deploy.yaml",
+      "extra_files": ["templates/service.yaml", "templates/ingress.yaml", "env.example"]
+    },
+    "repo-surface": {
+      "description": "Repository-level configuration/governance",
+      "entry": "GOVERNANCE.md",
+      "extra_files": ["CONTRIBUTING.md", "CODE_OF_CONDUCT.md"]
+    }
+  }
+}
