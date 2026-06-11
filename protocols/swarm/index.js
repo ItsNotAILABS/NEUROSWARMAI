@@ -135,3 +135,34 @@ export {
   executeEmergencyZeroize,
   executeSwarmMission,
 } from './swarm-orchestrator.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EMBEDDED SUB-PROTOCOLS (PROTO-255–274)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export {
+  heartbeatSync,
+  deriveNodeIdentity,
+  phiHash,
+  spatialExclusionEnvelope,
+  kuramotoCouple,
+  fibonacciQuorum,
+  byzantineFaultDetector,
+  goldenEpochTimer,
+  merkleChainAppend,
+  merkleChainVerify,
+  entropyAccumulate,
+  phiWeightedVote,
+  heartbeatMonitor,
+  fibonacciBackoff,
+  generateNonce,
+  ringPositionAssign,
+  signalEnvelopeDetector,
+  gradientNormClip,
+  attestationSign,
+  attestationVerify,
+  swarmBroadcast,
+  emergencyCascade,
+  PHI_BEAT_MS,
+  FIB,
+} from './swarm-embedded-protocols.js';
