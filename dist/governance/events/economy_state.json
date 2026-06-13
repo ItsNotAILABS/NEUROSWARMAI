@@ -1,7 +1,7 @@
 {
   "entity_id": "atlas://bot/organism-economy-bot",
   "op": "economy_scan_completed",
-  "timestamp": "2026-06-12T05:39:04Z",
+  "timestamp": "2026-06-13T05:35:06Z",
   "context": {
     "assets_total": 177,
     "sdk_count": 2,
