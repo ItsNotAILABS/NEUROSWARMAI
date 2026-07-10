@@ -1,14 +1,14 @@
 {
   "entity_id": "atlas://bot/organism-learning-bot",
   "op": "learning_cycle_completed",
-  "timestamp": "2026-07-09T18:33:25Z",
+  "timestamp": "2026-07-10T00:25:05Z",
   "context": {
     "training_signals": 4,
     "hebbian_synapses_trained": 7,
     "protocols_evolved": 3,
-    "state_path": "dist/learning/state-2026-07-09.json",
+    "state_path": "dist/learning/state-2026-07-10.json",
     "learning_rate": 0.01,
-    "cycle_duration_ms": 248,
+    "cycle_duration_ms": 276,
     "error_rate": .105
   }
 }
