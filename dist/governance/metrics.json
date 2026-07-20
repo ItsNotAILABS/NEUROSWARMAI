@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-20T06:58:52.863Z",
+  "timestamp": "2026-07-20T12:39:44.262Z",
   "metrics": {
     "drone_swarm.coherence_mean": 0.91,
     "drone_swarm.threat_fast_p50_ms": 0,
