@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-07-28T06:48:37Z",
-  "training_signals": 7,
-  "hebbian_synapses_trained": 9,
+  "timestamp": "2026-07-28T12:32:20Z",
+  "training_signals": 6,
+  "hebbian_synapses_trained": 8,
   "protocols_evolved": 3,
   "error_rate": .1,
   "learning_rate": 0.01,
-  "cycle_duration_ms": 2311
+  "cycle_duration_ms": 346
 }
