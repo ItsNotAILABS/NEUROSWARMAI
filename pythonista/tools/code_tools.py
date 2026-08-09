@@ -395,7 +395,8 @@ class DocumentTool(NovaTool):
         
         # Metrics
         doc_parts.append("## Metrics\n\n")
-        doc_parts.append(f"- Lines of code: {len(code.split('\\n'))}\n")
+        line_count = len(code.splitlines())
+        doc_parts.append(f"- Lines of code: {line_count}\n")
         doc_parts.append(f"- Functions: {len(functions)}\n")
         doc_parts.append(f"- Classes: {len(classes)}\n")
         doc_parts.append(f"- Existing docstrings: {len(docstrings)}\n")

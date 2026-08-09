@@ -263,6 +263,33 @@ The economy operates on 7-year Jubilee cycles with fear-priced minting gates and
 
 ---
 
+## NeuroSwarm Evidence & Sovereign Stack
+
+**For evaluators and customers:** measured claims with honest tiers — not combat certification until named gaps close.
+
+| Asset | Purpose |
+|-------|---------|
+| `evidence/mesie/` | Public evidence pack (harness results, claim tiers, gap plan) |
+| `evidence/mesie/reproduce_neuroswarmai.ps1` | One-command repro or embedded manifest verify |
+| `evidence/ZENODO_ALIGNMENT.md` | Public Cryptographia (Zenodo) ↔ production Phantom QSHA ↔ sovereign native |
+| `scripts/run_neuroswarm_stack.ps1` | Full stack verify: Python + Node + evidence + governance |
+
+**Sovereign layers in this repo:**
+
+- **Phantom QSHA** (`pythonista/phantom_qsha/`) — QSHA commitments, Shadow Wire, Sovereign Vault, Receipt Chain
+- **Sovereign native** (`sovereign_*.py`) — dependency-free tensor, wire, model, compute kernels
+- **Drone-side engines** (`pythonista/neuroswarm/`) — DSEN, DNAV, DMESH, DTHR, DFORM, DRT on every edge tick
+- **Swarm protocols** (`protocols/swarm/`) — PROTO-231–262 including drone-side + CPL-L law gate
+- **Constitutional law** (`laws/neuroswarm-drone-side.cpl-l`) — binding edge rules enforced by governance cycle
+
+```powershell
+.\scripts\run_neuroswarm_stack.ps1
+```
+
+Site alignment: [neuroswarmai.com](https://neuroswarmai.com) · Zenodo [Cryptographia Phantasma](https://zenodo.org/records/20598320)
+
+---
+
 ## Governance & Compliance
 
 CHIMERIA DEFENSE implements multi-framework compliance as an **immutable constitutional guarantee** — not a checkbox, not an afterthought, but architecturally enforced law:

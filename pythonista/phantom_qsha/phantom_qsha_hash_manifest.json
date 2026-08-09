@@ -1,19 +1,23 @@
 {
   "package": "phantom_qsha",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "domain": "MEDINA.PHANTOM.QSHA.v1",
   "files": {
-    "__init__.py": "5dbe32ea6c3229e541a7fda018653939406c1a60d54be1bb75ea8272da5a3c94",
-    "canonical.py": "5a1b740066954b4e07039a9d7aecf6fb7b28c610308ea2bc529d277c5b512b1d",
-    "errors.py": "6d711e9e0f7be864841ab2ccf6ed338e90bb5d2f3c9dbcf80074e2bb2bb2efe9",
-    "keys.py": "d689b027c946a61d1feb33fe3ed99ba7d71fa6d7c459df6a8e8009539a6da2f9",
-    "manifest.py": "7f166eb2252ff349d77c72fed89321b4326b6d6383430c84e6c5b9e4babe72d3",
-    "qsha.py": "b98b5e90259651eecfac2eefc32fa091360420546050543ef836009854621987",
-    "receipts.py": "56e41919fcdba34d138e2eccda37a795bf4b0b73244792fa9c5325be811deff3",
-    "replay.py": "8ac0d29687a035f2f3f83f1ff0f76e119d70e12f0c7a32865fd3e5f4c50e1060",
-    "shadow_wire.py": "0db1c6904d95ac07dc54ffc0df9d698d06fd34b0d82cb744aaccda297405392f",
-    "utils.py": "96b69ad5b595abdb4c27c92850365c20f02cf35aae1bcecd346458c7dc06bcf9",
-    "vault.py": "badc75628e99c2e1e62caba19a818e100bd1e2a22ef667951a5a74f1006e83ae"
+    "__init__.py": "f4de5d56441a2ee588208ae22022234ce9928864dd9c4e342c31a0b1bec9765c",
+    "canonical.py": "a736ba69c2741a37e3f21f25dfa487d660213c18771c8be76fbef70c126f26c3",
+    "errors.py": "84774ef5db3f6e5de759b4ae69eae9d0602ae327f1d668d10a49453dbcf110aa",
+    "keys.py": "e18a52aa1f86833a6245d2405d1abb8c6fd17442b840b8f3dc45b30c484c0fee",
+    "manifest.py": "3594c9c79a46134c531feed681443760ce4100bd278c3567b36c7037c6dd46ca",
+    "qsha.py": "8b6685623b8ffdea2d12ff02329715d5b183dc160f733dd6a665995059665db9",
+    "receipts.py": "6af838050191abdb33715477191a6575dced37c19253479c1a5eba8eb55fdf0e",
+    "replay.py": "2b03bad54de04c23044edb1a273e96ed57f84b180fdf7df7136af22204e1243c",
+    "shadow_wire.py": "a8c74b3a1641a5bf8dbb7493b4e0d092841be17b8345414893f780e0ef6b5725",
+    "sovereign_compute.py": "695a4ce3da3936180669328c1aab945efd80787e0e817dbf33c1d26a8f96a895",
+    "sovereign_model.py": "389993435bc6634ad88da845e9072ac0681f1549d1a8fe5a142c84e59a146267",
+    "sovereign_tensor.py": "ce641d9ea45a17fdeb29b4e3a4d8aafd230ef9d79a1e20cc6aaae8320b0e5d96",
+    "sovereign_wire.py": "3f41f25f346ce48930c89d6bf434f9beaec937a451cfb9d6aa57b5fa30cb3c36",
+    "utils.py": "50c9126fafab8728bafef188be185768c24d7200c5f300ae1a40d1907855363e",
+    "vault.py": "7bb41c3a4e4b15c1641b50adcbc3320268ebe717a6ed72f3a03b565c6627aeaa"
   },
-  "aggregate_commitment": "578a3038f198b5d8f54a164dac8328ca2124fc06bc5e9d19c5dd05f313dee350"
+  "aggregate_commitment": "7a783c9cec2883cf49bfb670796738b6a7b242a80a5602bb55d2ce28762d9105"
 }

@@ -1,0 +1,91 @@
+LAW NEUROSWARM_DRONE_SIDE {
+  VERSION: "1.0.0"
+  DOMAIN: "CHIMERIA.DRONE.EDGE"
+  BINDING: ALL_TERMINALS
+  PHI_SYNC: true
+  PHI_BEAT: 873ms
+  SUPERSEDES: none
+
+  RULE NSW-L001_KURAMOTO_COHERENCE {
+    SUBJECT: swarm_actuation
+    CONDITION: kuramoto_r < 0.85
+    ACTION: HOLD_ACTUATION
+    SEVERITY: CRITICAL
+    ENGINE: DFORM
+    PROTOCOL: PROTO-259
+    IMMUTABLE: true
+  }
+
+  RULE NSW-L002_THREAT_FAST_PATH {
+    SUBJECT: spectral_threat_decision
+    CONDITION: threat_decision_ms > 12
+    ACTION: ALERT_GUARDIAN
+    SEVERITY: HIGH
+    ENGINE: DTHR
+    PROTOCOL: PROTO-258
+  }
+
+  RULE NSW-L003_GPS_DENIED_NAV {
+    SUBJECT: edge_navigation
+    CONDITION: gps_denied AND NOT nav_ok
+    ACTION: DEGRADE_TO_INERTIAL
+    SEVERITY: HIGH
+    ENGINE: DNAV
+    PROTOCOL: PROTO-256
+  }
+
+  RULE NSW-L004_JAM_FAILOVER {
+    SUBJECT: route_access
+    CONDITION: ground_jammed AND access_mode != orbital_preferred
+    ACTION: SWITCH_ORBITAL_ROUTE
+    SEVERITY: CRITICAL
+    ENGINE: DRT
+    PROTOCOL: PROTO-260
+    IMMUTABLE: true
+  }
+
+  RULE NSW-L005_MESH_PARTITION {
+    SUBJECT: gossip_mesh
+    CONDITION: mesh_partitions > 0
+    ACTION: GOSSIP_HEAL
+    SEVERITY: HIGH
+    ENGINE: DMESH
+    PROTOCOL: PROTO-257
+  }
+
+  RULE NSW-L006_FORMATION_INTEGRITY {
+    SUBJECT: phi_lattice
+    CONDITION: formation_error > phi_inverse
+    ACTION: REFORM_LATTICE
+    SEVERITY: MEDIUM
+    ENGINE: DFORM
+    PROTOCOL: PROTO-259
+  }
+
+  RULE NSW-L007_SIDE_ENGINE_ATTEST {
+    SUBJECT: drone_side_runtime
+    CONDITION: engines_attested NOT CONTAINS ALL [DSEN, DNAV, DMESH, DTHR, DFORM, DRT]
+    ACTION: BLOCK_TICK
+    SEVERITY: CRITICAL
+    ENGINE: ALL
+    PROTOCOL: PROTO-261
+    IMMUTABLE: true
+  }
+
+  RULE NSW-L008_ROE_GATE {
+    SUBJECT: actuation
+    CONDITION: actuation_requested AND roe_score < 0.5
+    ACTION: BLOCK_ACTUATION
+    SEVERITY: CRITICAL
+    ENGINE: DTHR
+    PROTOCOL: PROTO-262
+    IMMUTABLE: true
+  }
+
+  AMENDMENT 1.0.0 {
+    REQUIRES: QUORUM(0.618)
+    CHANGES: initial_release
+    AUTHOR: Alfredo Medina Hernandez
+    DATE: 2026-06-10
+  }
+}

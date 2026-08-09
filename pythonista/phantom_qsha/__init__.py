@@ -8,6 +8,7 @@ Components:
     - Sovereign Vault (encrypted on-disk storage with abstracted reads)
     - Receipt Chain (append-only verifiable ledger)
     - Context-Bound Key Derivation (HKDF + QSHA)
+    - Sovereign Native Stack (tensor, wire, model, compute — zero third-party)
 
 Author: Alfredo Medina Hernandez / ItsNotAI Labs / MedinaTech
 Reference: Cryptographia Phantasma v1.0 (Zenodo DOI: 10.5281/zenodo.20598320)
@@ -30,8 +31,23 @@ from pythonista.phantom_qsha.replay import FileReplayCache
 from pythonista.phantom_qsha.shadow_wire import ShadowWireEngine
 from pythonista.phantom_qsha.vault import SovereignVault
 from pythonista.phantom_qsha.canonical import canonical_json
+from pythonista.phantom_qsha.sovereign_compute import (
+    SovereignInterpreter,
+    build_linear_classifier,
+    run_forward,
+)
+from pythonista.phantom_qsha.sovereign_model import ModelNode, SovereignModel
+from pythonista.phantom_qsha.sovereign_tensor import SovereignTensor
+from pythonista.phantom_qsha.sovereign_wire import (
+    WireSchema,
+    decode_freeform,
+    decode_record,
+    encode_freeform,
+    encode_record,
+    wire_commitment,
+)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __all__ = [
     "PhantomError",
     "PolicyError",
@@ -48,4 +64,16 @@ __all__ = [
     "ShadowWireEngine",
     "SovereignVault",
     "canonical_json",
+    "SovereignTensor",
+    "WireSchema",
+    "encode_record",
+    "decode_record",
+    "encode_freeform",
+    "decode_freeform",
+    "wire_commitment",
+    "SovereignModel",
+    "ModelNode",
+    "SovereignInterpreter",
+    "build_linear_classifier",
+    "run_forward",
 ]

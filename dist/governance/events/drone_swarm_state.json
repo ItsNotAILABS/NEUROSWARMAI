@@ -1,0 +1,37 @@
+{
+  "entity_id": "atlas://engine/neuroswarm-drone-side",
+  "op": "drone_swarm_tick_completed",
+  "timestamp": "2026-06-10T15:43:02.635Z",
+  "context": {
+    "n_agents": 8,
+    "agents_healthy": 8,
+    "kuramoto_r_mean": 0.91,
+    "threat_consensus": "clear",
+    "threat_fast_p50_ms": 0,
+    "jam_failover_ok": true,
+    "engines_attested_ratio": 1,
+    "law_violations_critical": 0,
+    "law_violations_total": 0,
+    "access_modes": [
+      "ground_mesh"
+    ],
+    "protocols_invoked": [
+      "PROTO-255",
+      "PROTO-256",
+      "PROTO-257",
+      "PROTO-258",
+      "PROTO-259",
+      "PROTO-260",
+      "PROTO-261",
+      "PROTO-262"
+    ],
+    "side_engines": [
+      "DSEN",
+      "DNAV",
+      "DMESH",
+      "DTHR",
+      "DFORM",
+      "DRT"
+    ]
+  }
+}

@@ -146,6 +146,43 @@ const CPL_L_LAWS = {
     action: 'ALERT_ORACLE',
     description: 'No active callers registered with the geometry lock',
   },
+
+  // Drone Swarm State Laws (NeuroSwarm drone-side engines)
+  DRONE_COHERENCE_LOW: {
+    eventType: 'drone_swarm_state',
+    condition: (ctx) => ctx.kuramoto_r_mean < 0.85,
+    severity: 'CRITICAL',
+    action: 'HOLD_ACTUATION',
+    description: 'Fleet Kuramoto coherence below 0.85',
+  },
+  DRONE_THREAT_SLOW: {
+    eventType: 'drone_swarm_state',
+    condition: (ctx) => ctx.threat_fast_p50_ms > 12,
+    severity: 'HIGH',
+    action: 'ALERT_GUARDIAN',
+    description: 'Threat-fast path exceeds 12ms p50',
+  },
+  DRONE_JAM_FAILOVER_BROKEN: {
+    eventType: 'drone_swarm_state',
+    condition: (ctx) => ctx.jam_failover_ok === false,
+    severity: 'CRITICAL',
+    action: 'SWITCH_ORBITAL_ROUTE',
+    description: 'Jam failover to orbital_preferred failed',
+  },
+  DRONE_ENGINE_ATTEST_INCOMPLETE: {
+    eventType: 'drone_swarm_state',
+    condition: (ctx) => ctx.engines_attested_ratio < 1.0,
+    severity: 'CRITICAL',
+    action: 'BLOCK_TICK',
+    description: 'Not all six drone-side engines attested',
+  },
+  DRONE_LAW_CRITICAL: {
+    eventType: 'drone_swarm_state',
+    condition: (ctx) => ctx.law_violations_critical > 0,
+    severity: 'CRITICAL',
+    action: 'BLOCK_RELEASE',
+    description: 'Critical CPL-L violations in drone swarm tick',
+  },
 };
 
 // Meta Engine Metric Extractors
@@ -188,6 +225,14 @@ const METRIC_EXTRACTORS = {
     'security.geometry_lock_total_validations': ctx.geometry_lock_total_validations,
     'security.geometry_lock_active_callers': ctx.geometry_lock_active_callers,
     'security.geometry_lock_total_denied': ctx.geometry_lock_total_denied,
+  }),
+  drone_swarm_state: (ctx) => ({
+    'drone_swarm.coherence_mean': ctx.kuramoto_r_mean,
+    'drone_swarm.threat_fast_p50_ms': ctx.threat_fast_p50_ms,
+    'drone_swarm.engine_attest_ratio': ctx.engines_attested_ratio,
+    'drone_swarm.law_violations_critical': ctx.law_violations_critical,
+    'drone_swarm.agents_healthy_ratio': ctx.agents_healthy / ctx.n_agents,
+    'drone_swarm.jam_failover_ok': ctx.jam_failover_ok ? 1 : 0,
   }),
 };
 

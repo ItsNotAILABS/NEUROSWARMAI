@@ -24,9 +24,10 @@
  *   1. Pre-flight: PROTO-252 (isolation), PROTO-253 (boot), PROTO-247 (compliance)
  *   2. Compute: PROTO-231-234 (tensor), PROTO-235-238 (neural)
  *   3. Deploy: PROTO-239-242 (inference)
- *   4. Operate: PROTO-243-246 (SIGINT)
- *   5. Audit: PROTO-248-250 (compliance gates)
- *   6. Emergency: PROTO-254 (zeroization)
+ *   4. Drone Side: PROTO-255-262 (edge engines + law gate)
+ *   5. Operate: PROTO-243-246 (SIGINT)
+ *   6. Audit: PROTO-248-250 (compliance gates)
+ *   7. Emergency: PROTO-254 (zeroization)
  *
  * ZERO EXTERNAL DEPENDENCIES.
  */
@@ -74,6 +75,8 @@ import {
   secureBootChainVerification,
   zeroizationCoordination,
 } from './swarm-airgap-protocols.js';
+
+import { executeDroneSideTick } from './swarm-drone-side-protocols.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -287,6 +290,70 @@ function executeDeploy(deployment, nodes, swarmState) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// DRONE SIDE ENGINE EXECUTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Execute drone-side engine tick across fleet agents
+ * Runs: PROTO-255 through PROTO-262
+ *
+ * @param {Object} droneConfig - Per-agent or fleet-wide drone side config
+ * @param {Object} swarmState - Current swarm state
+ * @returns {Object} Drone side execution result
+ */
+function executeDroneSide(droneConfig, swarmState) {
+  const agents = droneConfig.agents || [{ agentId: 'drone-001' }];
+  const ticks = agents.map((agent, index) =>
+    executeDroneSideTick({
+      ...droneConfig,
+      ...agent,
+      agentIndex: agent.agentIndex ?? index,
+    })
+  );
+
+  const healthy = ticks.filter((t) => t.ok).length;
+  const kuramotoR = droneConfig.kuramotoR ?? 0.9;
+  const kuramotoSum = kuramotoR * ticks.length;
+  const threatMs = ticks
+    .map((t) => t.engines?.find((e) => e.engine === 'DTHR')?.threatDecisionMs ?? 0)
+    .sort((a, b) => a - b);
+  const p50 = threatMs[Math.floor(threatMs.length / 2)] || 0;
+  const jamOk = ticks.every(
+    (t) => !droneConfig.groundJammed || t.accessMode === 'orbital_preferred'
+  );
+
+  const lawViolations = ticks.reduce(
+    (s, t) => s + (t.lawGate?.violations?.length || 0),
+    0
+  );
+  const criticalViolations = ticks.reduce(
+    (s, t) => s + (t.lawGate?.criticalCount || 0),
+    0
+  );
+
+  swarmState.protocolsExecuted.push('PROTO-255', 'PROTO-262');
+
+  return {
+    phase: 'DRONE_SIDE',
+    agentsTotal: agents.length,
+    agentsHealthy: healthy,
+    kuramotoRMean: kuramotoSum / Math.max(agents.length, 1),
+    threatFastP50Ms: p50,
+    jamFailoverOk: jamOk,
+    enginesAttestedRatio: healthy / Math.max(agents.length, 1),
+    lawViolationsTotal: lawViolations,
+    lawViolationsCritical: criticalViolations,
+    goNoGo: criticalViolations === 0 && healthy === agents.length,
+    ticks,
+    protocols: [
+      'PROTO-255', 'PROTO-256', 'PROTO-257', 'PROTO-258',
+      'PROTO-259', 'PROTO-260', 'PROTO-261', 'PROTO-262',
+    ],
+    timestamp: Date.now(),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // SIGINT EXECUTION
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -420,7 +487,23 @@ function executeSwarmMission(mission) {
     swarmState.phase = 'DEPLOY_COMPLETE';
   }
 
-  // Phase 4: SIGINT
+  // Phase 4: Drone Side Engines
+  if (mission.droneSide) {
+    const droneSide = executeDroneSide(mission.droneSide, swarmState);
+    timeline.push(droneSide);
+    swarmState.phase = 'DRONE_SIDE_COMPLETE';
+    if (!droneSide.goNoGo) {
+      return {
+        status: 'ABORTED',
+        reason: 'Drone side law gate failed',
+        droneSide,
+        timeline,
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  // Phase 5: SIGINT
   if (mission.sigint) {
     const sigint = executeSIGINT(mission.sigint, swarmState);
     timeline.push(sigint);
@@ -453,6 +536,7 @@ export {
   executePreFlight,
   executeCompute,
   executeDeploy,
+  executeDroneSide,
   executeSIGINT,
   executeEmergencyZeroize,
   // Full pipeline
@@ -468,6 +552,7 @@ export default {
   executePreFlight,
   executeCompute,
   executeDeploy,
+  executeDroneSide,
   executeSIGINT,
   executeEmergencyZeroize,
   executeSwarmMission,

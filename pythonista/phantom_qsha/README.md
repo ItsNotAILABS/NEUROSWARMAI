@@ -63,6 +63,14 @@ Phantom QSHA implements the full Phantom Cryptography stack for production use i
 └─────────────────────────────────────────────────┘
 ```
 
+## Sovereign Core Advantages
+
+**Optimized Runtime Efficiency** — Pure-native mathematical implementations deliver deterministic, predictable performance with minimal overhead on inference-heavy and small-model agent loops. Quantization and custom kernels unlock exceptional efficiency on edge and constrained hardware, often outperforming general-purpose frameworks by eliminating abstraction layers and dynamic dispatch.
+
+**Streamlined Development Focus** — The absence of heavy external dependencies creates a clean, auditable codebase that prioritizes clarity and control. This sovereign design excels as the hardened core runtime kernel, while higher-level agent logic remains expressive in safe languages through clean, verified interfaces.
+
+**Seamless Hardware Integration** — The architecture naturally complements hardware roots of trust (TPM, Pluton, custom silicon, attestation). Binding produces cryptographically verifiable, tamper-evident deterministic binaries that strengthen compliance, reproducibility, and deployment confidence in high-assurance environments.
+
 ## Module Map
 
 | Module | Purpose |
@@ -74,9 +82,34 @@ Phantom QSHA implements the full Phantom Cryptography stack for production use i
 | `replay.py` | FileReplayCache — filesystem-backed wire ID deduplication |
 | `shadow_wire.py` | ShadowWireEngine — encrypted ephemeral channels |
 | `vault.py` | SovereignVault — encrypted storage with abstracted access |
+| `sovereign_tensor.py` | NumPy replacement — deterministic tensor ops + int8 quant |
+| `sovereign_wire.py` | Protobuf replacement — tagged binary wire format |
+| `sovereign_model.py` | ONNX-lite — graph + weight package with commitments |
+| `sovereign_compute.py` | CPU inference interpreter (MatMul, Conv2d, Relu, Softmax) |
 | `errors.py` | PolicyError, IntegrityError, ReplayError hierarchy |
 | `manifest.py` | Build integrity manifest generator |
 | `utils.py` | Backward-compatible re-exports |
+
+## Zenodo ↔ Production Alignment
+
+Public release: [Cryptographia Phantasma v1.0](https://zenodo.org/records/20598320) (June 8, 2026).  
+Production buildout commitment: `42959fdfa2b66472ca3e7e970d2b05cd1e3e84240e68a2aa3c12dddb432c8cf9`  
+Local live manifest: `phantom_qsha_hash_manifest.json` (regenerate after changes).
+
+See `evidence/ZENODO_ALIGNMENT.md` for layer separation (public demo vs sovereign core vs sovereign native).
+
+## MESIE Evidence Bridge
+
+Measured NeuroSwarmAI claims ship in `evidence/mesie/`. Reproduce:
+
+```powershell
+.\evidence\mesie\reproduce_neuroswarmai.ps1
+```
+
+```bash
+python scripts/regenerate_phantom_manifest.py
+python -m pytest tests/python/test_sovereign_native.py tests/python/test_phantom_qsha.py -v
+```
 
 ## Error Hierarchy
 
@@ -135,7 +168,7 @@ decrypted = engine.receive(envelope, route="internal/cognitive")
 python -m pytest tests/python/test_phantom_qsha.py -v
 ```
 
-29 tests covering: QSHA stability, vault flows, shadow wire round-trip, replay blocking, receipt chain integrity, and full integration flow.
+43+ tests covering: QSHA stability, sovereign native stack, vault flows, shadow wire round-trip, replay blocking, receipt chain integrity, and full integration flow.
 
 ## Security Notes
 

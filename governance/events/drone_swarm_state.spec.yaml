@@ -1,0 +1,142 @@
+# Drone Swarm State Event Specification
+# Emitted by: neuroswarm drone-side runtime / swarm orchestrator
+# COPYRIGHT © 2024-2026 ALFREDO MEDINA HERNANDEZ. ALL RIGHTS RESERVED.
+
+event_type: "drone_swarm_state"
+version: "1.0.0"
+source_organism: "neuroswarm-drone-side"
+entity_id: "atlas://engine/neuroswarm-drone-side"
+
+description: "Per-tick drone side engine health, law compliance, and swarm coherence report"
+
+schema:
+  entity_id:
+    type: STRING
+    required: true
+    pattern: "^atlas://engine/neuroswarm-drone-side$"
+
+  op:
+    type: STRING
+    required: true
+    enum: ["drone_swarm_tick_completed", "drone_law_violation_detected"]
+
+  timestamp:
+    type: TIMESTAMP
+    required: true
+    format: "ISO 8601"
+
+  context:
+    type: OBJECT
+    required: true
+    properties:
+      n_agents:
+        type: INTEGER
+        minimum: 1
+      agents_healthy:
+        type: INTEGER
+        minimum: 0
+      kuramoto_r_mean:
+        type: FLOAT
+        minimum: 0.0
+        maximum: 1.0
+      threat_consensus:
+        type: STRING
+        enum: ["threat", "clear", "mixed"]
+      threat_fast_p50_ms:
+        type: FLOAT
+        minimum: 0.0
+      jam_failover_ok:
+        type: BOOLEAN
+      engines_attested_ratio:
+        type: FLOAT
+        minimum: 0.0
+        maximum: 1.0
+      law_violations_critical:
+        type: INTEGER
+        minimum: 0
+      law_violations_total:
+        type: INTEGER
+        minimum: 0
+      access_modes:
+        type: ARRAY[STRING]
+      protocols_invoked:
+        type: ARRAY[STRING]
+      side_engines:
+        type: ARRAY[STRING]
+        description: "DSEN, DNAV, DMESH, DTHR, DFORM, DRT"
+
+cpl_l_conditions:
+  DRONE_COHERENCE_LOW:
+    expression: "context.kuramoto_r_mean < 0.85"
+    severity: "CRITICAL"
+    description: "Fleet Kuramoto coherence below 0.85 — hold actuation"
+    action: "HOLD_ACTUATION, alert GUARDIAN"
+
+  DRONE_THREAT_SLOW:
+    expression: "context.threat_fast_p50_ms > 12"
+    severity: "HIGH"
+    description: "Threat-fast path exceeds 12ms p50 on edge harness"
+    action: "ALERT_GUARDIAN"
+
+  DRONE_JAM_FAILOVER_BROKEN:
+    expression: "context.jam_failover_ok == false"
+    severity: "CRITICAL"
+    description: "Jam failover to orbital_preferred failed"
+    action: "SWITCH_ORBITAL_ROUTE, BLOCK_RELEASE"
+
+  DRONE_ENGINE_ATTEST_INCOMPLETE:
+    expression: "context.engines_attested_ratio < 1.0"
+    severity: "CRITICAL"
+    description: "Not all six drone-side engines attested"
+    action: "BLOCK_TICK"
+
+  DRONE_LAW_CRITICAL:
+    expression: "context.law_violations_critical > 0"
+    severity: "CRITICAL"
+    description: "Critical CPL-L violations in drone swarm tick"
+    action: "BLOCK_RELEASE, alert GUARDIAN"
+
+meta_engine_metrics:
+  - metric_id: "drone_swarm.coherence_mean"
+    expression: "context.kuramoto_r_mean"
+    type: "GAUGE"
+    unit: "ratio"
+
+  - metric_id: "drone_swarm.threat_fast_p50_ms"
+    expression: "context.threat_fast_p50_ms"
+    type: "GAUGE"
+    unit: "milliseconds"
+
+  - metric_id: "drone_swarm.engine_attest_ratio"
+    expression: "context.engines_attested_ratio"
+    type: "GAUGE"
+    unit: "ratio"
+
+  - metric_id: "drone_swarm.law_violations_critical"
+    expression: "context.law_violations_critical"
+    type: "GAUGE"
+    unit: "count"
+
+example_payload:
+  entity_id: "atlas://engine/neuroswarm-drone-side"
+  op: "drone_swarm_tick_completed"
+  timestamp: "2026-06-10T12:00:00Z"
+  context:
+    n_agents: 100
+    agents_healthy: 98
+    kuramoto_r_mean: 0.91
+    threat_consensus: "clear"
+    threat_fast_p50_ms: 0.42
+    jam_failover_ok: true
+    engines_attested_ratio: 1.0
+    law_violations_critical: 0
+    law_violations_total: 0
+    access_modes: ["ground_mesh"]
+    protocols_invoked: ["PROTO-255", "PROTO-256", "PROTO-257", "PROTO-258", "PROTO-259", "PROTO-260", "PROTO-261", "PROTO-262"]
+    side_engines: ["DSEN", "DNAV", "DMESH", "DTHR", "DFORM", "DRT"]
+
+governance_integration:
+  ingestion_path: "dist/governance/events/drone_swarm_state.json"
+  processing_frequency: "on_write"
+  phi_synchronized: true
+  phi_beat_alignment: "F8"
