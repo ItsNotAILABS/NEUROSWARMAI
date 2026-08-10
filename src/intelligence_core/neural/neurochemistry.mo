@@ -183,7 +183,7 @@ module NovaNeuralChemistry {
     v + (iExt - iNa - iK - iL) * dt / cm
   };
 
-  /// Gating variable rate: α_m(V) = 0.1(V+40)/(1-exp(-(V+40)/10))
+  /// Gating variable rate: α_n(V) = 0.01(V+55)/(1-exp(-(V+55)/10))
   public func alphaN(v : Float) : Float {
     let denom = 1.0 - Float.exp(-(v + 55.0) / 10.0);
     if (Float.abs(denom) < NovaComputing.EPSILON) {

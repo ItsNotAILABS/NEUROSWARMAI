@@ -273,7 +273,7 @@ describe('Intelligence Core — Machine Learning Pillar', () => {
       state = { estimate: state.estimate, uncertainty: state.uncertainty + processNoise };
       // Update
       const gain = state.uncertainty / (state.uncertainty + measurementNoise);
-      const measurement = trueValue + (Math.random() - 0.5) * 0.5;
+      const measurement = trueValue + (((i * 7 + 3) % 10) - 5) * 0.1;
       state = {
         estimate: state.estimate + gain * (measurement - state.estimate),
         uncertainty: (1 - gain) * state.uncertainty
