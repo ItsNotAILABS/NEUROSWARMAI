@@ -1,0 +1,30 @@
+{
+  "name": "example-static-app",
+  "kind": "static-app",
+  "version": "0.1.0",
+  "builder_version": "1.0.0",
+  "description": "HTML/CSS/JS frontend bundles",
+  "entry": "index.html",
+  "files": [
+    "PACKET_POLICY.md",
+    "README.md",
+    "index.html",
+    "manifest.json",
+    "release_manifest.json",
+    "reports/build_report.md",
+    "reports/scores.json",
+    "src/app.js",
+    "src/style.css",
+    "tools/quality_gate.py"
+  ],
+  "checksums": {
+    "README.md": "e9a85d841fab700ad47b5d9626be6053c97a66c2ad6887ff39c2e7e4ef0d723c",
+    "PACKET_POLICY.md": "5f007368d13a17306d0c319db337e39339956f7132061c84a77e8226833079ee",
+    "index.html": "cc99bfd8bcb091bffb21df277e8437e7204e3f70535310eb635e700544bbc073",
+    "src/app.js": "a0687288ac83949fe2e0e512850369eed1cadd00c10aa0fde4070a94c1caf843",
+    "src/style.css": "95f3b7fdb95f5453aba0908aa46f4137638b0b7f4723eb14bb20797f5fa17e0a",
+    "tools/quality_gate.py": "685093290656819e27c4c5c0c54cb285899fb8a16efda0f8794a2d8e50dd379e",
+    "reports/build_report.md": "aaae050bf543f47feb3fa6e5f700edb5fa805ac6f4081430828090261fdc7605",
+    "reports/scores.json": "8a579064cf31553ffad857afd70c71408bd09d9f02fae9510643a0ab0b0e2028"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "example-python-service",
+  "kind": "python-service",
+  "version": "0.1.0",
+  "builder_version": "1.0.0",
+  "description": "Python backend service or library",
+  "entry": "main.py",
+  "files": [
+    "PACKET_POLICY.md",
+    "README.md",
+    "main.py",
+    "manifest.json",
+    "release_manifest.json",
+    "reports/build_report.md",
+    "reports/scores.json",
+    "requirements.txt",
+    "src/__init__.py",
+    "src/service.py",
+    "tools/quality_gate.py"
+  ],
+  "checksums": {
+    "README.md": "39f932463f7f403b1cfbeea3d7e015889a09aa3433a7f7bf80b0d63828c59153",
+    "PACKET_POLICY.md": "5f007368d13a17306d0c319db337e39339956f7132061c84a77e8226833079ee",
+    "main.py": "762298f2310cce5e592fb2221ff362753dba91a35e783f97897c04d0385b3649",
+    "src/__init__.py": "33326542aade526412118f56a703cb727d1a47df719a47b9973a75f4c2ad3803",
+    "src/service.py": "b29e1a9113689dec9827c9bf33eebc5a896dbcb03f3eba18d43b89c33dc7f274",
+    "requirements.txt": "5cfbc8591dece6de0195b12b4d6256f5211caabf7e95b88555f82a7ffaef3edc",
+    "tools/quality_gate.py": "685093290656819e27c4c5c0c54cb285899fb8a16efda0f8794a2d8e50dd379e",
+    "reports/build_report.md": "1636b6a04cfd9957d93f5fc752e1a519b9357d5afe191c1b99b092cb37d3c237",
+    "reports/scores.json": "8a579064cf31553ffad857afd70c71408bd09d9f02fae9510643a0ab0b0e2028"
+  }
+}

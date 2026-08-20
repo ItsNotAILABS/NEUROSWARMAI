@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "structure": 1.0,
+    "manifest_integrity": 1.0,
+    "readme_completeness": 1.0,
+    "policy_present": 1.0,
+    "gate_executable": 1.0
+  },
+  "overall": 1.0,
+  "threshold": 0.7,
+  "passed": true
+}
